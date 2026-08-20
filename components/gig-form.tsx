@@ -1,0 +1,225 @@
+"use client";
+
+import { useActionState, useEffect, useState } from "react";
+import { Plus, X } from "lucide-react";
+import { toast } from "sonner";
+import { createGig, updateGig } from "@/app/actions/gigs";
+import type { Announcement, GigShift } from "@/lib/database.types";
+import { SKILLS } from "@/lib/constants";
+import { ChipGroup } from "@/components/ui/chip-toggle";
+import { SubmitButton } from "@/components/ui/button";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { FormError } from "@/components/form-error";
+import { cn } from "@/lib/utils";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+function toDateInputValue(iso: string) {
+  const date = new Date(iso);
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function toTimeInputValue(iso: string) {
+  const date = new Date(iso);
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function initialShifts(gig?: Announcement): GigShift[] {
+  if (gig?.shifts?.length) return gig.shifts;
+  if (gig) {
+    return [
+      {
+        date: toDateInputValue(gig.starts_at),
+        start: toTimeInputValue(gig.starts_at),
+        end: toTimeInputValue(gig.ends_at),
+      },
+    ];
+  }
+  return [{ date: "", start: "", end: "" }];
+}
+
+export function GigForm({ gig }: { gig?: Announcement }) {
+  const [skills, setSkills] = useState<string[]>(gig?.required_skills ?? []);
+  const [shifts, setShifts] = useState<GigShift[]>(() => initialShifts(gig));
+  const [payType, setPayType] = useState<"hourly" | "flat">(gig?.pay_type ?? "hourly");
+  const [state, action] = useActionState(gig ? updateGig : createGig, null);
+  const error = state && !state.ok ? state : null;
+
+  useEffect(() => {
+    if (state?.ok) toast.success("Gig saved");
+  }, [state]);
+
+  return (
+    <form action={action} className="flex flex-col gap-5">
+      {gig ? <input type="hidden" name="gigId" value={gig.id} /> : null}
+      {gig ? <input type="hidden" name="status" value={gig.status} /> : null}
+
+      <Field
+        label="Title (optional)"
+        hint="Leave it blank and we'll name the gig after its dates."
+        error={error?.field === "title" ? error.error : undefined}
+      >
+        {(id) => (
+          <Input
+            id={id}
+            name="title"
+            defaultValue={gig?.title}
+            placeholder="e.g. Saturday brunch rush cover"
+          />
+        )}
+      </Field>
+
+      <Field
+        label="Description"
+        hint="What's the shift like? Machines, volume, dress code, who to ask for."
+        error={error?.field === "description" ? error.error : undefined}
+      >
+        {(id) => (
+          <Textarea
+            id={id}
+            name="description"
+            defaultValue={gig?.description}
+            required
+            minLength={10}
+            maxLength={2000}
+            className="min-h-32"
+          />
+        )}
+      </Field>
+
+      <Field
+        label="Dates"
+        hint="Add every date this gig covers. An end time earlier than the start means the shift runs past midnight."
+        error={error?.field?.startsWith("shifts") ? error.error : undefined}
+      >
+        {() => (
+          <div className="flex flex-col gap-2">
+            {shifts.map((shift, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  name="shiftDate"
+                  type="date"
+                  value={shift.date}
+                  required
+                  aria-label="Shift date"
+                  onChange={(e) =>
+                    setShifts((prev) =>
+                      prev.map((s, i) => (i === index ? { ...s, date: e.target.value } : s)),
+                    )
+                  }
+                />
+                <Input
+                  name="shiftStart"
+                  type="time"
+                  value={shift.start}
+                  required
+                  aria-label="Start time"
+                  onChange={(e) =>
+                    setShifts((prev) =>
+                      prev.map((s, i) => (i === index ? { ...s, start: e.target.value } : s)),
+                    )
+                  }
+                />
+                <Input
+                  name="shiftEnd"
+                  type="time"
+                  value={shift.end}
+                  required
+                  aria-label="End time"
+                  onChange={(e) =>
+                    setShifts((prev) =>
+                      prev.map((s, i) => (i === index ? { ...s, end: e.target.value } : s)),
+                    )
+                  }
+                />
+                {shifts.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-label="Remove date"
+                    onClick={() => setShifts((prev) => prev.filter((_, i) => i !== index))}
+                    className="pressable rounded-sm p-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                ) : null}
+              </div>
+            ))}
+            {shifts.length < 14 ? (
+              <button
+                type="button"
+                onClick={() =>
+                  setShifts((prev) => [
+                    ...prev,
+                    { date: "", start: prev[prev.length - 1]?.start ?? "", end: prev[prev.length - 1]?.end ?? "" },
+                  ])
+                }
+                className="pressable inline-flex items-center gap-1.5 self-start rounded-sm px-2 py-1.5 text-[13px] font-medium text-accent"
+              >
+                <Plus className="size-4" /> Add a date
+              </button>
+            ) : null}
+          </div>
+        )}
+      </Field>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Pay (€)" error={error?.field === "payRateCents" ? error.error : undefined}>
+          {(id) => (
+            <Input
+              id={id}
+              name="payRate"
+              type="number"
+              min={1}
+              step="0.5"
+              defaultValue={gig ? gig.pay_rate_cents / 100 : undefined}
+              required
+            />
+          )}
+        </Field>
+        <Field label="Pay type">
+          {() => (
+            <div className="grid h-10 grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup">
+              {(["hourly", "flat"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={payType === option}
+                  onClick={() => setPayType(option)}
+                  className={cn(
+                    "pressable rounded-sm text-[13px] font-medium outline-none transition-colors duration-150",
+                    "focus-visible:ring-2 focus-visible:ring-ring",
+                    payType === option
+                      ? "bg-surface-raised text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {option === "hourly" ? "Per hour" : "Flat rate"}
+                </button>
+              ))}
+              <input type="hidden" name="payType" value={payType} />
+            </div>
+          )}
+        </Field>
+      </div>
+
+      <Field label="Required skills" hint="Optional — helps the right baristas find you.">
+        {() => (
+          <ChipGroup
+            options={[...SKILLS]}
+            selected={skills}
+            onToggle={(value) =>
+              setSkills((prev) =>
+                prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+              )
+            }
+            name="requiredSkills"
+          />
+        )}
+      </Field>
+
+      <FormError message={error && !error.field ? error.error : undefined} />
+      <SubmitButton className="self-start">{gig ? "Save changes" : "Publish gig"}</SubmitButton>
+    </form>
+  );
+}

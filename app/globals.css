@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f7f3ec;
+  --surface: #fffdf8;
+  --surface-raised: #ffffff;
+  --foreground: #251d15;
+  --muted: #efe8dc;
+  --muted-foreground: #6f6355;
+  --border: #e5dbcb;
+  --border-strong: #d4c6b1;
+  --primary: #2a211a;
+  --primary-foreground: #f8f3ea;
+  --accent: #b95f2e;
+  --accent-soft: #f3e3d3;
+  --accent-foreground: #ffffff;
+  --success: #3e7a4e;
+  --success-soft: #e3efe4;
+  --danger: #b23c2a;
+  --danger-soft: #f7e4df;
+  --warning: #9a6b1f;
+  --warning-soft: #f5ead2;
+  --ring: #b95f2e;
+}
+
+.dark {
+  --background: #17110c;
+  --surface: #201913;
+  --surface-raised: #261e17;
+  --foreground: #f0e9de;
+  --muted: #2b221a;
+  --muted-foreground: #a5978a;
+  --border: #342a20;
+  --border-strong: #4a3c2e;
+  --primary: #f0e9de;
+  --primary-foreground: #241b13;
+  --accent: #d98c4f;
+  --accent-soft: #3a2a1c;
+  --accent-foreground: #1d150e;
+  --success: #7fbb8d;
+  --success-soft: #22301f;
+  --danger: #e07862;
+  --danger-soft: #3a221c;
+  --warning: #d9ae62;
+  --warning-soft: #362a16;
+  --ring: #d98c4f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-general-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-clash-display), ui-sans-serif, system-ui, sans-serif;
+
+  /* Strong custom curves — built-in CSS easings are too weak. */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Pressable feedback — every button/link that acts like a button. */
+.pressable {
+  transition: transform 160ms var(--ease-out-strong), background-color 160ms ease,
+    border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* Entry animation for list items and cards (decorative, non-blocking). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: rise-in 300ms var(--ease-out-strong) both;
+}
+
+.stagger > * {
+  animation: rise-in 300ms var(--ease-out-strong) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(n + 7) { animation-delay: 240ms; }
+
+/* Popover / menu entrance — origin-aware, scales from the trigger. */
+.menu-panel {
+  transform-origin: var(--origin, top right);
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 150ms var(--ease-out-strong), transform 150ms var(--ease-out-strong);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+.menu-panel[data-closing] {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+/* Message bubbles enter from below, only animate transform + opacity. */
+.bubble-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms var(--ease-out-strong), transform 200ms var(--ease-out-strong);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in,
+  .stagger > * {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+  .pressable:active {
+    transform: none;
+  }
+  .menu-panel,
+  .bubble-in {
+    transition-duration: 1ms;
+  }
+}
