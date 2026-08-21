@@ -34,7 +34,7 @@ export default async function LandingPage() {
           <em className="text-accent">great hands.</em>
         </h1>
         <p className="max-w-xl text-balance text-lg text-muted-foreground">
-          Barista Gigs connects specialty coffee shops with skilled freelance
+          Barista Gigs connects specialty cafés with skilled freelance
           baristas for one-off shifts. Post a gig, find your extra, pour on.
         </p>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
@@ -80,7 +80,7 @@ export default async function LandingPage() {
           {
             icon: CalendarClock,
             title: "Post the shift",
-            body: "Shops publish gigs with dates, pay, and the skills the bar needs — from dialing in to latte art.",
+            body: "Cafés publish gigs with dates, pay, and the skills the bar needs — from dialing in to latte art.",
           },
           {
             icon: Coffee,
@@ -107,10 +107,10 @@ export default async function LandingPage() {
       <section className="border-t border-border py-16">
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 rounded-lg border border-border bg-surface p-10 text-center">
           <h2 className="font-display text-3xl font-semibold tracking-tight">
-            Simple pricing for shops
+            Simple pricing for cafés
           </h2>
           <p className="text-muted-foreground">
-            Free for baristas, always. Shops subscribe to post unlimited gigs.
+            Free for baristas, always. Cafés subscribe to post unlimited gigs.
           </p>
           <p className="font-display text-5xl font-semibold">
             €{SUBSCRIPTION_PRICE_EUR}

@@ -56,7 +56,7 @@ export async function expressInterest(
             ? `${message.slice(0, 120)}…`
             : message
           : undefined,
-        href: `/shop/gigs/${parsed.data.announcementId}`,
+        href: `/cafe/gigs/${parsed.data.announcementId}`,
       });
     }
   } catch {

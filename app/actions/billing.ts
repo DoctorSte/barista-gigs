@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireShop } from "@/lib/auth";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { appUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
+import { grantReferralRewardIfEligible } from "@/lib/referrals";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/validation";
 import type { Subscription } from "@/lib/database.types";
@@ -44,8 +45,9 @@ export async function startSubscription(): Promise<ActionResult> {
       updated_at: new Date().toISOString(),
     });
     if (error) return { ok: false, error: "Could not activate the dev subscription." };
+    await grantReferralRewardIfEligible(shop.id);
     revalidatePath("/settings/billing");
-    revalidatePath("/shop/dashboard");
+    revalidatePath("/cafe/dashboard");
     return { ok: true };
   }
 

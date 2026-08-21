@@ -65,12 +65,12 @@ export async function requireShop() {
 
 export async function requireExtra() {
   const { user, profile } = await requireProfile();
-  if (profile.role !== "extra") redirect("/shop/dashboard");
+  if (profile.role !== "extra") redirect("/cafe/dashboard");
   const extra = await getExtraProfile();
   if (!extra) redirect("/onboarding");
   return { user, profile, extra };
 }
 
 export function homeForRole(role: "shop" | "extra") {
-  return role === "shop" ? "/shop/dashboard" : "/gigs";
+  return role === "shop" ? "/cafe/dashboard" : "/gigs";
 }

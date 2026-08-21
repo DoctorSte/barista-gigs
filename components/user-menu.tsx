@@ -44,8 +44,8 @@ export function UserMenu({
         </MenuItem>
       ) : (
         <>
-          <MenuItem onSelect={() => router.push("/shop/profile")}>
-            <Store className="size-4 text-muted-foreground" /> Shop profile
+          <MenuItem onSelect={() => router.push("/cafe/profile")}>
+            <Store className="size-4 text-muted-foreground" /> Café profile
           </MenuItem>
           <MenuItem onSelect={() => router.push("/settings/billing")}>
             <CreditCard className="size-4 text-muted-foreground" /> Billing

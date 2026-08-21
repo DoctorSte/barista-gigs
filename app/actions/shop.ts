@@ -56,8 +56,8 @@ export async function updateShopProfile(
     })
     .eq("id", shop.id);
 
-  if (error) return { ok: false, error: "Could not save your shop. Try again." };
+  if (error) return { ok: false, error: "Could not save your café. Try again." };
 
-  revalidatePath("/shop/profile");
+  revalidatePath("/cafe/profile");
   return { ok: true };
 }

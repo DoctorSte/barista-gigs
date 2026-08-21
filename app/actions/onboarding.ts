@@ -116,7 +116,7 @@ export async function completeOnboarding(
           ...values,
           is_published: true,
         });
-    if (error) return { ok: false, error: "Could not save your shop. Try again." };
+    if (error) return { ok: false, error: "Could not save your café. Try again." };
   } else {
     const parsed = extraOnboardingSchema.safeParse({
       bio: formData.get("bio") ?? "",

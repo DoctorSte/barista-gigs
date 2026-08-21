@@ -10,13 +10,14 @@ import type { Notification } from "@/lib/database.types";
 
 const EXTRA_LINKS: NavLink[] = [
   { href: "/gigs", label: "Gigs" },
+  { href: "/jobs", label: "Jobs" },
   { href: "/applications", label: "Applications" },
   { href: "/messages", label: "Messages" },
 ];
 
 const SHOP_LINKS: NavLink[] = [
-  { href: "/shop/dashboard", label: "Dashboard" },
-  { href: "/shop/baristas", label: "Baristas" },
+  { href: "/cafe/dashboard", label: "Dashboard" },
+  { href: "/cafe/baristas", label: "Baristas" },
   { href: "/messages", label: "Messages" },
 ];
 
@@ -50,7 +51,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-15 max-w-5xl items-center gap-6 px-4 sm:px-6">
         <Link
-          href={profile ? (profile.role === "shop" ? "/shop/dashboard" : "/gigs") : "/"}
+          href={profile ? (profile.role === "shop" ? "/cafe/dashboard" : "/gigs") : "/"}
           className="pressable flex items-center gap-2 rounded-md font-display text-[17px] font-semibold tracking-tight"
         >
           <Image

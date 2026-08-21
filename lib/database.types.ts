@@ -2,7 +2,8 @@
 // `supabase gen types typescript` once the project is reachable.
 
 export type Role = "shop" | "extra";
-export type PayType = "hourly" | "flat";
+export type PayType = "hourly" | "flat" | "monthly";
+export type ListingKind = "shift" | "full_time" | "part_time";
 export type AnnouncementStatus = "draft" | "open" | "filled" | "closed";
 export type InterestStatus = "pending" | "accepted" | "declined";
 
@@ -54,6 +55,7 @@ export type CoffeeShop = {
   is_published: boolean;
   referral_code: string;
   referred_by: string | null;
+  referral_reward_granted: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -115,6 +117,9 @@ export type Announcement = {
   shifts: GigShift[];
   pay_rate_cents: number;
   pay_type: PayType;
+  kind: ListingKind;
+  weekly_hours: number | null;
+  is_sos: boolean;
   required_skills: string[];
   status: AnnouncementStatus;
   created_at: string;

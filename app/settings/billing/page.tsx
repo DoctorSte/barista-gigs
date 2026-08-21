@@ -55,7 +55,7 @@ export default async function BillingPage({
           <div>
             <p className="flex items-center gap-2 font-display text-xl font-semibold">
               <CreditCard className="size-5 text-accent" />
-              Shop subscription
+              Café subscription
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Unlimited gig posts · applicant messaging · shop profile

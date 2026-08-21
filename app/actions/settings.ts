@@ -50,7 +50,7 @@ export async function changeCity(
       .update({ city_id: cityId })
       .eq("id", shop.id);
     if (closeError || shopError) {
-      return { ok: false, error: "Could not move your shop. Try again." };
+      return { ok: false, error: "Could not move your café. Try again." };
     }
   } else {
     const extra = await getExtraProfile();

@@ -1,5 +1,6 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { MapPin, ThumbsUp } from "lucide-react";
+import { Eye, MapPin, ThumbsUp } from "lucide-react";
 import { requireExtra } from "@/lib/auth";
 import { getCityById } from "@/lib/city";
 import { createClient } from "@/lib/supabase/server";
@@ -39,12 +40,20 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">My profile</h1>
-        <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
-          <MapPin className="size-4" />
-          {city?.name ?? "Your city"} — this is what shops see when you apply.
-        </p>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">My profile</h1>
+          <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
+            <MapPin className="size-4" />
+            {city?.name ?? "Your city"} — this is what cafés see when you apply.
+          </p>
+        </div>
+        <Link
+          href={`/cafe/baristas/${extra.id}`}
+          className="pressable inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-muted-foreground hover:border-border-strong hover:text-foreground"
+        >
+          <Eye className="size-4" /> See how cafés see you
+        </Link>
       </div>
 
       <div className="flex flex-col gap-10">

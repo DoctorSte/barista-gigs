@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { grantReferralRewardIfEligible } from "@/lib/referrals";
 
 export const runtime = "nodejs";
 
@@ -40,6 +41,9 @@ async function upsertFromSubscription(subscription: Stripe.Subscription) {
       current_period_end: periodEnd(subscription),
       updated_at: new Date().toISOString(),
     });
+    if (mapStatus(subscription.status) === "active") {
+      await grantReferralRewardIfEligible(shopId);
+    }
     return;
   }
 

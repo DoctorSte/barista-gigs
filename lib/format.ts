@@ -13,9 +13,18 @@ export function formatMoney(cents: number, currency = "EUR") {
   return formatter.format(cents / 100);
 }
 
-export function formatPay(cents: number, payType: "hourly" | "flat", currency = "EUR") {
+export function formatPay(
+  cents: number,
+  payType: "hourly" | "flat" | "monthly",
+  currency = "EUR",
+) {
+  if (payType === "monthly") return `${formatMoney(cents, currency)}/month`;
   const amount = formatMoney(cents, currency);
   return payType === "hourly" ? `${amount}/hr` : `${amount} flat`;
+}
+
+export function formatListingKind(kind: "shift" | "full_time" | "part_time") {
+  return kind === "full_time" ? "Full-time" : kind === "part_time" ? "Part-time" : "Shift";
 }
 
 export function formatDate(iso: string) {
@@ -54,12 +63,18 @@ export function formatShift(shift: { date: string; start: string; end: string })
   return `${formatDate(`${shift.date}T00:00`)}, ${shift.start} – ${shift.end}`;
 }
 
-/** One-line schedule for gig cards: single shift → full range, multi → count + span */
+/** One-line schedule for listing cards: jobs → kind + hours, single shift → full range, multi → count + span */
 export function formatGigSchedule(gig: {
   starts_at: string;
   ends_at: string;
   shifts?: { date: string; start: string; end: string }[];
+  kind?: "shift" | "full_time" | "part_time";
+  weekly_hours?: number | null;
 }) {
+  if (gig.kind && gig.kind !== "shift") {
+    const label = formatListingKind(gig.kind);
+    return gig.weekly_hours ? `${label} · ~${gig.weekly_hours} h/week` : `${label} position`;
+  }
   if (!gig.shifts || gig.shifts.length <= 1) {
     return formatShiftRange(gig.starts_at, gig.ends_at);
   }

@@ -19,7 +19,7 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
   const error = state && !state.ok ? state : null;
 
   useEffect(() => {
-    if (state?.ok) toast.success("Shop saved");
+    if (state?.ok) toast.success("Café saved");
   }, [state]);
 
   return (
@@ -27,11 +27,11 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
       <form action={action} className="flex flex-col gap-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-lg font-semibold">Shop details</h2>
+            <h2 className="font-display text-lg font-semibold">Café details</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {isPublished
-                ? "Your shop is visible to baristas in your city."
-                : "Your shop is hidden — publish it so baristas can see who's hiring."}
+                ? "Your café is visible to baristas in your city."
+                : "Your café is hidden — publish it so baristas can see who's hiring."}
             </p>
           </div>
           <div className="flex items-center gap-2.5">
@@ -42,13 +42,13 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
               id="publish-switch"
               checked={isPublished}
               onCheckedChange={setIsPublished}
-              aria-label="Publish shop"
+              aria-label="Publish café"
             />
             <input type="hidden" name="isPublished" value={String(isPublished)} />
           </div>
         </div>
 
-        <Field label="Shop name" error={error?.field === "name" ? error.error : undefined}>
+        <Field label="Café name" error={error?.field === "name" ? error.error : undefined}>
           {(id) => <Input id={id} name="name" defaultValue={shop.name} required />}
         </Field>
 
@@ -56,7 +56,7 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
           {(id) => <Input id={id} name="address" defaultValue={shop.address} required />}
         </Field>
 
-        <Field label="About the shop">
+        <Field label="About the café">
           {(id) => (
             <Textarea id={id} name="description" defaultValue={shop.description ?? ""} maxLength={1000} />
           )}
@@ -141,7 +141,7 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
         </Field>
 
         <FormError message={error && !error.field ? error.error : undefined} />
-        <SubmitButton className="self-start">Save shop</SubmitButton>
+        <SubmitButton className="self-start">Save café</SubmitButton>
       </form>
     </Card>
   );

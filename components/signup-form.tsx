@@ -19,7 +19,7 @@ const ROLES = [
   {
     value: "shop" as const,
     icon: Store,
-    title: "I run a shop",
+    title: "I run a café",
     caption: "Hire trusted extras",
   },
 ];
@@ -88,6 +88,17 @@ export function SignupForm({ initialRole }: { initialRole?: "shop" | "extra" }) 
       <SubmitButton size="lg" className="w-full">
         Create account
       </SubmitButton>
+      <p className="text-center text-[13px] text-muted-foreground">
+        By creating an account you agree to the{" "}
+        <a href="/legal/terms" className="text-accent hover:underline">
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a href="/legal/privacy" className="text-accent hover:underline">
+          Privacy Policy
+        </a>
+        .
+      </p>
     </form>
   );
 }

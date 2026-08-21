@@ -94,7 +94,7 @@ export default async function ApplicationsPage() {
                     href={`/messages/${conversationId}`}
                     className="pressable mt-3 inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success"
                   >
-                    <MessageSquare className="size-4" /> Message the shop
+                    <MessageSquare className="size-4" /> Message the café
                   </Link>
                 ) : null}
               </li>

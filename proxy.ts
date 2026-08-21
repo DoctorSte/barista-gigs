@@ -3,7 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const PROTECTED_PREFIXES = [
   "/gigs",
-  "/shop",
+  "/jobs",
+  "/cafe",
+  "/shop", // legacy namespace; next.config redirects it to /cafe
   "/profile",
   "/applications",
   "/messages",
@@ -73,7 +75,7 @@ export async function proxy(request: NextRequest) {
       return redirectTo("/onboarding");
     }
     if (profile && AUTH_PAGES.includes(pathname)) {
-      return redirectTo(profile.role === "shop" ? "/shop/dashboard" : "/gigs");
+      return redirectTo(profile.role === "shop" ? "/cafe/dashboard" : "/gigs");
     }
   }
 

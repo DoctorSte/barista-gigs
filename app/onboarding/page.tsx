@@ -28,7 +28,7 @@ export default async function OnboardingPage() {
 
   return (
     <AuthShell
-      title={initialRole === "shop" ? "Set up your shop" : "Set up your profile"}
+      title={initialRole === "shop" ? "Set up your café" : "Set up your profile"}
       subtitle="Two minutes, then you're in."
     >
       <OnboardingForm

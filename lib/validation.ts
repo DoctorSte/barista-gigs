@@ -25,7 +25,7 @@ export const citySelectionSchema = z.object({
 });
 
 export const shopOnboardingSchema = z.object({
-  shopName: z.string().trim().min(2, "Shop name is required").max(120),
+  shopName: z.string().trim().min(2, "Café name is required").max(120),
   address: z.string().trim().min(4, "Address is required").max(240),
 });
 
@@ -37,7 +37,7 @@ export const extraOnboardingSchema = z.object({
 });
 
 export const shopProfileSchema = z.object({
-  name: z.string().trim().min(2, "Shop name is required").max(120),
+  name: z.string().trim().min(2, "Café name is required").max(120),
   address: z.string().trim().min(4, "Address is required").max(240),
   description: z.string().trim().max(1000).optional().default(""),
   website: z.union([z.literal(""), z.string().trim().url("Enter a valid URL")]).default(""),
@@ -90,18 +90,23 @@ export const gigShiftSchema = z.object({
   end: z.string().regex(/^\d{2}:\d{2}$/, "Pick an end time"),
 });
 
-export const gigSchema = z.object({
-  title: z.string().trim().max(120).optional().default(""),
-  description: z.string().trim().min(10, "Describe the shift so baristas know what to expect").max(2000),
-  shifts: z
-    .array(gigShiftSchema)
-    .min(1, "Add at least one date")
-    .max(14, "Fourteen dates is plenty for one gig"),
-  payRateCents: z.coerce.number().int().min(100, "Set the pay").max(10_000_00),
-  payType: z.enum(["hourly", "flat"]),
-  requiredSkills: z.array(z.string().trim().min(1).max(40)).max(8).default([]),
-  status: z.enum(["draft", "open", "filled", "closed"]).default("open"),
-});
+export const gigSchema = z
+  .object({
+    kind: z.enum(["shift", "full_time", "part_time"]).default("shift"),
+    title: z.string().trim().max(120).optional().default(""),
+    description: z.string().trim().min(10, "Describe the role so baristas know what to expect").max(2000),
+    shifts: z.array(gigShiftSchema).max(14, "Fourteen dates is plenty for one gig").default([]),
+    weeklyHours: z.coerce.number().int().min(1).max(60).nullable().default(null),
+    payRateCents: z.coerce.number().int().min(100, "Set the pay").max(10_000_00),
+    payType: z.enum(["hourly", "flat", "monthly"]),
+    requiredSkills: z.array(z.string().trim().min(1).max(40)).max(8).default([]),
+    isSos: z.boolean().default(false),
+    status: z.enum(["draft", "open", "filled", "closed"]).default("open"),
+  })
+  .refine((gig) => gig.kind !== "shift" || gig.shifts.length > 0, {
+    message: "Add at least one date",
+    path: ["shifts"],
+  });
 
 export const interestSchema = z.object({
   announcementId: z.string().uuid(),

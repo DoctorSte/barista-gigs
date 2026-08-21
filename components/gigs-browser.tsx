@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CalendarClock, Coffee, List, Map as MapIcon } from "lucide-react";
+import { Briefcase, CalendarClock, Coffee, List, Map as MapIcon } from "lucide-react";
 import type { Announcement } from "@/lib/database.types";
 import { formatGigSchedule, formatPay } from "@/lib/format";
 import { SKILLS, skillLabel } from "@/lib/constants";
@@ -26,7 +26,7 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
     const min = Number(minRate) * 100;
     return gigs.filter((gig) => {
       if (skills.length > 0 && !skills.every((s) => gig.required_skills.includes(s))) return false;
-      // The €/hr filter only applies to hourly gigs; flat-rate gigs stay visible.
+      // The €/hr filter only applies to hourly gigs; flat/monthly-rate gigs stay visible.
       if (min > 0 && gig.pay_type === "hourly" && gig.pay_rate_cents < min) return false;
       return true;
     });
@@ -132,7 +132,8 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
                     <p className="truncate text-sm text-muted-foreground">
                       {gig.coffee_shops?.name ?? "Coffee shop"}
                     </p>
-                    <h2 className="mt-0.5 font-display text-xl font-semibold tracking-tight">
+                    <h2 className="mt-0.5 flex flex-wrap items-center gap-2 font-display text-xl font-semibold tracking-tight">
+                      {gig.is_sos ? <Badge tone="danger">SOS</Badge> : null}
                       {gig.title}
                     </h2>
                   </div>
@@ -141,7 +142,11 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
                   </span>
                 </div>
                 <p className="mt-2.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <CalendarClock className="size-4" />
+                  {gig.kind !== "shift" ? (
+                    <Briefcase className="size-4" />
+                  ) : (
+                    <CalendarClock className="size-4" />
+                  )}
                   {formatGigSchedule(gig)}
                 </p>
                 {gig.required_skills.length > 0 ? (

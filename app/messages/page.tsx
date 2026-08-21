@@ -45,7 +45,7 @@ export default async function MessagesPage() {
         <p className="mt-1 text-[15px] text-muted-foreground">
           {profile.role === "shop"
             ? "Conversations with baristas you've accepted."
-            : "Conversations with shops that accepted you."}
+            : "Conversations with cafés that accepted you."}
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export default async function MessagesPage() {
           description={
             profile.role === "shop"
               ? "Accept an application and a conversation opens automatically."
-              : "When a shop accepts your application, your conversation shows up here."
+              : "When a café accepts your application, your conversation shows up here."
           }
         />
       ) : (

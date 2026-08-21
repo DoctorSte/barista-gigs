@@ -30,7 +30,7 @@ export default async function CitySettingsPage() {
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           {profile.role === "shop"
-            ? "Moving your shop closes any draft or open gigs. Filled gigs and message threads are kept."
+            ? "Moving your café closes any draft or open gigs. Filled gigs and message threads are kept."
             : "Moving withdraws your pending applications. Accepted gigs and message threads are kept."}
         </p>
 

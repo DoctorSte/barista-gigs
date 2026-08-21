@@ -15,8 +15,10 @@ export default async function GigsPage() {
     .from("announcements")
     .select("*, coffee_shops(name, address, lat, lng)")
     .eq("status", "open")
+    .eq("kind", "shift")
     .eq("city_id", profile.city_id)
     .gte("ends_at", new Date().toISOString())
+    .order("is_sos", { ascending: false })
     .order("starts_at");
 
   const gigs = (data ?? []) as unknown as BrowserGig[];

@@ -59,7 +59,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
           Barista gigs in {city.name}
         </h1>
         <p className="max-w-xl text-balance text-lg text-muted-foreground">
-          One-off shifts at specialty coffee shops — posted by the shops themselves.
+          One-off shifts at specialty coffee shops — posted by the cafés themselves.
         </p>
       </div>
 
@@ -67,7 +67,7 @@ export default async function CityPage({ params }: { params: Promise<{ slug: str
         <EmptyState
           icon={Coffee}
           title={`No open gigs in ${city.name} right now`}
-          description="Be the first shop to post one."
+          description="Be the first café to post one."
         />
       ) : (
         <ul className="stagger flex flex-col gap-3">

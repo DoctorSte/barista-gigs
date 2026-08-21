@@ -35,7 +35,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
           <div>
             <h2 className="font-display text-lg font-semibold">About you</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {isAvailable ? "You're visible to shops in your city." : "You're hidden from search."}
+              {isAvailable ? "You're visible to cafés in your city." : "You're hidden from search."}
             </p>
           </div>
           <div className="flex items-center gap-2.5">

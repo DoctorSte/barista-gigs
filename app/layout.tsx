@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s · Barista Gigs",
   },
   description:
-    "Barista Gigs connects specialty coffee shops with skilled freelance baristas for one-off shifts across Europe.",
+    "Barista Gigs connects specialty cafés with skilled freelance baristas for one-off shifts across Europe.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="flex min-h-dvh flex-col">
             <SiteHeader />
             <main className="flex-1">{children}</main>
+            <SiteFooter />
           </div>
           <Toaster
             position="bottom-right"

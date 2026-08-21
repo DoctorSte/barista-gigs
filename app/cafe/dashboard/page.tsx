@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CalendarClock, ClipboardList, Plus, Sparkles, Users } from "lucide-react";
+import { Briefcase, CalendarClock, ClipboardList, Plus, Sparkles, Users } from "lucide-react";
 import { requireShop } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { formatGigSchedule, formatPay } from "@/lib/format";
-import { GigStatusBadge } from "@/components/ui/badge";
+import { Badge, GigStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReferralLink } from "@/components/referral-link";
@@ -61,12 +61,20 @@ export default async function ShopDashboardPage() {
           </p>
         </div>
         {subscribed ? (
-          <Link
-            href="/shop/gigs/new"
-            className="pressable inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="size-4" /> Post a gig
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/cafe/gigs/new"
+              className="pressable inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="size-4" /> Post a gig
+            </Link>
+            <Link
+              href="/cafe/jobs/new"
+              className="pressable inline-flex h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium hover:bg-muted"
+            >
+              <Briefcase className="size-4" /> Post a job
+            </Link>
+          </div>
         ) : null}
       </div>
 
@@ -107,11 +115,12 @@ export default async function ShopDashboardPage() {
             return (
               <li key={gig.id}>
                 <Link
-                  href={`/shop/gigs/${gig.id}`}
+                  href={`/cafe/gigs/${gig.id}`}
                   className="pressable block rounded-lg border border-border bg-surface p-5 transition-colors duration-150 hover:border-border-strong"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <h2 className="min-w-0 truncate font-display text-lg font-semibold tracking-tight">
+                    <h2 className="flex min-w-0 items-center gap-2 truncate font-display text-lg font-semibold tracking-tight">
+                      {gig.is_sos ? <Badge tone="danger">SOS</Badge> : null}
                       {gig.title}
                     </h2>
                     <GigStatusBadge status={gig.status} />
@@ -137,8 +146,8 @@ export default async function ShopDashboardPage() {
       <Card className="rise-in mt-6">
         <h2 className="font-display text-lg font-semibold tracking-tight">Refer a café</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Know a café that needs extra hands? They join with your link and you&apos;ll see them
-          here.
+          Know a café that needs extra hands? Share your link — when they subscribe, you get a
+          month free.
         </p>
         <div className="mt-4">
           <ReferralLink code={shop.referral_code} />

@@ -8,7 +8,7 @@ export async function toggleRecommendation(
   extraId: string,
 ): Promise<ActionResult<{ recommended: boolean }>> {
   const shop = await getShop();
-  if (!shop) return { ok: false, error: "Log in as a shop to recommend baristas." };
+  if (!shop) return { ok: false, error: "Log in as a café to recommend baristas." };
 
   const supabase = await createClient();
   const { data: existing } = await supabase

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, AtSign, Send, ThumbsUp } from "lucide-react";
-import { requireShop } from "@/lib/auth";
+import { ArrowLeft, AtSign, Eye, Send, ThumbsUp } from "lucide-react";
+import { getExtraProfile, getShop, requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 import { skillLabel, WEEKDAYS } from "@/lib/constants";
@@ -25,9 +25,19 @@ export default async function BaristaProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { shop } = await requireShop();
-  const supabase = await createClient();
+  const { profile } = await requireProfile();
 
+  // Cafés browse any barista; a barista can open only their own profile here,
+  // as a preview of what cafés see.
+  const shop = profile.role === "shop" ? await getShop() : null;
+  if (profile.role === "shop" && !shop) redirect("/onboarding");
+  const isSelfPreview = profile.role === "extra";
+  if (isSelfPreview) {
+    const ownExtra = await getExtraProfile();
+    if (!ownExtra || ownExtra.id !== id) redirect("/profile");
+  }
+
+  const supabase = await createClient();
   const { data } = await supabase
     .from("extras_profiles")
     .select("*, profiles:user_id(display_name, avatar_url)")
@@ -49,14 +59,18 @@ export default async function BaristaProfilePage({
         .select("*, coffee_shops(name)")
         .eq("extra_id", barista.id)
         .order("created_at", { ascending: false }),
-      supabase
-        .from("announcements")
-        .select("id, title")
-        .eq("shop_id", shop.id)
-        .eq("status", "open")
-        .gte("ends_at", nowIso)
-        .order("starts_at"),
-      supabase.from("interests").select("announcement_id").eq("extra_id", barista.id),
+      shop
+        ? supabase
+            .from("announcements")
+            .select("id, title")
+            .eq("shop_id", shop.id)
+            .eq("status", "open")
+            .gte("ends_at", nowIso)
+            .order("starts_at")
+        : Promise.resolve({ data: [] }),
+      shop
+        ? supabase.from("interests").select("announcement_id").eq("extra_id", barista.id)
+        : Promise.resolve({ data: [] }),
     ]);
 
   const photos = (photoData ?? []) as Pick<
@@ -80,11 +94,18 @@ export default async function BaristaProfilePage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Link
-        href="/shop/baristas"
+        href={isSelfPreview ? "/profile" : "/cafe/baristas"}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> All baristas
+        <ArrowLeft className="size-4" /> {isSelfPreview ? "Back to my profile" : "All baristas"}
       </Link>
+
+      {isSelfPreview ? (
+        <p className="bubble-in mb-6 inline-flex items-center gap-2 rounded-lg border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
+          <Eye className="size-4 shrink-0" />
+          Preview — this is how cafés see your profile.
+        </p>
+      ) : null}
 
       <div className="rise-in">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -182,6 +203,7 @@ export default async function BaristaProfilePage({
         </section>
       ) : null}
 
+      {isSelfPreview ? null : (
       <section className="rise-in mt-10 [animation-delay:140ms]">
         <Card>
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
@@ -205,7 +227,7 @@ export default async function BaristaProfilePage({
             <p className="mt-1 text-sm text-muted-foreground">
               You have no open gigs right now.{" "}
               <Link
-                href="/shop/dashboard"
+                href="/cafe/dashboard"
                 className="font-medium text-accent transition-colors duration-150 hover:underline"
               >
                 Post one from your dashboard
@@ -215,6 +237,7 @@ export default async function BaristaProfilePage({
           )}
         </Card>
       </section>
+      )}
     </div>
   );
 }

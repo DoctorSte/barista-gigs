@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AtSign, Banknote, Check, Inbox, MessageSquare, ThumbsUp, X } from "lucide-react";
+import { AtSign, Banknote, Check, Inbox, MessageSquare, RotateCcw, ThumbsUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { decideInterest } from "@/app/actions/gigs";
 import { toggleRecommendation } from "@/app/actions/recommendations";
@@ -96,10 +96,25 @@ export function ApplicantList({
         return (
           <li key={applicant.id} className="rounded-lg border border-border bg-surface p-5">
             <div className="flex items-start gap-3.5">
-              <Avatar name={name} src={extra?.profiles?.avatar_url} />
+              {extra ? (
+                <Link href={`/cafe/baristas/${extra.id}`} className="pressable shrink-0 rounded-full">
+                  <Avatar name={name} src={extra.profiles?.avatar_url} />
+                </Link>
+              ) : (
+                <Avatar name={name} />
+              )}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium">{name}</p>
+                  {extra ? (
+                    <Link
+                      href={`/cafe/baristas/${extra.id}`}
+                      className="font-medium transition-colors duration-150 hover:text-accent hover:underline"
+                    >
+                      {name}
+                    </Link>
+                  ) : (
+                    <p className="font-medium">{name}</p>
+                  )}
                   <InterestStatusBadge status={applicant.status} />
                 </div>
                 <p className="mt-0.5 text-[13px] text-muted-foreground">
@@ -109,7 +124,7 @@ export function ApplicantList({
                       ? `${formatMoney(extra.hourly_rate_cents, extra.currency)}/hr`
                       : null,
                     `applied ${formatRelative(applicant.created_at)}`,
-                    worked > 0 ? `${worked} ${worked === 1 ? "shift" : "shifts"} at your shop` : null,
+                    worked > 0 ? `${worked} ${worked === 1 ? "shift" : "shifts"} at your café` : null,
                   ]
                     .filter(Boolean)
                     .join(" · ")}
@@ -192,15 +207,23 @@ export function ApplicantList({
                     </Link>
                   ) : null}
                   {applicant.status === "accepted" && extra ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      loading={pending}
-                      onClick={() => recommend(extra.id)}
-                    >
-                      <ThumbsUp className="size-4" />
-                      {recs?.mine ? "Recommended" : "Recommend"}
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        loading={pending}
+                        onClick={() => recommend(extra.id)}
+                      >
+                        <ThumbsUp className="size-4" />
+                        {recs?.mine ? "Recommended" : "Recommend"}
+                      </Button>
+                      <Link
+                        href={`/cafe/gigs/new?from=${applicant.announcement_id}&invite=${extra.id}`}
+                        className="pressable inline-flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:border-border-strong hover:text-foreground"
+                      >
+                        <RotateCcw className="size-4" /> Rebook
+                      </Link>
+                    </>
                   ) : null}
                 </div>
               </div>

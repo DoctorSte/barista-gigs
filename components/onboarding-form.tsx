@@ -49,7 +49,7 @@ export function OnboardingForm({
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {option === "extra" ? "Barista" : "Coffee shop"}
+              {option === "extra" ? "Barista" : "Café"}
             </button>
           ))}
         </div>
@@ -69,7 +69,7 @@ export function OnboardingForm({
 
       {role === "shop" ? (
         <>
-          <Field label="Shop name" error={error?.field === "shopName" ? error.error : undefined}>
+          <Field label="Café name" error={error?.field === "shopName" ? error.error : undefined}>
             {(id) => <Input id={id} name="shopName" placeholder="e.g. Kaffebar Nord" required />}
           </Field>
           <Field label="Address" error={error?.field === "address" ? error.error : undefined}>
@@ -108,7 +108,7 @@ export function OnboardingForm({
 
       <FormError message={error && !error.field ? error.error : undefined} />
       <SubmitButton size="lg" className="w-full">
-        {role === "shop" ? "Open shop account" : "Start finding gigs"}
+        {role === "shop" ? "Open café account" : "Start finding gigs"}
       </SubmitButton>
     </form>
   );

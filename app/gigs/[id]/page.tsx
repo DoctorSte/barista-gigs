@@ -1,19 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, CalendarClock, Globe, Info, MapPin, Phone, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Briefcase, CalendarClock, Info, TriangleAlert } from "lucide-react";
 import { requireExtra } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { formatPay, formatShift, formatShiftRange } from "@/lib/format";
-import { machineTypeLabel, skillLabel, WEEKDAYS } from "@/lib/constants";
+import { formatListingKind, formatPay, formatShift, formatShiftRange } from "@/lib/format";
+import { skillLabel, WEEKDAYS } from "@/lib/constants";
 import { Badge, InterestStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CafeCard } from "@/components/cafe-card";
 import { InterestForm } from "@/components/interest-form";
 import type { Announcement, CoffeeShop, Interest } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Gig details" };
 
-type GigRow = Announcement & { coffee_shops: CoffeeShop | null };
+type GigRow = Announcement & {
+  coffee_shops: (CoffeeShop & { profiles: { avatar_url: string | null } | null }) | null;
+};
 
 type Shift = { date: string; start: string; end: string };
 
@@ -48,7 +51,7 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
 
   const { data } = await supabase
     .from("announcements")
-    .select("*, coffee_shops(*)")
+    .select("*, coffee_shops(*, profiles:owner_id(avatar_url))")
     .eq("id", id)
     .maybeSingle();
   const gig = data as unknown as GigRow | null;
@@ -64,24 +67,28 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
 
   const { data: acceptedData } = await supabase
     .from("interests")
-    .select("id, announcements!inner(id, title, shifts, starts_at, ends_at)")
+    .select("id, announcements!inner(id, title, kind, shifts, starts_at, ends_at)")
     .eq("extra_id", extra.id)
     .eq("status", "accepted");
   const acceptedGigs = ((acceptedData ?? []) as unknown as {
     id: string;
-    announcements: Pick<Announcement, "id" | "title" | "shifts" | "starts_at" | "ends_at">;
+    announcements: Pick<Announcement, "id" | "title" | "kind" | "shifts" | "starts_at" | "ends_at">;
   }[])
     .map((row) => row.announcements)
-    .filter((other) => other.id !== gig.id);
+    // Jobs have no concrete times, so they can't produce meaningful overlaps.
+    .filter((other) => other.id !== gig.id && other.kind === "shift");
 
-  const thisGigIntervals = gigIntervals(gig);
-  const conflictTitles = [
-    ...new Set(
-      acceptedGigs
-        .filter((other) => intervalsOverlap(thisGigIntervals, gigIntervals(other)))
-        .map((other) => other.title),
-    ),
-  ];
+  // Jobs have no concrete shift times, so overlap checks don't apply.
+  const conflictTitles =
+    gig.kind !== "shift"
+      ? []
+      : [
+          ...new Set(
+            acceptedGigs
+              .filter((other) => intervalsOverlap(gigIntervals(gig), gigIntervals(other)))
+              .map((other) => other.title),
+          ),
+        ];
 
   const weekly = extra.availability?.weekly ?? [];
   const offDayNames =
@@ -102,21 +109,30 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Link
-        href="/gigs"
+        href={gig.kind === "shift" ? "/gigs" : "/jobs"}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> All gigs
+        <ArrowLeft className="size-4" /> {gig.kind === "shift" ? "All gigs" : "All jobs"}
       </Link>
 
       <div className="rise-in">
-        <p className="text-sm text-muted-foreground">{shop?.name ?? "Coffee shop"}</p>
+        <p className="text-sm text-muted-foreground">{shop?.name ?? "Café"}</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">{gig.title}</h1>
+          <h1 className="flex flex-wrap items-center gap-2.5 font-display text-3xl font-semibold tracking-tight">
+            {gig.is_sos ? <Badge tone="danger">SOS</Badge> : null}
+            {gig.title}
+          </h1>
           <span className="rounded-md bg-accent-soft px-3 py-1.5 text-lg font-semibold text-accent">
             {formatPay(gig.pay_rate_cents, gig.pay_type)}
           </span>
         </div>
-        {gig.shifts.length > 0 ? (
+        {gig.kind !== "shift" ? (
+          <p className="mt-3 flex items-center gap-1.5 text-[15px] text-muted-foreground">
+            <Briefcase className="size-4" />
+            {formatListingKind(gig.kind)}
+            {gig.weekly_hours ? ` · ~${gig.weekly_hours} h/week` : ""}
+          </p>
+        ) : gig.shifts.length > 0 ? (
           <ul className="mt-3 flex flex-col gap-1">
             {gig.shifts.map((shift, index) => (
               <li
@@ -152,62 +168,11 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
       </div>
 
       {shop ? (
-        <Card className="rise-in mt-8 [animation-delay:80ms]">
-          <h2 className="font-display text-lg font-semibold">{shop.name}</h2>
-          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="size-4 shrink-0" /> {shop.address}
-          </p>
-          {shop.description ? (
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{shop.description}</p>
-          ) : null}
-          {shop.machines.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {shop.machines.map((machine, index) => (
-                <Badge key={index}>
-                  {machine.name}
-                  <span className="ml-1 opacity-60">{machineTypeLabel(machine.type)}</span>
-                </Badge>
-              ))}
-            </div>
-          ) : null}
-          <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            {shop.website ? (
-              <a
-                href={shop.website}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-foreground"
-              >
-                <Globe className="size-4" /> Website
-              </a>
-            ) : null}
-            {shop.phone ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Phone className="size-4" /> {shop.phone}
-              </span>
-            ) : null}
-            {shop.lat != null && shop.lng != null ? (
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${shop.lat},${shop.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-foreground"
-              >
-                <MapPin className="size-4" /> Open in Google Maps
-              </a>
-            ) : null}
-          </div>
-          {shop.lat != null && shop.lng != null ? (
-            <div className="mt-4 overflow-hidden rounded-md border border-border">
-              <iframe
-                title={`Map showing ${shop.name}`}
-                src={`https://www.openstreetmap.org/export/embed.html?bbox=${shop.lng - 0.006}%2C${shop.lat - 0.004}%2C${shop.lng + 0.006}%2C${shop.lat + 0.004}&layer=mapnik&marker=${shop.lat}%2C${shop.lng}`}
-                className="h-56 w-full"
-                loading="lazy"
-              />
-            </div>
-          ) : null}
-        </Card>
+        <CafeCard
+          shop={shop}
+          avatarUrl={shop.profiles?.avatar_url}
+          className="rise-in mt-8 [animation-delay:80ms]"
+        />
       ) : null}
 
       <div className="rise-in mt-8 [animation-delay:140ms]">
@@ -229,10 +194,10 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
               <p className="font-medium">You applied to this gig</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {interest.status === "accepted"
-                  ? "You're in — the shop accepted your application."
+                  ? "You're in — the café accepted your application."
                   : interest.status === "declined"
-                    ? "The shop went with someone else this time."
-                    : "The shop hasn't responded yet."}
+                    ? "The café went with someone else this time."
+                    : "The café hasn’t responded yet."}
               </p>
             </div>
             <InterestStatusBadge status={interest.status} />
