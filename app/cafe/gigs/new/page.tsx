@@ -57,6 +57,7 @@ export default async function NewGigPage({
           template={template}
           inviteExtraId={params.invite}
           inviteName={inviteName}
+          openingHours={shop.opening_hours}
         />
       </Card>
     </div>

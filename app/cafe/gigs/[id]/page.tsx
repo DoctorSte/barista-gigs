@@ -131,7 +131,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
       <section>
         <h2 className="mb-3 font-display text-xl font-semibold">Edit gig</h2>
         <Card>
-          <GigForm gig={gig} />
+          <GigForm gig={gig} openingHours={shop.opening_hours} />
         </Card>
       </section>
     </div>

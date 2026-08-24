@@ -27,3 +27,5 @@ supabase/.branches/
 .claude/
 .agents/
 agent/
+.vercel
+.env*

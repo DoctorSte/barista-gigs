@@ -5,7 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { requireShop } from "@/lib/auth";
 import { getCityById } from "@/lib/city";
 import { geocodeAddress } from "@/lib/geocode";
-import { firstZodError, shopProfileSchema, type ActionResult } from "@/lib/validation";
+import {
+  firstZodError,
+  openingHoursSchema,
+  shopProfileSchema,
+  type ActionResult,
+} from "@/lib/validation";
 
 export async function updateShopProfile(
   _prev: ActionResult | null,
@@ -33,6 +38,17 @@ export async function updateShopProfile(
     return { ok: false, error: message, field };
   }
 
+  let openingHours: ({ open: string; close: string } | null)[] | undefined = undefined;
+  const rawHours = formData.get("openingHours");
+  if (typeof rawHours === "string" && rawHours) {
+    try {
+      const hoursParsed = openingHoursSchema.safeParse(JSON.parse(rawHours));
+      if (hoursParsed.success) openingHours = hoursParsed.data;
+    } catch {
+      // Ignore malformed hours; keep the stored value.
+    }
+  }
+
   // Best-effort geocode so the shop shows up on maps; skip if unchanged.
   let coords: { lat: number; lng: number } | null = null;
   if (parsed.data.address !== shop.address || shop.lat == null || shop.lng == null) {
@@ -52,6 +68,7 @@ export async function updateShopProfile(
       phone: parsed.data.phone || null,
       machines: parsed.data.machines,
       is_published: parsed.data.isPublished,
+      ...(openingHours !== undefined ? { opening_hours: openingHours } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", shop.id);

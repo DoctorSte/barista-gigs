@@ -4,16 +4,34 @@ import { useActionState, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateShopProfile } from "@/app/actions/shop";
-import type { CoffeeShop, Machine } from "@/lib/database.types";
+import type { AvailabilityWindow, CoffeeShop, Machine, OpeningHours } from "@/lib/database.types";
 import { MACHINE_TYPES } from "@/lib/constants";
+import { WeekHoursEditor } from "@/components/week-hours-editor";
 import { Switch } from "@/components/ui/switch";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { Card } from "@/components/ui/card";
 
+function hoursToWindows(hours: OpeningHours | null): AvailabilityWindow[] {
+  if (!hours) return [];
+  return hours.flatMap((entry, day) =>
+    entry ? [{ day, start: entry.open, end: entry.close }] : [],
+  );
+}
+
+function windowsToHours(windows: AvailabilityWindow[]): OpeningHours {
+  return Array.from({ length: 7 }, (_, day) => {
+    const w = windows.find((x) => x.day === day);
+    return w ? { open: w.start, close: w.end } : null;
+  });
+}
+
 export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
   const [machines, setMachines] = useState<Machine[]>(shop.machines ?? []);
+  const [openingWindows, setOpeningWindows] = useState<AvailabilityWindow[]>(() =>
+    hoursToWindows(shop.opening_hours),
+  );
   const [isPublished, setIsPublished] = useState(shop.is_published);
   const [state, action] = useActionState(updateShopProfile, null);
   const error = state && !state.ok ? state : null;
@@ -78,6 +96,27 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
             {(id) => <Input id={id} name="phone" type="tel" defaultValue={shop.phone ?? ""} />}
           </Field>
         </div>
+
+        <Field
+          label="Opening hours"
+          hint="Tap a day, then drag the bar to set hours. These bound the weekly shift scheduler when you post gigs."
+        >
+          {() => (
+            <>
+              <WeekHoursEditor
+                windows={openingWindows}
+                onChange={setOpeningWindows}
+                defaultStart="07:00"
+                defaultEnd="19:00"
+              />
+              <input
+                type="hidden"
+                name="openingHours"
+                value={JSON.stringify(windowsToHours(openingWindows))}
+              />
+            </>
+          )}
+        </Field>
 
         <Field label="Machines" hint="What will the barista be working on?">
           {() => (

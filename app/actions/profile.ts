@@ -23,6 +23,16 @@ export async function updateAvatar(path: string | null): Promise<ActionResult> {
   return { ok: true };
 }
 
+function parseWindows(raw: FormDataEntryValue | null): unknown[] {
+  if (typeof raw !== "string" || !raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function updateExtraProfile(
   _prev: ActionResult | null,
   formData: FormData,
@@ -53,7 +63,7 @@ export async function updateExtraProfile(
     skills: formData.getAll("skills"),
     isAvailable: formData.get("isAvailable") === "true",
     availability: {
-      weekly: formData.getAll("weekly").map(Number),
+      weekly: parseWindows(formData.get("availabilityWindows")),
       blackoutDates: extra.availability?.blackoutDates ?? [],
     },
   });

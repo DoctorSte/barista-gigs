@@ -7,10 +7,19 @@ export type ListingKind = "shift" | "full_time" | "part_time";
 export type AnnouncementStatus = "draft" | "open" | "filled" | "closed";
 export type InterestStatus = "pending" | "accepted" | "declined";
 
+export type AvailabilityWindow = {
+  day: number; // 0 = Monday … 6 = Sunday
+  start: string; // "HH:MM"
+  end: string; // "HH:MM"
+};
+
 export type Availability = {
-  weekly: number[]; // days of week, 0 = Monday … 6 = Sunday
+  weekly: AvailabilityWindow[];
   blackoutDates: string[]; // ISO dates
 };
+
+/** Seven entries, Monday first; null = closed that day. */
+export type OpeningHours = ({ open: string; close: string } | null)[];
 
 export type City = {
   id: string;
@@ -53,6 +62,7 @@ export type CoffeeShop = {
   website: string | null;
   phone: string | null;
   is_published: boolean;
+  opening_hours: OpeningHours | null;
   referral_code: string;
   referred_by: string | null;
   referral_reward_granted: boolean;

@@ -146,7 +146,7 @@ if (!existingExtra) {
     years_experience: 4,
     hourly_rate_cents: 2400,
     skills: ["espresso", "latte_art", "pour_over", "service"],
-    availability: { weekly: [4, 5, 6], blackoutDates: [] },
+    availability: { weekly: [{ day: 4, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }, { day: 6, start: "08:00", end: "18:00" }], blackoutDates: [] },
     is_available: true,
   });
   if (error) throw error;

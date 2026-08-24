@@ -90,14 +90,19 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
           ),
         ];
 
+  // A shift is "outside availability" when its day has no window, or its
+  // hours fall outside the window ("HH:MM" strings compare lexicographically).
   const weekly = extra.availability?.weekly ?? [];
   const offDayNames =
-    weekly.length > 0
+    weekly.length > 0 && gig.kind === "shift"
       ? [
           ...new Set(
             gig.shifts
-              .map((shift) => mondayWeekday(shift.date))
-              .filter((day) => !weekly.includes(day)),
+              .filter((shift) => {
+                const window = weekly.find((w) => w.day === mondayWeekday(shift.date));
+                return !window || shift.start < window.start || shift.end > window.end;
+              })
+              .map((shift) => mondayWeekday(shift.date)),
           ),
         ]
           .sort((a, b) => a - b)

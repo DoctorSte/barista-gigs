@@ -4,22 +4,22 @@ import { useActionState, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateExtraProfile } from "@/app/actions/profile";
-import type { ExtraProfile, Profile } from "@/lib/database.types";
-import { SKILLS, WEEKDAYS } from "@/lib/constants";
+import type { AvailabilityWindow, ExtraProfile, Profile } from "@/lib/database.types";
+import { SKILLS } from "@/lib/constants";
+import { WeekHoursEditor } from "@/components/week-hours-editor";
 import { ChipGroup } from "@/components/ui/chip-toggle";
 import { Switch } from "@/components/ui/switch";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: ExtraProfile }) {
   const [skills, setSkills] = useState<string[]>(extra.skills);
   const [rates, setRates] = useState<{ label: string; amount: string }[]>(
     (extra.rates ?? []).map((rate) => ({ label: rate.label, amount: String(rate.cents / 100) })),
   );
-  const [weekly, setWeekly] = useState<number[]>(extra.availability?.weekly ?? []);
+  const [weekly, setWeekly] = useState<AvailabilityWindow[]>(extra.availability?.weekly ?? []);
   const [isAvailable, setIsAvailable] = useState(extra.is_available);
   const [state, action] = useActionState(updateExtraProfile, null);
   const error = state && !state.ok ? state : null;
@@ -185,37 +185,15 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
           )}
         </Field>
 
-        <Field label="Usual availability" hint="Which days can you generally cover?">
+        <Field
+          label="Usual availability"
+          hint="Tap a day, then drag the bar's edges to set your hours. Cafés see this and gigs outside it warn you."
+        >
           {() => (
-            <div className="flex flex-wrap gap-2">
-              {WEEKDAYS.map((day, index) => {
-                const active = weekly.includes(index);
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() =>
-                      setWeekly((prev) =>
-                        active ? prev.filter((d) => d !== index) : [...prev, index].sort(),
-                      )
-                    }
-                    className={cn(
-                      "pressable size-10 rounded-full border text-[13px] font-medium outline-none",
-                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
-                      active
-                        ? "border-accent bg-accent-soft text-accent"
-                        : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
-                    )}
-                  >
-                    {day[0]}
-                  </button>
-                );
-              })}
-              {weekly.map((day) => (
-                <input key={day} type="hidden" name="weekly" value={day} />
-              ))}
-            </div>
+            <>
+              <WeekHoursEditor windows={weekly} onChange={setWeekly} />
+              <input type="hidden" name="availabilityWindows" value={JSON.stringify(weekly)} />
+            </>
           )}
         </Field>
 

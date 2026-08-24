@@ -4,7 +4,8 @@ import { useActionState, useEffect, useState } from "react";
 import { Plus, RotateCcw, Siren, X } from "lucide-react";
 import { toast } from "sonner";
 import { createGig, updateGig } from "@/app/actions/gigs";
-import type { Announcement, GigShift } from "@/lib/database.types";
+import type { Announcement, AvailabilityWindow, GigShift, OpeningHours } from "@/lib/database.types";
+import { WeekHoursEditor } from "@/components/week-hours-editor";
 import { SKILLS } from "@/lib/constants";
 import { ChipGroup } from "@/components/ui/chip-toggle";
 import { SubmitButton } from "@/components/ui/button";
@@ -23,6 +24,29 @@ function toDateInputValue(iso: string) {
 function toTimeInputValue(iso: string) {
   const date = new Date(iso);
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+const MAX_SHIFTS = 56; // ~8 weeks of daily shifts
+
+/** "Every Sat 8–15 between two dates" → the concrete shift list we store. */
+function expandPattern(
+  windows: AvailabilityWindow[],
+  from: string,
+  to: string,
+): GigShift[] {
+  if (!from || !to || windows.length === 0) return [];
+  const start = new Date(`${from}T00:00`);
+  const end = new Date(`${to}T00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [];
+  const out: GigShift[] = [];
+  for (const d = new Date(start); d <= end && out.length < MAX_SHIFTS; d.setDate(d.getDate() + 1)) {
+    const monday0 = (d.getDay() + 6) % 7;
+    const w = windows.find((x) => x.day === monday0);
+    if (w) {
+      out.push({ date: toDateInputValue(d.toISOString()), start: w.start, end: w.end });
+    }
+  }
+  return out;
 }
 
 function initialShifts(gig?: Announcement): GigShift[] {
@@ -50,6 +74,7 @@ export function GigForm({
   template,
   inviteExtraId,
   inviteName,
+  openingHours,
 }: {
   gig?: Announcement;
   mode?: "shift" | "job";
@@ -57,6 +82,8 @@ export function GigForm({
   template?: Announcement;
   inviteExtraId?: string;
   inviteName?: string;
+  /** Café opening hours; bounds the weekly scheduler when set. */
+  openingHours?: OpeningHours | null;
 }) {
   const defaults = gig ?? template;
   const mode = modeProp ?? (defaults && defaults.kind !== "shift" ? "job" : "shift");
@@ -66,6 +93,11 @@ export function GigForm({
     defaults?.kind ?? (mode === "job" ? "full_time" : "shift"),
   );
   const [isSos, setIsSos] = useState(gig?.is_sos ?? false);
+  const [scheduleMode, setScheduleMode] = useState<"dates" | "pattern">("dates");
+  const [patternWindows, setPatternWindows] = useState<AvailabilityWindow[]>([]);
+  const [patternFrom, setPatternFrom] = useState("");
+  const [patternTo, setPatternTo] = useState("");
+  const patternShifts = expandPattern(patternWindows, patternFrom, patternTo);
   const [payType, setPayType] = useState<"hourly" | "flat" | "monthly">(
     defaults?.pay_type ?? "hourly",
   );
@@ -179,6 +211,91 @@ export function GigForm({
           )}
         </Field>
       ) : (
+      <>
+      <div className="grid w-fit grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup" aria-label="Schedule type">
+        {(
+          [
+            { value: "dates", label: "Specific dates" },
+            { value: "pattern", label: "Weekly schedule" },
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={scheduleMode === option.value}
+            onClick={() => setScheduleMode(option.value)}
+            className={cn(
+              "pressable rounded-sm px-4 py-1.5 text-[13px] font-medium outline-none transition-colors duration-150",
+              "focus-visible:ring-2 focus-visible:ring-ring",
+              scheduleMode === option.value
+                ? "bg-surface-raised text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {scheduleMode === "pattern" ? (
+        <Field
+          label="Weekly schedule"
+          hint={
+            openingHours
+              ? "Tap a day, drag the bar to set hours — bounded by your opening hours. Repeats every week between the two dates."
+              : "Tap a day, drag the bar to set hours. Repeats every week between the two dates. Tip: set your opening hours on the café profile to bound this."
+          }
+          error={error?.field?.startsWith("shifts") ? error.error : undefined}
+        >
+          {() => (
+            <div className="flex flex-col gap-3">
+              <WeekHoursEditor
+                windows={patternWindows}
+                onChange={setPatternWindows}
+                bounds={openingHours ?? undefined}
+              />
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                From
+                <Input
+                  type="date"
+                  value={patternFrom}
+                  onChange={(e) => setPatternFrom(e.target.value)}
+                  className="w-40"
+                  aria-label="First date"
+                />
+                until
+                <Input
+                  type="date"
+                  value={patternTo}
+                  onChange={(e) => setPatternTo(e.target.value)}
+                  className="w-40"
+                  aria-label="Last date"
+                />
+              </div>
+              {patternShifts.length > 0 ? (
+                <p className="text-[13px] text-muted-foreground">
+                  Creates <span className="font-medium text-foreground">{patternShifts.length}</span>{" "}
+                  {patternShifts.length === 1 ? "shift" : "shifts"}
+                  {patternShifts.length >= MAX_SHIFTS ? " (capped at eight weeks)" : ""} — first on{" "}
+                  {patternShifts[0].date}, last on {patternShifts[patternShifts.length - 1].date}.
+                </p>
+              ) : (
+                <p className="text-[13px] text-muted-foreground">
+                  Pick days, hours, and a date range to see the shifts this creates.
+                </p>
+              )}
+              {patternShifts.map((shift, index) => (
+                <span key={index} hidden>
+                  <input type="hidden" name="shiftDate" value={shift.date} />
+                  <input type="hidden" name="shiftStart" value={shift.start} />
+                  <input type="hidden" name="shiftEnd" value={shift.end} />
+                </span>
+              ))}
+            </div>
+          )}
+        </Field>
+      ) : (
       <Field
         label="Dates"
         hint="Add every date this gig covers. An end time earlier than the start means the shift runs past midnight."
@@ -253,6 +370,8 @@ export function GigForm({
           </div>
         )}
       </Field>
+      )}
+      </>
       )}
 
       {!isJob ? (

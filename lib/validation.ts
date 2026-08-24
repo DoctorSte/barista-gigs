@@ -54,6 +54,18 @@ export const shopProfileSchema = z.object({
   isPublished: z.boolean().default(false),
 });
 
+const timeSchema = z.string().regex(/^\d{2}:\d{2}$/, "Use HH:MM");
+
+export const availabilityWindowSchema = z.object({
+  day: z.coerce.number().int().min(0).max(6),
+  start: timeSchema,
+  end: timeSchema,
+});
+
+export const openingHoursSchema = z
+  .array(z.object({ open: timeSchema, close: timeSchema }).nullable())
+  .length(7);
+
 export const rateCardSchema = z.object({
   label: z.string().trim().min(1, "Name the rate").max(40),
   cents: z.coerce.number().int().min(0).max(500_00),
@@ -78,7 +90,7 @@ export const extraProfileSchema = z.object({
   isAvailable: z.boolean().default(true),
   availability: z
     .object({
-      weekly: z.array(z.number().int().min(0).max(6)).max(7),
+      weekly: z.array(availabilityWindowSchema).max(7),
       blackoutDates: z.array(z.string()).max(60),
     })
     .default({ weekly: [], blackoutDates: [] }),
@@ -95,7 +107,7 @@ export const gigSchema = z
     kind: z.enum(["shift", "full_time", "part_time"]).default("shift"),
     title: z.string().trim().max(120).optional().default(""),
     description: z.string().trim().min(10, "Describe the role so baristas know what to expect").max(2000),
-    shifts: z.array(gigShiftSchema).max(14, "Fourteen dates is plenty for one gig").default([]),
+    shifts: z.array(gigShiftSchema).max(56, "That's more than eight weeks of shifts — split it up").default([]),
     weeklyHours: z.coerce.number().int().min(1).max(60).nullable().default(null),
     payRateCents: z.coerce.number().int().min(100, "Set the pay").max(10_000_00),
     payType: z.enum(["hourly", "flat", "monthly"]),

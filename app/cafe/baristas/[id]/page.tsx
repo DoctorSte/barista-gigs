@@ -87,9 +87,9 @@ export default async function BaristaProfilePage({
   const name = barista.profiles?.display_name ?? "Barista";
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
   const availableDays = (barista.availability?.weekly ?? [])
-    .filter((day) => day >= 0 && day < WEEKDAYS.length)
-    .sort((a, b) => a - b)
-    .map((day) => WEEKDAYS[day]);
+    .filter((w) => w.day >= 0 && w.day < WEEKDAYS.length)
+    .sort((a, b) => a.day - b.day)
+    .map((w) => `${WEEKDAYS[w.day]} ${w.start}–${w.end}`);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">

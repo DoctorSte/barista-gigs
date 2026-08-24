@@ -41,7 +41,7 @@ const BARISTAS = [
     signature: "Lavender oat flat white",
     instagram: "lea.pours",
     skills: ["espresso", "latte_art", "service", "opening_closing"],
-    weekly: [0, 1, 2, 3, 4],
+    weekly: [{ day: 0, start: "08:00", end: "18:00" }, { day: 1, start: "08:00", end: "18:00" }, { day: 2, start: "08:00", end: "18:00" }, { day: 3, start: "08:00", end: "18:00" }, { day: 4, start: "08:00", end: "18:00" }],
   },
   {
     email: "diego.fuentes@baristagigs.dev",
@@ -53,7 +53,7 @@ const BARISTAS = [
     signature: "Café bombón",
     instagram: "diegopulls",
     skills: ["espresso", "service"],
-    weekly: [3, 4, 5, 6],
+    weekly: [{ day: 3, start: "08:00", end: "18:00" }, { day: 4, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }, { day: 6, start: "08:00", end: "18:00" }],
   },
   {
     email: "amara.diallo@baristagigs.dev",
@@ -69,7 +69,7 @@ const BARISTAS = [
     signature: "Gesha pour over flight",
     instagram: "amara.brews",
     skills: ["espresso", "pour_over", "cupping", "barista_training"],
-    weekly: [0, 1, 2, 5, 6],
+    weekly: [{ day: 0, start: "08:00", end: "18:00" }, { day: 1, start: "08:00", end: "18:00" }, { day: 2, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }, { day: 6, start: "08:00", end: "18:00" }],
   },
   {
     email: "tom.beckett@baristagigs.dev",
@@ -81,7 +81,7 @@ const BARISTAS = [
     signature: "Iced long black, no fuss",
     instagram: "tomtamps",
     skills: ["espresso", "opening_closing", "service"],
-    weekly: [0, 1, 2, 3, 4, 5, 6],
+    weekly: [{ day: 0, start: "08:00", end: "18:00" }, { day: 1, start: "08:00", end: "18:00" }, { day: 2, start: "08:00", end: "18:00" }, { day: 3, start: "08:00", end: "18:00" }, { day: 4, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }, { day: 6, start: "08:00", end: "18:00" }],
   },
   {
     email: "yuki.tanaka@baristagigs.dev",
@@ -93,7 +93,7 @@ const BARISTAS = [
     signature: "Siphon-brewed Yirgacheffe",
     instagram: "yuki.slowbar",
     skills: ["pour_over", "cupping", "service"],
-    weekly: [1, 2, 3, 4],
+    weekly: [{ day: 1, start: "08:00", end: "18:00" }, { day: 2, start: "08:00", end: "18:00" }, { day: 3, start: "08:00", end: "18:00" }, { day: 4, start: "08:00", end: "18:00" }],
   },
   {
     email: "nina.kowalska@baristagigs.dev",
@@ -108,7 +108,7 @@ const BARISTAS = [
     signature: "Swan-on-swan latte",
     instagram: "nina.rosetta",
     skills: ["espresso", "latte_art", "barista_training"],
-    weekly: [4, 5, 6],
+    weekly: [{ day: 4, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }, { day: 6, start: "08:00", end: "18:00" }],
   },
   {
     email: "karim.haddad@baristagigs.dev",
@@ -120,7 +120,7 @@ const BARISTAS = [
     signature: "Turkish-spiced cold brew",
     instagram: "karim.roasts",
     skills: ["espresso", "roasting", "cupping", "opening_closing"],
-    weekly: [0, 1, 4, 5],
+    weekly: [{ day: 0, start: "08:00", end: "18:00" }, { day: 1, start: "08:00", end: "18:00" }, { day: 4, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }],
   },
   {
     email: "sofia.ricci@baristagigs.dev",
@@ -132,7 +132,7 @@ const BARISTAS = [
     signature: "Marocchino",
     instagram: "sofia.banco",
     skills: ["espresso", "service"],
-    weekly: [2, 3, 4, 5, 6],
+    weekly: [{ day: 2, start: "08:00", end: "18:00" }, { day: 3, start: "08:00", end: "18:00" }, { day: 4, start: "08:00", end: "18:00" }, { day: 5, start: "08:00", end: "18:00" }, { day: 6, start: "08:00", end: "18:00" }],
   },
 ];
 
