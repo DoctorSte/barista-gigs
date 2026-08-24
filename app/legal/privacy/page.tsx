@@ -85,6 +85,9 @@ export default function PrivacyPage() {
             <span key="stripe">
               <strong>Stripe</strong> — café subscription payments.
             </span>,
+            <span key="resend">
+              <strong>Resend</strong> — sends account and notification emails on our behalf.
+            </span>,
             <span key="osm">
               <strong>OpenStreetMap / Nominatim</strong> — we send café addresses (never personal
               names) to the Nominatim geocoding service to place cafés on a map, and map tiles are
