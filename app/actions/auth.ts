@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { appUrl } from "@/lib/stripe";
@@ -53,6 +54,7 @@ export async function signUp(
   if (error) return { ok: false, error: friendlyAuthError(error.message) };
   if (!data.session) return { ok: true, data: { needsConfirmation: true } };
 
+  revalidatePath("/", "layout");
   redirect("/onboarding");
 }
 
@@ -73,6 +75,10 @@ export async function logIn(
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { ok: false, error: friendlyAuthError(error.message) };
 
+  // Auth state changed — drop the whole cached layout tree so the header
+  // (nav, bell, avatar) re-renders as the logged-in user.
+  revalidatePath("/", "layout");
+
   const next = formData.get("next");
   if (typeof next === "string" && next.startsWith("/")) redirect(next);
 
@@ -88,6 +94,7 @@ export async function logIn(
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  revalidatePath("/", "layout");
   redirect("/");
 }
 
