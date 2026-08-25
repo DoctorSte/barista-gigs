@@ -4,7 +4,7 @@ import { Briefcase, CalendarClock, ClipboardList, Plus, Sparkles, Users } from "
 import { requireShop } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
-import { formatGigSchedule, formatPay } from "@/lib/format";
+import { formatDate, formatGigSchedule, formatPay } from "@/lib/format";
 import { Badge, GigStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,14 +41,17 @@ export default async function ShopDashboardPage() {
 
   // Referred shops may live in other cities, so the RLS-scoped client would
   // undercount them. The service role sees them all; without it, show none.
-  let referredCount = 0;
+  let referred: { id: string; name: string; created_at: string; referral_reward_granted: boolean }[] =
+    [];
   if (hasAdminClient()) {
-    const { count } = await createAdminClient()
+    const { data: referredData } = await createAdminClient()
       .from("coffee_shops")
-      .select("id", { count: "exact", head: true })
-      .eq("referred_by", shop.id);
-    referredCount = count ?? 0;
+      .select("id, name, created_at, referral_reward_granted")
+      .eq("referred_by", shop.id)
+      .order("created_at", { ascending: false });
+    referred = (referredData ?? []) as typeof referred;
   }
+  const freeMonths = referred.filter((r) => r.referral_reward_granted).length;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -152,10 +155,35 @@ export default async function ShopDashboardPage() {
         <div className="mt-4">
           <ReferralLink code={shop.referral_code} />
         </div>
-        {referredCount > 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            {referredCount} {referredCount === 1 ? "café" : "cafés"} joined with your link
-          </p>
+        {referred.length > 0 ? (
+          <div className="mt-4">
+            <p className="text-sm font-medium">
+              {referred.length} {referred.length === 1 ? "café" : "cafés"} joined with your link
+              {freeMonths > 0
+                ? ` · ${freeMonths} free ${freeMonths === 1 ? "month" : "months"} earned`
+                : ""}
+            </p>
+            <ul className="mt-2.5 flex flex-col gap-1.5">
+              {referred.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 px-3.5 py-2 text-sm"
+                >
+                  <span className="flex items-center gap-2">
+                    {r.name}
+                    <span className="text-[12px] text-muted-foreground">
+                      joined {formatDate(r.created_at)}
+                    </span>
+                  </span>
+                  {r.referral_reward_granted ? (
+                    <Badge tone="success">Free month earned</Badge>
+                  ) : (
+                    <Badge>Not subscribed yet</Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
       </Card>
     </div>
