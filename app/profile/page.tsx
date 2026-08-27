@@ -5,6 +5,7 @@ import { requireExtra } from "@/lib/auth";
 import { getCityById } from "@/lib/city";
 import { createClient } from "@/lib/supabase/server";
 import { AvatarUpload } from "@/components/avatar-upload";
+import { CvUpload } from "@/components/cv-upload";
 import { ExtraProfileForm } from "@/components/extra-profile-form";
 import { PaymentDetailsForm } from "@/components/payment-details-form";
 import { PortfolioManager } from "@/components/portfolio-manager";
@@ -72,6 +73,7 @@ export default async function ProfilePage() {
         ) : null}
         <ExtraProfileForm profile={profile} extra={extra} />
         <PaymentDetailsForm details={paymentData?.details ?? ""} />
+        <CvUpload userId={user.id} cvPath={extra.cv_path} cvFilename={extra.cv_filename} />
         <PortfolioManager
           userId={user.id}
           photos={photos.map((photo) => ({

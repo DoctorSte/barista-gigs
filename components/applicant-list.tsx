@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AtSign, Banknote, Check, Inbox, MessageSquare, RotateCcw, ThumbsUp, X } from "lucide-react";
+import { AtSign, Banknote, Check, FileText, Inbox, MessageSquare, RotateCcw, ThumbsUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { decideInterest } from "@/app/actions/gigs";
 import { toggleRecommendation } from "@/app/actions/recommendations";
@@ -25,6 +25,8 @@ export type ApplicantRow = Interest & {
     rates: RateCard[];
     signature_drink: string | null;
     instagram_handle: string | null;
+    cv_path: string | null;
+    cv_filename: string | null;
     skills: string[];
     profiles: { display_name: string; avatar_url: string | null } | null;
   } | null;
@@ -38,12 +40,14 @@ export function ApplicantList({
   recommendationsByExtra,
   workedByExtra,
   paymentByExtra,
+  cvByExtra,
 }: {
   applicants: ApplicantRow[];
   conversationByExtra: Record<string, string>;
   recommendationsByExtra: Record<string, RecommendationSummary>;
   workedByExtra: Record<string, number>;
   paymentByExtra: Record<string, string>;
+  cvByExtra: Record<string, { url: string; filename: string }>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -93,6 +97,7 @@ export function ApplicantList({
         const recs = extra ? recommendationsByExtra[extra.id] : undefined;
         const worked = extra ? (workedByExtra[extra.id] ?? 0) : 0;
         const payment = extra ? paymentByExtra[extra.id] : undefined;
+        const cv = extra ? cvByExtra[extra.id] : undefined;
         return (
           <li key={applicant.id} className="rounded-lg border border-border bg-surface p-5">
             <div className="flex items-start gap-3.5">
@@ -129,7 +134,7 @@ export function ApplicantList({
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
-                {extra && (extra.rates.length > 0 || extra.signature_drink || extra.instagram_handle) ? (
+                {extra && (extra.rates.length > 0 || extra.signature_drink || extra.instagram_handle || cv) ? (
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted-foreground">
                     {extra.rates.map((rate) => (
                       <span key={rate.label}>
@@ -146,6 +151,16 @@ export function ApplicantList({
                       >
                         <AtSign className="size-3.5" />
                         {extra.instagram_handle}
+                      </a>
+                    ) : null}
+                    {cv ? (
+                      <a
+                        href={cv.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 hover:text-foreground"
+                      >
+                        <FileText className="size-3.5" /> CV
                       </a>
                     ) : null}
                   </p>

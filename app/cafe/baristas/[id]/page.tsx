@@ -2,9 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, AtSign, Eye, Send, ThumbsUp } from "lucide-react";
+import { ArrowLeft, AtSign, Eye, FileText, Send, ThumbsUp } from "lucide-react";
 import { getExtraProfile, getShop, requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { formatMoney } from "@/lib/format";
 import { skillLabel, WEEKDAYS } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
@@ -86,6 +87,15 @@ export default async function BaristaProfilePage({
 
   const name = barista.profiles?.display_name ?? "Barista";
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
+
+  // CVs live in a private bucket; hand café viewers a short-lived signed URL.
+  let cvUrl: string | null = null;
+  if (barista.cv_path && hasAdminClient()) {
+    const { data: signed } = await createAdminClient()
+      .storage.from("cvs")
+      .createSignedUrl(barista.cv_path, 3600);
+    cvUrl = signed?.signedUrl ?? null;
+  }
   const availableDays = (barista.availability?.weekly ?? [])
     .filter((w) => w.day >= 0 && w.day < WEEKDAYS.length)
     .sort((a, b) => a.day - b.day)
@@ -166,6 +176,20 @@ export default async function BaristaProfilePage({
               </a>
             ) : null}
           </div>
+        ) : null}
+
+        {cvUrl ? (
+          <p className="mt-4">
+            <a
+              href={cvUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="pressable inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-muted-foreground hover:border-border-strong hover:text-foreground"
+            >
+              <FileText className="size-4 text-accent" />
+              View CV{barista.cv_filename ? ` (${barista.cv_filename})` : ""}
+            </a>
+          </p>
         ) : null}
 
         {recommendations.length > 0 ? (

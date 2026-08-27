@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Users } from "lucide-react";
 import { requireShop } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { GigForm } from "@/components/gig-form";
 import { GigStatusControl } from "@/components/gig-status-control";
 import { ApplicantList, type ApplicantRow } from "@/components/applicant-list";
@@ -31,7 +32,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
     supabase
       .from("interests")
       .select(
-        "*, extras_profiles(id, bio, years_experience, hourly_rate_cents, currency, rates, signature_drink, instagram_handle, skills, profiles:user_id(display_name, avatar_url))",
+        "*, extras_profiles(id, bio, years_experience, hourly_rate_cents, currency, rates, signature_drink, instagram_handle, cv_path, cv_filename, skills, profiles:user_id(display_name, avatar_url))",
       )
       .eq("announcement_id", gig.id)
       .order("created_at"),
@@ -92,6 +93,20 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
     if (row.details) paymentByExtra[row.extra_id] = row.details;
   }
 
+  // CVs are in a private bucket — sign short-lived URLs for applicants that have one.
+  const cvByExtra: Record<string, { url: string; filename: string }> = {};
+  if (hasAdminClient()) {
+    const admin = createAdminClient();
+    for (const applicant of applicants) {
+      const extra = applicant.extras_profiles;
+      if (!extra?.cv_path) continue;
+      const { data: signed } = await admin.storage.from("cvs").createSignedUrl(extra.cv_path, 3600);
+      if (signed?.signedUrl) {
+        cvByExtra[extra.id] = { url: signed.signedUrl, filename: extra.cv_filename ?? "CV" };
+      }
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Link
@@ -125,6 +140,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
           recommendationsByExtra={recommendationsByExtra}
           workedByExtra={workedByExtra}
           paymentByExtra={paymentByExtra}
+          cvByExtra={cvByExtra}
         />
       </section>
 

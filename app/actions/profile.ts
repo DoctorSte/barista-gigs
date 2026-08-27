@@ -33,6 +33,32 @@ function parseWindows(raw: FormDataEntryValue | null): unknown[] {
   }
 }
 
+export async function updateCv(
+  path: string | null,
+  filename: string | null,
+): Promise<ActionResult> {
+  const { user } = await getSession();
+  const extra = await getExtraProfile();
+  if (!user || !extra) return { ok: false, error: "Log in as a barista to edit your CV." };
+  if (path !== null && !path.startsWith(`${user.id}/`)) {
+    return { ok: false, error: "Invalid file." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("extras_profiles")
+    .update({
+      cv_path: path,
+      cv_filename: path ? (filename ?? "CV") : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", extra.id);
+  if (error) return { ok: false, error: "Could not save your CV. Try again." };
+
+  revalidatePath("/profile");
+  return { ok: true };
+}
+
 export async function updateExtraProfile(
   _prev: ActionResult | null,
   formData: FormData,
