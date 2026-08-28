@@ -37,4 +37,3 @@ export function machineTypeLabel(value: string) {
   return MACHINE_TYPE_LABELS.get(value) ?? "Other";
 }
 
-export const SUBSCRIPTION_PRICE_EUR = 29;

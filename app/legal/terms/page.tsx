@@ -71,7 +71,8 @@ export default function TermsPage() {
 
       <LegalSection heading="4. Subscriptions (cafés)">
         <p>
-          Posting gigs requires a paid subscription (currently €29/month), billed through Stripe.
+          Posting gigs requires a paid subscription (see current plans and prices on the billing
+          page), billed monthly or yearly through Stripe.
           You can cancel any time and keep access until the end of the paid period. Prices may
           change with reasonable advance notice; changes never apply retroactively to a period
           you&rsquo;ve already paid for. Except where the law requires otherwise, fees already

@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { grantReferralRewardIfEligible } from "@/lib/referrals";
+import { isPlanId, planForPriceId, type BillingInterval, type PlanId } from "@/lib/plans";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,29 @@ function periodEnd(subscription: Stripe.Subscription): string | null {
   return end ? new Date(end * 1000).toISOString() : null;
 }
 
+/**
+ * Resolve which plan + interval a Stripe subscription is on: prefer the price
+ * id on the subscription item, fall back to the checkout metadata. Returns
+ * only the columns we could resolve so an unresolvable subscription never
+ * overwrites the stored plan with defaults.
+ */
+function planColumns(
+  subscription: Stripe.Subscription,
+): { plan?: PlanId; billing_interval?: BillingInterval } {
+  const priceId = subscription.items.data[0]?.price?.id;
+  const resolved = priceId ? planForPriceId(priceId) : null;
+  if (resolved) return { plan: resolved.plan, billing_interval: resolved.interval };
+
+  const metaPlan = subscription.metadata.plan;
+  if (isPlanId(metaPlan)) {
+    const metaInterval = subscription.metadata.interval;
+    return metaInterval === "monthly" || metaInterval === "yearly"
+      ? { plan: metaPlan, billing_interval: metaInterval }
+      : { plan: metaPlan };
+  }
+  return {};
+}
+
 async function upsertFromSubscription(subscription: Stripe.Subscription) {
   const shopId = subscription.metadata.shop_id;
   const admin = createAdminClient();
@@ -39,6 +63,7 @@ async function upsertFromSubscription(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       status: mapStatus(subscription.status),
       current_period_end: periodEnd(subscription),
+      ...planColumns(subscription),
       updated_at: new Date().toISOString(),
     });
     if (mapStatus(subscription.status) === "active") {
@@ -56,6 +81,7 @@ async function upsertFromSubscription(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       status: mapStatus(subscription.status),
       current_period_end: periodEnd(subscription),
+      ...planColumns(subscription),
       updated_at: new Date().toISOString(),
     })
     .eq("stripe_customer_id", customerId);

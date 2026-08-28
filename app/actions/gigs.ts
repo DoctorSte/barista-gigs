@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireShop } from "@/lib/auth";
 import { notify, notifyMany } from "@/lib/notifications";
 import { firstZodError, gigSchema, type ActionResult } from "@/lib/validation";
+import { PLANS, isPlanId } from "@/lib/plans";
 import type { AnnouncementStatus } from "@/lib/database.types";
 
 function parseGigForm(formData: FormData) {
@@ -102,6 +103,33 @@ export async function createGig(
 
   const { startsAt, endsAt, title } = listingSpanAndTitle(parsed.data);
   const supabase = await createClient();
+
+  // Plan limit: the Occasional plan caps listings per rolling year. Posting
+  // already requires an active subscription via RLS, so no status check here;
+  // a missing row is treated as the default "regular" plan.
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan, status")
+    .eq("shop_id", shop.id)
+    .maybeSingle();
+  const planId = subscription?.plan;
+  const plan = PLANS[isPlanId(planId) ? planId : "regular"];
+  if (plan.gigsPerYear !== null) {
+    const yearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from("announcements")
+      .select("id", { count: "exact", head: true })
+      .eq("shop_id", shop.id)
+      .gte("created_at", yearAgo);
+    if ((count ?? 0) >= plan.gigsPerYear) {
+      return {
+        ok: false,
+        error:
+          "You've used all 6 listings on the Occasional plan this year — upgrade to Regular for unlimited gigs.",
+      };
+    }
+  }
+
   const { data, error } = await supabase
     .from("announcements")
     .insert({

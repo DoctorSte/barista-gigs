@@ -143,6 +143,8 @@ export type Subscription = {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   status: string;
+  plan: "occasional" | "regular" | "group";
+  billing_interval: "monthly" | "yearly" | null;
   current_period_end: string | null;
   updated_at: string;
 };

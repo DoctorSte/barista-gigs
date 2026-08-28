@@ -7,6 +7,7 @@ import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { appUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
 import { grantReferralRewardIfEligible } from "@/lib/referrals";
 import { createClient } from "@/lib/supabase/server";
+import { isPlanId, stripePriceId, type BillingInterval, type PlanId } from "@/lib/plans";
 import type { ActionResult } from "@/lib/validation";
 import type { Subscription } from "@/lib/database.types";
 
@@ -22,10 +23,20 @@ export async function getOwnSubscription(): Promise<Subscription | null> {
 }
 
 /**
- * Starts a Stripe Checkout session, or — when Stripe isn't configured —
- * activates a 30-day dev subscription directly via the service role.
+ * Starts a Stripe Checkout session for the chosen plan + interval, or — when
+ * Stripe isn't configured — activates a dev subscription directly via the
+ * service role.
  */
-export async function startSubscription(): Promise<ActionResult> {
+export async function startSubscription(
+  plan: PlanId,
+  interval: BillingInterval,
+): Promise<ActionResult> {
+  if (!isPlanId(plan)) {
+    return { ok: false, error: "Pick a valid plan." };
+  }
+  if (interval !== "monthly" && interval !== "yearly") {
+    return { ok: false, error: "Pick monthly or yearly billing." };
+  }
   const { user, shop } = await requireShop();
 
   if (!isStripeConfigured()) {
@@ -33,14 +44,17 @@ export async function startSubscription(): Promise<ActionResult> {
       return {
         ok: false,
         error:
-          "Billing isn't configured. Set STRIPE_SECRET_KEY + STRIPE_PRICE_ID (or SUPABASE_SERVICE_ROLE_KEY for dev mode).",
+          "Billing isn't configured. Set STRIPE_SECRET_KEY + the STRIPE_PRICE_* price ids (or SUPABASE_SERVICE_ROLE_KEY for dev mode).",
       };
     }
     const admin = createAdminClient();
-    const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const days = interval === "monthly" ? 30 : 365;
+    const periodEnd = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await admin.from("subscriptions").upsert({
       shop_id: shop.id,
       status: "active",
+      plan,
+      billing_interval: interval,
       current_period_end: periodEnd,
       updated_at: new Date().toISOString(),
     });
@@ -49,6 +63,11 @@ export async function startSubscription(): Promise<ActionResult> {
     revalidatePath("/settings/billing");
     revalidatePath("/cafe/dashboard");
     return { ok: true };
+  }
+
+  const priceId = stripePriceId(plan, interval);
+  if (!priceId) {
+    return { ok: false, error: "That plan isn't configured yet." };
   }
 
   const stripe = getStripe();
@@ -79,11 +98,11 @@ export async function startSubscription(): Promise<ActionResult> {
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
-    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     success_url: appUrl("/settings/billing?checkout=success"),
     cancel_url: appUrl("/settings/billing?checkout=cancelled"),
-    metadata: { shop_id: shop.id },
-    subscription_data: { metadata: { shop_id: shop.id } },
+    metadata: { shop_id: shop.id, plan, interval },
+    subscription_data: { metadata: { shop_id: shop.id, plan, interval } },
   });
 
   if (!session.url) return { ok: false, error: "Stripe did not return a checkout URL." };

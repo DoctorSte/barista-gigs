@@ -1,12 +1,13 @@
 // Referral rewards: when a referred café activates its subscription for the
 // first time, the referring café earns one free month. With Stripe configured
-// the reward is a €29 credit on the referrer's next invoice; in dev mode the
-// referrer's subscription period is extended by 30 days instead.
+// the reward is a credit worth one month of the referrer's own plan on their
+// next invoice; in dev mode the referrer's subscription period is extended by
+// 30 days instead.
 
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { notify } from "@/lib/notifications";
-import { SUBSCRIPTION_PRICE_EUR } from "@/lib/constants";
+import { PLANS, isPlanId } from "@/lib/plans";
 
 export async function grantReferralRewardIfEligible(subscribedShopId: string): Promise<void> {
   if (!hasAdminClient()) return;
@@ -43,9 +44,11 @@ export async function grantReferralRewardIfEligible(subscribedShopId: string): P
       .maybeSingle();
 
     if (isStripeConfigured() && referrerSub?.stripe_customer_id) {
-      // Negative balance = credit automatically applied to the next invoice.
+      // One free month of the referrer's own plan, as a negative balance =
+      // credit automatically applied to the next invoice.
+      const referrerPlan = PLANS[isPlanId(referrerSub.plan) ? referrerSub.plan : "regular"];
       await getStripe().customers.createBalanceTransaction(referrerSub.stripe_customer_id, {
-        amount: -SUBSCRIPTION_PRICE_EUR * 100,
+        amount: -referrerPlan.monthlyCents,
         currency: "eur",
         description: `Referral reward — ${shop.name} subscribed`,
       });

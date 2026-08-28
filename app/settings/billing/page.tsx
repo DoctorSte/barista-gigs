@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { BadgeCheck, CreditCard } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 import { requireShop } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isStripeConfigured } from "@/lib/stripe";
-import { formatDate } from "@/lib/format";
-import { SUBSCRIPTION_PRICE_EUR } from "@/lib/constants";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { BillingActions } from "@/components/billing-actions";
+import { isPlanId } from "@/lib/plans";
+import { PlanPicker } from "@/components/billing-actions";
 import type { Subscription } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Billing" };
@@ -29,11 +26,11 @@ export default async function BillingPage({
   const stripeConfigured = isStripeConfigured();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <div className="mb-8">
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <div className="mb-8 text-center">
         <h1 className="font-display text-3xl font-semibold tracking-tight">Billing</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
-          One plan, everything included.
+          Pick the plan that fits your café — switch or cancel any time.
         </p>
       </div>
 
@@ -50,55 +47,29 @@ export default async function BillingPage({
         </div>
       ) : null}
 
-      <Card className="p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="flex items-center gap-2 font-display text-xl font-semibold">
-              <CreditCard className="size-5 text-accent" />
-              Café subscription
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Unlimited gig posts · applicant messaging · shop profile
-            </p>
-          </div>
-          {active ? (
-            <Badge tone="success">Active</Badge>
-          ) : subscription?.status === "past_due" ? (
-            <Badge tone="warning">Past due</Badge>
-          ) : (
-            <Badge>Inactive</Badge>
-          )}
-        </div>
+      <PlanPicker
+        currentPlan={subscription && isPlanId(subscription.plan) ? subscription.plan : null}
+        currentInterval={subscription?.billing_interval ?? null}
+        currentPeriodEnd={subscription?.current_period_end ?? null}
+        active={active}
+        stripeConfigured={stripeConfigured}
+        hasStripeCustomer={Boolean(subscription?.stripe_customer_id)}
+      />
 
-        <p className="mt-6 font-display text-4xl font-semibold">
-          €{SUBSCRIPTION_PRICE_EUR}
-          <span className="text-base font-normal text-muted-foreground">/month</span>
+      <p className="mt-6 text-center text-[13px] text-muted-foreground">
+        Multi-location management is rolling out — the Group plan reserves your locations.
+      </p>
+
+      {!stripeConfigured ? (
+        <p className="mt-6 rounded-md bg-muted/70 px-3.5 py-2.5 text-[13px] leading-relaxed text-muted-foreground">
+          Stripe isn&apos;t configured in this environment, so choosing a plan activates a dev
+          subscription instead of charging a card. Set{" "}
+          <code className="font-mono">STRIPE_SECRET_KEY</code>,{" "}
+          <code className="font-mono">STRIPE_WEBHOOK_SECRET</code> and the{" "}
+          <code className="font-mono">STRIPE_PRICE_&lt;PLAN&gt;_&lt;INTERVAL&gt;</code> price ids to
+          enable real billing.
         </p>
-
-        {active && subscription?.current_period_end ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Renews {formatDate(subscription.current_period_end)}
-          </p>
-        ) : null}
-
-        <div className="mt-6">
-          <BillingActions
-            active={active}
-            stripeConfigured={stripeConfigured}
-            hasStripeCustomer={Boolean(subscription?.stripe_customer_id)}
-          />
-        </div>
-
-        {!stripeConfigured ? (
-          <p className="mt-4 rounded-md bg-muted/70 px-3.5 py-2.5 text-[13px] leading-relaxed text-muted-foreground">
-            Stripe isn&apos;t configured in this environment, so subscribing activates a 30-day dev
-            subscription instead of charging a card. Set{" "}
-            <code className="font-mono">STRIPE_SECRET_KEY</code>,{" "}
-            <code className="font-mono">STRIPE_PRICE_ID</code> and{" "}
-            <code className="font-mono">STRIPE_WEBHOOK_SECRET</code> to enable real billing.
-          </p>
-        ) : null}
-      </Card>
+      ) : null}
     </div>
   );
 }

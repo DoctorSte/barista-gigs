@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight, CalendarClock, Coffee, MessageSquare, Sparkles } from "lucide-react";
 import { getSession, homeForRole } from "@/lib/auth";
 import { getFeaturedCities } from "@/lib/city";
-import { SUBSCRIPTION_PRICE_EUR } from "@/lib/constants";
+import { PLANS } from "@/lib/plans";
 
 export default async function LandingPage() {
   const { profile } = await getSession();
@@ -105,20 +105,41 @@ export default async function LandingPage() {
 
       {/* Pricing */}
       <section className="border-t border-border py-16">
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 rounded-lg border border-border bg-surface p-10 text-center">
-          <h2 className="font-display text-3xl font-semibold tracking-tight">
-            Simple pricing for cafés
-          </h2>
-          <p className="text-muted-foreground">
-            Free for baristas, always. Cafés subscribe to post unlimited gigs.
-          </p>
-          <p className="font-display text-5xl font-semibold">
-            €{SUBSCRIPTION_PRICE_EUR}
-            <span className="text-lg font-normal text-muted-foreground">/month</span>
-          </p>
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
+          <div className="flex flex-col gap-3">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">
+              Simple pricing for cafés
+            </h2>
+            <p className="text-muted-foreground">
+              Free for baristas, always. Cafés pick the plan that fits their bar.
+            </p>
+          </div>
+          <div className="grid w-full gap-4 sm:grid-cols-3">
+            {[
+              { plan: PLANS.occasional, features: "6 gigs a year" },
+              { plan: PLANS.regular, features: "Unlimited gigs" },
+              { plan: PLANS.group, features: "Unlimited gigs · up to 3 locations" },
+            ].map(({ plan, features }) => (
+              <div
+                key={plan.id}
+                className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-6"
+              >
+                <h3 className="font-display text-lg font-semibold">{plan.name}</h3>
+                <p className="font-display text-3xl font-semibold">
+                  <span className="text-base font-normal text-muted-foreground">from </span>
+                  €{plan.monthlyCents / 100}
+                  <span className="text-base font-normal text-muted-foreground">/month</span>
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  or €{plan.yearlyCents / 100}/year
+                </p>
+                <p className="mt-2 text-[15px] text-muted-foreground">{features}</p>
+              </div>
+            ))}
+          </div>
           <Link
             href="/signup?role=shop"
-            className="pressable mt-2 inline-flex h-11 items-center rounded-md bg-accent px-6 text-[15px] font-medium text-accent-foreground hover:bg-accent/90"
+            className="pressable inline-flex h-11 items-center rounded-md bg-accent px-6 text-[15px] font-medium text-accent-foreground hover:bg-accent/90"
           >
             Start hiring
           </Link>
