@@ -110,8 +110,8 @@ export async function createGig(
   const [subscription, ownerShops] = await Promise.all([getOwnerSubscription(), getOwnerShops()]);
   const planId = subscription?.plan;
   const plan = PLANS[isPlanId(planId) ? planId : "regular"];
-  if (plan.gigsPerYear !== null) {
-    const yearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+  if (plan.gigsPerMonth !== null) {
+    const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { count } = await supabase
       .from("announcements")
       .select("id", { count: "exact", head: true })
@@ -119,12 +119,11 @@ export async function createGig(
         "shop_id",
         ownerShops.map((s) => s.id),
       )
-      .gte("created_at", yearAgo);
-    if ((count ?? 0) >= plan.gigsPerYear) {
+      .gte("created_at", monthAgo);
+    if ((count ?? 0) >= plan.gigsPerMonth) {
       return {
         ok: false,
-        error:
-          "You've used all 6 listings on the Occasional plan this year — upgrade to Regular for unlimited gigs.",
+        error: `You've used all ${plan.gigsPerMonth} listings on the ${plan.name} plan this month — upgrade to Regular for unlimited gigs.`,
       };
     }
   }

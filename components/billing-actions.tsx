@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 function features(plan: Plan): string[] {
   return [
-    plan.gigsPerYear === null ? "Unlimited gigs" : `${plan.gigsPerYear} gigs a year`,
+    plan.gigsPerMonth === null ? "Unlimited gigs" : `${plan.gigsPerMonth} gigs a month`,
     plan.locations === 1 ? "1 location" : `Up to ${plan.locations} locations`,
     plan.teamAccounts === 1 ? "1 team account" : `${plan.teamAccounts} team accounts`,
     "Barista directory",

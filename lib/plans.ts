@@ -6,8 +6,8 @@ export type Plan = {
   name: string;
   monthlyCents: number;
   yearlyCents: number;
-  /** null = unlimited */
-  gigsPerYear: number | null;
+  /** null = unlimited **/
+  gigsPerMonth: number | null;
   locations: number;
   teamAccounts: number;
   blurb: string;
@@ -19,7 +19,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Occasional",
     monthlyCents: 15_00,
     yearlyCents: 149_00,
-    gigsPerYear: 6,
+    gigsPerMonth: 3,
     locations: 1,
     teamAccounts: 1,
     blurb: "For cafés that need a hand a few times a year.",
@@ -29,7 +29,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Regular",
     monthlyCents: 25_00,
     yearlyCents: 249_00,
-    gigsPerYear: null,
+    gigsPerMonth: null,
     locations: 1,
     teamAccounts: 3,
     blurb: "Unlimited gigs for one busy café.",
@@ -39,7 +39,7 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Group",
     monthlyCents: 49_00,
     yearlyCents: 499_00,
-    gigsPerYear: null,
+    gigsPerMonth: null,
     locations: 3,
     teamAccounts: 10,
     blurb: "For small groups running up to three locations.",

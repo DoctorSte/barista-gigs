@@ -116,7 +116,7 @@ export default async function LandingPage() {
           </div>
           <div className="grid w-full gap-4 sm:grid-cols-3">
             {[
-              { plan: PLANS.occasional, features: "6 gigs a year" },
+              { plan: PLANS.occasional, features: "3 gigs a month" },
               { plan: PLANS.regular, features: "Unlimited gigs" },
               { plan: PLANS.group, features: "Unlimited gigs · up to 3 locations" },
             ].map(({ plan, features }) => (
