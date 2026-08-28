@@ -7,7 +7,7 @@ import { getExtraProfile, getShop, requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { formatMoney } from "@/lib/format";
-import { skillLabel, WEEKDAYS } from "@/lib/constants";
+import { languageLabel, skillLabel, WEEKDAYS } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -127,6 +127,9 @@ export default async function BaristaProfilePage({
                 {[
                   barista.years_experience != null
                     ? `${barista.years_experience} yrs experience`
+                    : null,
+                  barista.languages.length > 0
+                    ? `speaks ${barista.languages.map(languageLabel).join(", ")}`
                     : null,
                   availableDays.length > 0
                     ? `usually available ${availableDays.join(", ")}`

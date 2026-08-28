@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { BadgeCheck } from "lucide-react";
-import { requireShop } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getOwnerSubscription, requireShop } from "@/lib/auth";
 import { isStripeConfigured } from "@/lib/stripe";
 import { isPlanId } from "@/lib/plans";
 import { PlanPicker } from "@/components/billing-actions";
-import type { Subscription } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -14,14 +12,9 @@ export default async function BillingPage({
 }: {
   searchParams: Promise<{ checkout?: string }>;
 }) {
-  const [{ shop }, params] = await Promise.all([requireShop(), searchParams]);
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("shop_id", shop.id)
-    .maybeSingle();
-  const subscription = data as Subscription | null;
+  const [, params] = await Promise.all([requireShop(), searchParams]);
+  // Owner-level: one subscription covers every location.
+  const subscription = await getOwnerSubscription();
   const active = subscription?.status === "active";
   const stripeConfigured = isStripeConfigured();
 

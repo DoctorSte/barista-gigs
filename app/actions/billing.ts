@@ -2,24 +2,17 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireShop } from "@/lib/auth";
+import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { appUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
 import { grantReferralRewardIfEligible } from "@/lib/referrals";
-import { createClient } from "@/lib/supabase/server";
 import { isPlanId, stripePriceId, type BillingInterval, type PlanId } from "@/lib/plans";
 import type { ActionResult } from "@/lib/validation";
 import type { Subscription } from "@/lib/database.types";
 
 export async function getOwnSubscription(): Promise<Subscription | null> {
-  const { shop } = await requireShop();
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("shop_id", shop.id)
-    .maybeSingle();
-  return (data as Subscription | null) ?? null;
+  await requireShop();
+  return getOwnerSubscription();
 }
 
 /**
@@ -38,6 +31,8 @@ export async function startSubscription(
     return { ok: false, error: "Pick monthly or yearly billing." };
   }
   const { user, shop } = await requireShop();
+  // Subscriptions are owner-level; the row always attaches to the primary location.
+  const primary = (await getOwnerShops())[0] ?? shop;
 
   if (!isStripeConfigured()) {
     if (!hasAdminClient()) {
@@ -51,7 +46,7 @@ export async function startSubscription(
     const days = interval === "monthly" ? 30 : 365;
     const periodEnd = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await admin.from("subscriptions").upsert({
-      shop_id: shop.id,
+      shop_id: primary.id,
       status: "active",
       plan,
       billing_interval: interval,
@@ -59,7 +54,7 @@ export async function startSubscription(
       updated_at: new Date().toISOString(),
     });
     if (error) return { ok: false, error: "Could not activate the dev subscription." };
-    await grantReferralRewardIfEligible(shop.id);
+    await grantReferralRewardIfEligible(primary.id);
     revalidatePath("/settings/billing");
     revalidatePath("/cafe/dashboard");
     return { ok: true };
@@ -76,19 +71,19 @@ export async function startSubscription(
   const { data: existing } = await admin
     .from("subscriptions")
     .select("stripe_customer_id")
-    .eq("shop_id", shop.id)
+    .eq("shop_id", primary.id)
     .maybeSingle();
 
   let customerId = existing?.stripe_customer_id ?? null;
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email ?? undefined,
-      name: shop.name,
-      metadata: { shop_id: shop.id },
+      name: primary.name,
+      metadata: { shop_id: primary.id },
     });
     customerId = customer.id;
     await admin.from("subscriptions").upsert({
-      shop_id: shop.id,
+      shop_id: primary.id,
       stripe_customer_id: customerId,
       status: existing ? undefined : "inactive",
       updated_at: new Date().toISOString(),
@@ -101,8 +96,8 @@ export async function startSubscription(
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: appUrl("/settings/billing?checkout=success"),
     cancel_url: appUrl("/settings/billing?checkout=cancelled"),
-    metadata: { shop_id: shop.id, plan, interval },
-    subscription_data: { metadata: { shop_id: shop.id, plan, interval } },
+    metadata: { shop_id: primary.id, plan, interval },
+    subscription_data: { metadata: { shop_id: primary.id, plan, interval } },
   });
 
   if (!session.url) return { ok: false, error: "Stripe did not return a checkout URL." };

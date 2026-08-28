@@ -5,7 +5,7 @@ import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateExtraProfile } from "@/app/actions/profile";
 import type { AvailabilityWindow, ExtraProfile, Profile } from "@/lib/database.types";
-import { SKILLS } from "@/lib/constants";
+import { LANGUAGES, SKILLS } from "@/lib/constants";
 import { WeekHoursEditor } from "@/components/week-hours-editor";
 import { ChipGroup } from "@/components/ui/chip-toggle";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +20,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
     (extra.rates ?? []).map((rate) => ({ label: rate.label, amount: String(rate.cents / 100) })),
   );
   const [weekly, setWeekly] = useState<AvailabilityWindow[]>(extra.availability?.weekly ?? []);
+  const [languages, setLanguages] = useState<string[]>(extra.languages ?? []);
   const [isAvailable, setIsAvailable] = useState(extra.is_available);
   const [state, action] = useActionState(updateExtraProfile, null);
   const error = state && !state.ok ? state : null;
@@ -181,6 +182,21 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
                 )
               }
               name="skills"
+            />
+          )}
+        </Field>
+
+        <Field label="Languages" hint="Which languages can you serve customers in?">
+          {() => (
+            <ChipGroup
+              options={[...LANGUAGES]}
+              selected={languages}
+              onToggle={(value) =>
+                setLanguages((prev) =>
+                  prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+                )
+              }
+              name="languages"
             />
           )}
         </Field>

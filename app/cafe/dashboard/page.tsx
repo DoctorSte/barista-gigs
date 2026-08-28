@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Briefcase, CalendarClock, ClipboardList, Plus, Sparkles, Users } from "lucide-react";
-import { requireShop } from "@/lib/auth";
+import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
+import { PLANS, isPlanId } from "@/lib/plans";
+import { LocationSwitcher } from "@/components/location-switcher";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { formatDate, formatGigSchedule, formatPay } from "@/lib/format";
@@ -23,18 +25,21 @@ export default async function ShopDashboardPage() {
   const { shop } = await requireShop();
   const supabase = await createClient();
 
-  const [{ data: gigData }, { data: subscriptionData }] = await Promise.all([
+  const [{ data: gigData }, subscription, shops] = await Promise.all([
     supabase
       .from("announcements")
       .select("*, interests(count)")
       .eq("shop_id", shop.id)
       .order("starts_at", { ascending: false }),
-    supabase.from("subscriptions").select("*").eq("shop_id", shop.id).maybeSingle(),
+    getOwnerSubscription(),
+    getOwnerShops(),
   ]);
 
   const gigs = (gigData ?? []) as unknown as GigRow[];
-  const subscription = subscriptionData as Subscription | null;
   const subscribed = isActive(subscription);
+  const plan = PLANS[isPlanId(subscription?.plan) ? subscription!.plan : "regular"];
+  const canAddLocation = subscribed && shops.length < plan.locations;
+  const showSwitcher = shops.length > 1 || canAddLocation || (subscribed && plan.locations === 1);
 
   const openCount = gigs.filter((g) => g.status === "open").length;
   const pendingApplicants = gigs.reduce((sum, gig) => sum + (gig.interests[0]?.count ?? 0), 0);
@@ -55,6 +60,14 @@ export default async function ShopDashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      {showSwitcher ? (
+        <LocationSwitcher
+          locations={shops.map((s) => ({ id: s.id, name: s.name }))}
+          activeId={shop.id}
+          canAdd={canAddLocation}
+          upgradeHint={subscribed && !canAddLocation && plan.id !== "group"}
+        />
+      ) : null}
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">{shop.name}</h1>

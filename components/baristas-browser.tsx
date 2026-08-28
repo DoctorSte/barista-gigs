@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CalendarCheck, ThumbsUp, Users } from "lucide-react";
 import { formatMoney } from "@/lib/format";
-import { SKILLS, skillLabel } from "@/lib/constants";
+import { languageLabel, SKILLS, skillLabel } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChipGroup } from "@/components/ui/chip-toggle";
@@ -21,6 +21,7 @@ export type DirectoryBarista = {
   yearsExperience: number | null;
   signatureDrink: string | null;
   skills: string[];
+  languages: string[];
   recommendations: number;
   shifts: number;
 };
@@ -128,6 +129,9 @@ export function BaristasBrowser({ baristas }: { baristas: DirectoryBarista[] }) 
                       {[
                         barista.yearsExperience != null
                           ? `${barista.yearsExperience} yrs experience`
+                          : null,
+                        barista.languages.length > 0
+                          ? barista.languages.map(languageLabel).join(", ")
                           : null,
                         barista.signatureDrink ? `Signature: ${barista.signatureDrink}` : null,
                       ]

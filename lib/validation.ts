@@ -87,6 +87,7 @@ export const extraProfileSchema = z.object({
     .optional()
     .default(""),
   skills: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  languages: z.array(z.string().trim().min(1).max(30)).max(8).default([]),
   isAvailable: z.boolean().default(true),
   availability: z
     .object({

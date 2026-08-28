@@ -1,7 +1,10 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { CoffeeShop, ExtraProfile, Profile } from "@/lib/database.types";
+import type { CoffeeShop, ExtraProfile, Profile, Subscription } from "@/lib/database.types";
+
+export const ACTIVE_SHOP_COOKIE = "active_shop";
 
 export const getSession = cache(async () => {
   const supabase = await createClient();
@@ -31,16 +34,44 @@ export async function requireProfile() {
   return { user, profile };
 }
 
-export const getShop = cache(async (): Promise<CoffeeShop | null> => {
+/** All of the owner's locations, oldest (primary) first. */
+export const getOwnerShops = cache(async (): Promise<CoffeeShop[]> => {
   const { user } = await getSession();
-  if (!user) return null;
+  if (!user) return [];
   const supabase = await createClient();
   const { data } = await supabase
     .from("coffee_shops")
     .select("*")
     .eq("owner_id", user.id)
-    .maybeSingle();
-  return (data as CoffeeShop | null) ?? null;
+    .order("created_at");
+  return (data as CoffeeShop[] | null) ?? [];
+});
+
+/** The active location: the one picked via cookie, else the primary. */
+export const getShop = cache(async (): Promise<CoffeeShop | null> => {
+  const shops = await getOwnerShops();
+  if (shops.length === 0) return null;
+  const activeId = (await cookies()).get(ACTIVE_SHOP_COOKIE)?.value;
+  return shops.find((shop) => shop.id === activeId) ?? shops[0];
+});
+
+/**
+ * One subscription covers all locations; the row is keyed to whichever shop
+ * subscribed (normally the primary). Prefers an active row.
+ */
+export const getOwnerSubscription = cache(async (): Promise<Subscription | null> => {
+  const shops = await getOwnerShops();
+  if (shops.length === 0) return null;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .in(
+      "shop_id",
+      shops.map((shop) => shop.id),
+    );
+  const rows = (data as Subscription[] | null) ?? [];
+  return rows.find((row) => row.status === "active") ?? rows[0] ?? null;
 });
 
 export const getExtraProfile = cache(async (): Promise<ExtraProfile | null> => {

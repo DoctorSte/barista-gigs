@@ -37,11 +37,20 @@ export async function grantReferralRewardIfEligible(subscribedShopId: string): P
       .maybeSingle();
     if (!referrer) return;
 
-    const { data: referrerSub } = await admin
+    // Owner-level lookup: the subscription may live on any of the referrer's locations.
+    const { data: referrerShops } = await admin
+      .from("coffee_shops")
+      .select("id")
+      .eq("owner_id", referrer.owner_id);
+    const { data: referrerSubs } = await admin
       .from("subscriptions")
       .select("*")
-      .eq("shop_id", referrer.id)
-      .maybeSingle();
+      .in(
+        "shop_id",
+        (referrerShops ?? []).map((s) => s.id),
+      );
+    const referrerSub =
+      (referrerSubs ?? []).find((s) => s.status === "active") ?? (referrerSubs ?? [])[0] ?? null;
 
     if (isStripeConfigured() && referrerSub?.stripe_customer_id) {
       // One free month of the referrer's own plan, as a negative balance =

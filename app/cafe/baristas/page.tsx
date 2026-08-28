@@ -15,6 +15,7 @@ type BaristaRow = {
   currency: string;
   rates: RateCard[];
   signature_drink: string | null;
+  languages: string[];
   skills: string[];
   profiles: { display_name: string; avatar_url: string | null } | null;
 };
@@ -26,7 +27,7 @@ export default async function BaristasPage() {
   const { data } = await supabase
     .from("extras_profiles")
     .select(
-      "id, user_id, years_experience, hourly_rate_cents, currency, rates, signature_drink, skills, profiles:user_id(display_name, avatar_url)",
+      "id, user_id, years_experience, hourly_rate_cents, currency, rates, signature_drink, skills, languages, profiles:user_id(display_name, avatar_url)",
     )
     .eq("city_id", shop.city_id)
     .eq("is_available", true)
@@ -72,6 +73,7 @@ export default async function BaristasPage() {
     currency: row.currency,
     yearsExperience: row.years_experience,
     signatureDrink: row.signature_drink,
+    languages: row.languages,
     skills: row.skills,
     recommendations: recommendationCounts.get(row.id) ?? 0,
     shifts: shiftCounts.get(row.id) ?? 0,

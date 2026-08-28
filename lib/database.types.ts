@@ -88,6 +88,7 @@ export type ExtraProfile = {
   instagram_handle: string | null;
   cv_path: string | null;
   cv_filename: string | null;
+  languages: string[];
   availability: Availability;
   skills: string[];
   is_available: boolean;

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireShop } from "@/lib/auth";
+import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
 import { notify, notifyMany } from "@/lib/notifications";
 import { firstZodError, gigSchema, type ActionResult } from "@/lib/validation";
 import { PLANS, isPlanId } from "@/lib/plans";
@@ -105,13 +105,9 @@ export async function createGig(
   const supabase = await createClient();
 
   // Plan limit: the Occasional plan caps listings per rolling year. Posting
-  // already requires an active subscription via RLS, so no status check here;
-  // a missing row is treated as the default "regular" plan.
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan, status")
-    .eq("shop_id", shop.id)
-    .maybeSingle();
+  // already requires an active subscription via RLS, so no status check here.
+  // Subscription and cap are owner-level, counted across all locations.
+  const [subscription, ownerShops] = await Promise.all([getOwnerSubscription(), getOwnerShops()]);
   const planId = subscription?.plan;
   const plan = PLANS[isPlanId(planId) ? planId : "regular"];
   if (plan.gigsPerYear !== null) {
@@ -119,7 +115,10 @@ export async function createGig(
     const { count } = await supabase
       .from("announcements")
       .select("id", { count: "exact", head: true })
-      .eq("shop_id", shop.id)
+      .in(
+        "shop_id",
+        ownerShops.map((s) => s.id),
+      )
       .gte("created_at", yearAgo);
     if ((count ?? 0) >= plan.gigsPerYear) {
       return {

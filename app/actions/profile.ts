@@ -87,6 +87,7 @@ export async function updateExtraProfile(
     signatureDrink: formData.get("signatureDrink") ?? "",
     instagramHandle: formData.get("instagramHandle") ?? "",
     skills: formData.getAll("skills"),
+    languages: formData.getAll("languages"),
     isAvailable: formData.get("isAvailable") === "true",
     availability: {
       weekly: parseWindows(formData.get("availabilityWindows")),
@@ -116,6 +117,7 @@ export async function updateExtraProfile(
       signature_drink: parsed.data.signatureDrink || null,
       instagram_handle: parsed.data.instagramHandle || null,
       skills: parsed.data.skills,
+      languages: parsed.data.languages,
       is_available: parsed.data.isAvailable,
       availability: parsed.data.availability,
       updated_at: new Date().toISOString(),
