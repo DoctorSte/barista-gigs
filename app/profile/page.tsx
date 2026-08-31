@@ -6,6 +6,7 @@ import { getCityById } from "@/lib/city";
 import { createClient } from "@/lib/supabase/server";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { CvUpload } from "@/components/cv-upload";
+import { PassportLink } from "@/components/passport-link";
 import { ExtraProfileForm } from "@/components/extra-profile-form";
 import { PaymentDetailsForm } from "@/components/payment-details-form";
 import { PortfolioManager } from "@/components/portfolio-manager";
@@ -59,6 +60,7 @@ export default async function ProfilePage() {
 
       <div className="flex flex-col gap-10">
         <AvatarUpload userId={user.id} name={profile.display_name} avatarUrl={profile.avatar_url} />
+        {profile.username ? <PassportLink username={profile.username} /> : null}
         {recommendations.length > 0 ? (
           <div className="rounded-lg border border-success/25 bg-success-soft px-5 py-4">
             <p className="flex items-center gap-2 text-sm font-medium text-success">

@@ -39,6 +39,7 @@ export type Profile = {
   id: string;
   role: Role;
   display_name: string;
+  username: string | null;
   city_id: string;
   avatar_url: string | null;
   created_at: string;

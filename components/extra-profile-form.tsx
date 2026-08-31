@@ -53,9 +53,26 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
           </div>
         </div>
 
-        <Field label="Display name" error={error?.field === "displayName" ? error.error : undefined}>
-          {(id) => <Input id={id} name="displayName" defaultValue={profile.display_name} required />}
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Display name" error={error?.field === "displayName" ? error.error : undefined}>
+            {(id) => <Input id={id} name="displayName" defaultValue={profile.display_name} required />}
+          </Field>
+          <Field
+            label="Username"
+            hint="Unlocks your shareable Barista Passport."
+            error={error?.field === "username" ? error.error : undefined}
+          >
+            {(id) => (
+              <Input
+                id={id}
+                name="username"
+                defaultValue={profile.username ?? ""}
+                placeholder="e.g. lea.pours"
+                maxLength={30}
+              />
+            )}
+          </Field>
+        </div>
 
         <Field label="Bio">
           {(id) => <Textarea id={id} name="bio" defaultValue={extra.bio ?? ""} maxLength={600} />}

@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
     // notifications) keep working.
     return [{ source: "/shop/:path*", destination: "/cafe/:path*", permanent: false }];
   },
+  async rewrites() {
+    // Pretty shareable passport URLs: baristagigs.com/@lea/passport
+    return [{ source: "/@:username/passport", destination: "/passport/:username" }];
+  },
   images: {
     remotePatterns: supabaseHost
       ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]

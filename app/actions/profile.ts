@@ -78,6 +78,7 @@ export async function updateExtraProfile(
 
   const parsed = extraProfileSchema.safeParse({
     displayName: formData.get("displayName"),
+    username: formData.get("username") ?? "",
     bio: formData.get("bio") ?? "",
     yearsExperience: formData.get("yearsExperience") ? Number(formData.get("yearsExperience")) : null,
     hourlyRateCents: formData.get("hourlyRate")
@@ -103,9 +104,17 @@ export async function updateExtraProfile(
 
   const { error: profileError } = await supabase
     .from("profiles")
-    .update({ display_name: parsed.data.displayName })
+    .update({
+      display_name: parsed.data.displayName,
+      username: parsed.data.username || null,
+    })
     .eq("id", user.id);
-  if (profileError) return { ok: false, error: "Could not save your name. Try again." };
+  if (profileError) {
+    if (profileError.code === "23505") {
+      return { ok: false, error: "That username is taken.", field: "username" };
+    }
+    return { ok: false, error: "Could not save your name. Try again." };
+  }
 
   const { error } = await supabase
     .from("extras_profiles")

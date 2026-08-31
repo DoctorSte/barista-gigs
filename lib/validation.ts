@@ -73,6 +73,16 @@ export const rateCardSchema = z.object({
 
 export const extraProfileSchema = z.object({
   displayName: z.string().trim().min(2).max(80),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^$|^[a-z0-9][a-z0-9._-]{2,29}$/,
+      "3–30 characters: letters, numbers, dots, dashes",
+    )
+    .optional()
+    .default(""),
   bio: z.string().trim().max(600).optional().default(""),
   yearsExperience: z.coerce.number().int().min(0).max(60).nullable(),
   hourlyRateCents: z.coerce.number().int().min(0).max(500_00).nullable(),

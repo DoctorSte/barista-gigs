@@ -26,7 +26,7 @@ export default async function LandingPage() {
         />
         <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground">
           <Sparkles className="size-3.5 text-accent" />
-          Now in {cities.length > 0 ? `${cities.length} European cities` : "Europe"}
+          Now pouring in Paris — any city welcome
         </p>
         <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
           Great coffee needs
