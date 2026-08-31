@@ -29,3 +29,4 @@ supabase/.branches/
 agent/
 .vercel
 .env*
+.demo-credentials.local
