@@ -173,3 +173,83 @@ body {
     transition-duration: 1ms;
   }
 }
+
+/* ---- Barista Passport: a physical document. Fixed palette — paper doesn't dark-mode. ---- */
+.pp-scene {
+  --pp-cover: #1e3a2f;
+  --pp-cover-deep: #142921;
+  --pp-foil: #d4b36a;
+  --pp-foil-bright: #edd9a3;
+  --pp-paper: #f2ead8;
+  --pp-paper-edge: #e0d3b8;
+  --pp-guilloche: #c9b892;
+  --pp-ink: #2b2417;
+  --pp-ink-soft: #6b5f49;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #241d16 0%, #15100b 60%, #0e0a07 100%);
+  color: var(--pp-ink);
+}
+.pp-cover {
+  background:
+    radial-gradient(140% 120% at 20% 0%, rgba(255, 255, 255, 0.07), transparent 45%),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, var(--pp-cover) 0%, var(--pp-cover-deep) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(212, 179, 106, 0.35),
+    inset 0 0 60px rgba(0, 0, 0, 0.55),
+    0 24px 48px -18px rgba(0, 0, 0, 0.8);
+}
+.pp-foil {
+  background: linear-gradient(105deg, #9c7c3c 0%, var(--pp-foil) 30%, var(--pp-foil-bright) 50%, var(--pp-foil) 68%, #9c7c3c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.pp-foil-rule {
+  background: linear-gradient(90deg, transparent, var(--pp-foil) 25%, var(--pp-foil-bright) 50%, var(--pp-foil) 75%, transparent);
+}
+.pp-page {
+  background:
+    repeating-radial-gradient(circle at 0% 120%, transparent 0 7px, rgba(201, 184, 146, 0.16) 7px 8px),
+    repeating-radial-gradient(circle at 100% -20%, transparent 0 7px, rgba(201, 184, 146, 0.14) 7px 8px),
+    linear-gradient(180deg, #f5eedd 0%, var(--pp-paper) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(107, 95, 73, 0.18),
+    inset 0 -14px 30px rgba(107, 95, 73, 0.08),
+    0 16px 36px -20px rgba(0, 0, 0, 0.75);
+}
+.pp-mrz {
+  background: #faf5e6;
+  border-top: 1px dashed rgba(107, 95, 73, 0.4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.14em;
+  color: #3d3526;
+}
+.pp-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pp-ink-soft);
+}
+/* Postage stamp: white sheet with perforated edges; the mask layer sits behind the photo. */
+.pp-perf {
+  -webkit-mask-image: radial-gradient(circle 4.5px at center, transparent 98%, #000);
+  mask-image: radial-gradient(circle 4.5px at center, transparent 98%, #000);
+  -webkit-mask-size: 15px 15px;
+  mask-size: 15px 15px;
+  -webkit-mask-position: 7.5px 7.5px;
+  mask-position: 7.5px 7.5px;
+}
+.pp-stamp-photo {
+  filter: saturate(0.92) contrast(1.02) sepia(0.08);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pp-tilt {
+    transition: transform 220ms var(--ease-out-strong);
+  }
+  .pp-tilt:hover {
+    transform: rotate(0deg) scale(1.04) !important;
+    z-index: 10;
+  }
+}

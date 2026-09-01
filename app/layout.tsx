@@ -3,8 +3,6 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 const generalSans = localFont({
@@ -42,11 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${generalSans.variable} ${clashDisplay.variable} min-h-dvh`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Analytics />
-          <div className="flex min-h-dvh flex-col">
-            <SiteHeader />
-            <main className="flex-1">{children}</main>
-            <SiteFooter />
-          </div>
+          {children}
           <Toaster
             position="bottom-right"
             toastOptions={{
