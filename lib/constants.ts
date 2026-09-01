@@ -21,25 +21,48 @@ export function skillLabel(value: string) {
 
 export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
-export const LANGUAGES = [
-  { value: "english", label: "English" },
-  { value: "french", label: "Français" },
-  { value: "german", label: "Deutsch" },
-  { value: "spanish", label: "Español" },
-  { value: "italian", label: "Italiano" },
-  { value: "portuguese", label: "Português" },
-  { value: "dutch", label: "Nederlands" },
-  { value: "polish", label: "Polski" },
-  { value: "ukrainian", label: "Українська" },
-  { value: "arabic", label: "العربية" },
-  { value: "japanese", label: "日本語" },
-  { value: "mandarin", label: "中文" },
+// ISO 639-1 codes; names come from Intl.DisplayNames (full ICU database,
+// available in every modern browser and in the Next.js Node runtime).
+export const LANGUAGE_CODES = [
+  "af", "am", "ar", "az", "be", "bg", "bn", "bs", "ca", "cs", "cy", "da",
+  "de", "el", "en", "es", "et", "eu", "fa", "fi", "fil", "fr", "ga", "gl",
+  "gu", "ha", "he", "hi", "hr", "hu", "hy", "id", "ig", "is", "it", "ja",
+  "ka", "kk", "km", "kn", "ko", "ku", "ky", "lb", "lo", "lt", "lv", "mk",
+  "ml", "mn", "mr", "ms", "mt", "my", "ne", "nl", "no", "pa", "pl", "ps",
+  "pt", "ro", "ru", "si", "sk", "sl", "so", "sq", "sr", "sv", "sw", "ta",
+  "te", "th", "tr", "uk", "ur", "uz", "vi", "wo", "yo", "zh", "zu",
 ] as const;
 
-const LANGUAGE_LABELS = new Map<string, string>(LANGUAGES.map((l) => [l.value, l.label]));
+// Values stored before the ISO switch.
+const LEGACY_LANGUAGES: Record<string, string> = {
+  english: "en", french: "fr", german: "de", spanish: "es", italian: "it",
+  portuguese: "pt", dutch: "nl", polish: "pl", ukrainian: "uk", arabic: "ar",
+  japanese: "ja", mandarin: "zh",
+};
 
+export function normalizeLanguage(value: string) {
+  return LEGACY_LANGUAGES[value] ?? value;
+}
+
+/** The language's name in its own language, e.g. "fr" → "Français". */
 export function languageLabel(value: string) {
-  return LANGUAGE_LABELS.get(value) ?? value;
+  const code = normalizeLanguage(value);
+  try {
+    const name = new Intl.DisplayNames([code], { type: "language" }).of(code) ?? code;
+    return name.charAt(0).toLocaleUpperCase(code) + name.slice(1);
+  } catch {
+    return value;
+  }
+}
+
+/** The language's English name, for sorting and search. */
+export function languageLabelEnglish(value: string) {
+  const code = normalizeLanguage(value);
+  try {
+    return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code;
+  } catch {
+    return value;
+  }
 }
 
 export const MACHINE_TYPES = [

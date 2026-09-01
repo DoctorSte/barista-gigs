@@ -5,7 +5,8 @@ import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateExtraProfile } from "@/app/actions/profile";
 import type { AvailabilityWindow, ExtraProfile, Profile } from "@/lib/database.types";
-import { LANGUAGES, SKILLS } from "@/lib/constants";
+import { SKILLS } from "@/lib/constants";
+import { LanguagePicker } from "@/components/language-picker";
 import { WeekHoursEditor } from "@/components/week-hours-editor";
 import { ChipGroup } from "@/components/ui/chip-toggle";
 import { Switch } from "@/components/ui/switch";
@@ -204,18 +205,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
         </Field>
 
         <Field label="Languages" hint="Which languages can you serve customers in?">
-          {() => (
-            <ChipGroup
-              options={[...LANGUAGES]}
-              selected={languages}
-              onToggle={(value) =>
-                setLanguages((prev) =>
-                  prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
-                )
-              }
-              name="languages"
-            />
-          )}
+          {() => <LanguagePicker value={languages} onChange={setLanguages} />}
         </Field>
 
         <Field
