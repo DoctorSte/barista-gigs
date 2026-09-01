@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
+import { getSession } from "@/lib/auth";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -35,11 +37,13 @@ export const metadata: Metadata = {
     "Barista Gigs connects specialty cafés with skilled freelance baristas for one-off shifts across Europe.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { user, profile } = await getSession();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${generalSans.variable} ${clashDisplay.variable} min-h-dvh`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AnalyticsProvider userId={user?.id ?? null} role={profile?.role ?? null} />
           <div className="flex min-h-dvh flex-col">
             <SiteHeader />
             <main className="flex-1">{children}</main>

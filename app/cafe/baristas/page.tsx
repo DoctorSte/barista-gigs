@@ -37,7 +37,7 @@ export default async function BaristasPage() {
 
   const extraIds = rows.map((barista) => barista.id);
   const nowIso = new Date().toISOString();
-  const [{ data: recData }, { data: shiftData }] = extraIds.length
+  const [{ data: recData }, { data: shiftData }, { data: savedData }] = extraIds.length
     ? await Promise.all([
         supabase.from("recommendations").select("extra_id").in("extra_id", extraIds),
         // RLS only surfaces this shop's own interests, so these counts are
@@ -47,8 +47,9 @@ export default async function BaristasPage() {
           .select("extra_id, announcements!inner(ends_at)")
           .eq("status", "accepted")
           .in("extra_id", extraIds),
+        supabase.from("saved_baristas").select("extra_id").eq("shop_id", shop.id),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
 
   const recommendationCounts = new Map<string, number>();
   for (const rec of (recData ?? []) as { extra_id: string }[]) {
@@ -89,7 +90,10 @@ export default async function BaristasPage() {
         </p>
       </div>
 
-      <BaristasBrowser baristas={baristas} />
+      <BaristasBrowser
+        baristas={baristas}
+        savedIds={((savedData ?? []) as { extra_id: string }[]).map((s) => s.extra_id)}
+      />
     </div>
   );
 }

@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { CalendarCheck, ThumbsUp, Users } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { CalendarCheck, Star, ThumbsUp, Users } from "lucide-react";
+import { toast } from "sonner";
+import { toggleSavedBarista } from "@/app/actions/saved";
 import { formatMoney } from "@/lib/format";
 import { languageLabel, SKILLS, skillLabel } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
@@ -26,25 +29,47 @@ export type DirectoryBarista = {
   shifts: number;
 };
 
-export function BaristasBrowser({ baristas }: { baristas: DirectoryBarista[] }) {
+export function BaristasBrowser({
+  baristas,
+  savedIds,
+}: {
+  baristas: DirectoryBarista[];
+  savedIds: string[];
+}) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const [skills, setSkills] = useState<string[]>([]);
   const [maxRate, setMaxRate] = useState("");
   const [recommendedOnly, setRecommendedOnly] = useState(false);
   const [workedWithYou, setWorkedWithYou] = useState(false);
+  const [savedOnly, setSavedOnly] = useState(false);
+  const saved = useMemo(() => new Set(savedIds), [savedIds]);
 
   const filtered = useMemo(() => {
     const max = Number(maxRate) * 100;
-    return baristas.filter((barista) => {
-      if (skills.length > 0 && !skills.every((s) => barista.skills.includes(s))) return false;
-      // Rate cap only applies to baristas with a listed rate.
-      if (max > 0 && barista.hourlyRateCents != null && barista.hourlyRateCents > max) {
-        return false;
-      }
-      if (recommendedOnly && barista.recommendations === 0) return false;
-      if (workedWithYou && barista.shifts === 0) return false;
-      return true;
+    return baristas
+      .filter((barista) => {
+        if (skills.length > 0 && !skills.every((s) => barista.skills.includes(s))) return false;
+        // Rate cap only applies to baristas with a listed rate.
+        if (max > 0 && barista.hourlyRateCents != null && barista.hourlyRateCents > max) {
+          return false;
+        }
+        if (recommendedOnly && barista.recommendations === 0) return false;
+        if (workedWithYou && barista.shifts === 0) return false;
+        if (savedOnly && !saved.has(barista.id)) return false;
+        return true;
+      })
+      // Favourites float to the top.
+      .sort((a, b) => Number(saved.has(b.id)) - Number(saved.has(a.id)));
+  }, [baristas, skills, maxRate, recommendedOnly, workedWithYou, savedOnly, saved]);
+
+  function toggleSave(extraId: string) {
+    startTransition(async () => {
+      const result = await toggleSavedBarista(extraId);
+      if (result.ok) router.refresh();
+      else toast.error(result.error);
     });
-  }, [baristas, skills, maxRate, recommendedOnly, workedWithYou]);
+  }
 
   const toggleClass = (active: boolean) =>
     cn(
@@ -84,6 +109,14 @@ export function BaristasBrowser({ baristas }: { baristas: DirectoryBarista[] }) 
           >
             <CalendarCheck className="size-3.5" /> Worked with you
           </button>
+          <button
+            type="button"
+            aria-pressed={savedOnly}
+            onClick={() => setSavedOnly((v) => !v)}
+            className={toggleClass(savedOnly)}
+          >
+            <Star className="size-3.5" /> Saved
+          </button>
           <span className="ml-1 flex items-center gap-2 text-sm text-muted-foreground">
             Rate up to
             <Input
@@ -118,7 +151,29 @@ export function BaristasBrowser({ baristas }: { baristas: DirectoryBarista[] }) 
                   <Avatar name={barista.name} src={barista.avatarUrl} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-medium">{barista.name}</p>
+                      <p className="flex items-center gap-1.5 font-medium">
+                        {barista.name}
+                        <button
+                          type="button"
+                          aria-pressed={saved.has(barista.id)}
+                          aria-label={saved.has(barista.id) ? "Unsave barista" : "Save barista"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleSave(barista.id);
+                          }}
+                          className="pressable rounded-sm p-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <Star
+                            className={cn(
+                              "size-4",
+                              saved.has(barista.id)
+                                ? "fill-accent text-accent"
+                                : "text-muted-foreground hover:text-foreground",
+                            )}
+                          />
+                        </button>
+                      </p>
                       {barista.hourlyRateCents != null ? (
                         <span className="shrink-0 rounded-md bg-accent-soft px-2.5 py-1 text-sm font-semibold text-accent">
                           {formatMoney(barista.hourlyRateCents, barista.currency)}/hr

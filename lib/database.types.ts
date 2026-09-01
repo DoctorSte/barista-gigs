@@ -215,6 +215,10 @@ export type Database = {
       interests: Table<Interest, "announcement_id" | "extra_id" | "message">;
       recommendations: Table<Recommendation, "shop_id" | "extra_id">;
       notifications: Table<Notification, "user_id" | "type" | "title">;
+      saved_baristas: Table<
+        { shop_id: string; extra_id: string; created_at: string },
+        "shop_id" | "extra_id"
+      >;
       extras_payment_details: Table<ExtraPaymentDetails, "extra_id">;
       conversations: Table<Conversation, "announcement_id" | "shop_id" | "extra_id">;
       messages: Table<Message, "conversation_id" | "sender_id" | "body">;
