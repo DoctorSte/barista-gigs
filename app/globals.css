@@ -238,8 +238,8 @@ body {
   mask-image: radial-gradient(circle 4.5px at center, transparent 98%, #000);
   -webkit-mask-size: 15px 15px;
   mask-size: 15px 15px;
-  -webkit-mask-position: 7.5px 7.5px;
-  mask-position: 7.5px 7.5px;
+  -webkit-mask-position: -7.5px -7.5px;
+  mask-position: -7.5px -7.5px;
 }
 .pp-stamp-photo {
   filter: saturate(0.92) contrast(1.02) sepia(0.08);

@@ -179,8 +179,11 @@ function LatteStamp({
       className="pp-tilt relative aspect-[4/5] w-36 sm:w-40"
       style={{ transform: `rotate(${rotation}deg)`, marginTop: `${(index % 3) * 6}px` }}
     >
-      <div className="pp-perf absolute inset-0 bg-[#fbf6ea] shadow-[0_6px_16px_-8px_rgba(43,36,23,0.5)]" />
-      <div className="absolute inset-[11px] bottom-[30px] overflow-hidden border border-[#d8cbae]">
+      {/* Perforated sheet: holes straddle the outer edge only — the solid
+          inner layer covers the interior of the hole grid. */}
+      <div className="pp-perf absolute inset-0 bg-[#fbf6ea] [filter:drop-shadow(0_6px_10px_rgba(43,36,23,0.35))]" />
+      <div className="absolute inset-[6px] bg-[#fbf6ea]" />
+      <div className="absolute inset-[11px] bottom-[30px] overflow-hidden border border-[#d8cbae] bg-[#efe7d2]">
         <Image
           src={src}
           alt={caption ?? `Latte art by ${name}`}
