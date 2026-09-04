@@ -9,9 +9,19 @@ export type EmailInput = {
   subject: string;
   title: string;
   body?: string;
+  /** Optional item list rendered under the body (digest emails). */
+  lines?: string[];
   ctaLabel?: string;
   ctaUrl?: string; // absolute URL
 };
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 function render(input: EmailInput) {
   const button = input.ctaUrl
@@ -25,6 +35,16 @@ function render(input: EmailInput) {
         <p style="margin:0 0 24px;font-size:15px;font-weight:700;color:#7c5231">Barista Gigs</p>
         <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#221c15">${input.title}</h1>
         ${input.body ? `<p style="margin:0;font-size:15px;line-height:1.6;color:#5c5347">${input.body}</p>` : ""}
+        ${
+          input.lines?.length
+            ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px">${input.lines
+                .map(
+                  (line) =>
+                    `<tr><td style="padding:9px 0;border-top:1px solid #efe8dc;font-size:14px;line-height:1.5;color:#3d3526">${escapeHtml(line)}</td></tr>`,
+                )
+                .join("")}</table>`
+            : ""
+        }
         ${button}
         <p style="margin:28px 0 0;font-size:12px;color:#a39a8c">You're receiving this because you have a Barista Gigs account. Manage notifications in the app.</p>
       </td></tr>

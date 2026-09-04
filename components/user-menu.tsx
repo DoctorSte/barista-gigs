@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
+  BellRing,
   CreditCard,
   LogOut,
   MapPin,
@@ -52,6 +53,9 @@ export function UserMenu({
           </MenuItem>
         </>
       )}
+      <MenuItem onSelect={() => router.push("/settings/notifications")}>
+        <BellRing className="size-4 text-muted-foreground" /> Notifications
+      </MenuItem>
       <MenuItem onSelect={() => router.push("/settings/city")}>
         <MapPin className="size-4 text-muted-foreground" /> {cityName ?? "Set your city"}
       </MenuItem>

@@ -4,6 +4,8 @@
 
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { sendEmails, type EmailInput } from "@/lib/email";
+import { emailAllowed } from "@/lib/notification-prefs";
+import type { NotificationPrefs } from "@/lib/database.types";
 
 // Notification types that also go out as an email. Messages and referral
 // rewards stay in-app only for now (messages would need unread batching).
@@ -45,8 +47,16 @@ export async function notifyMany(userIds: string[], input: NotificationInput): P
 
     if (EMAILED_TYPES.has(input.type) && process.env.RESEND_API_KEY) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://baristagigs.com";
+      const { data: prefRows } = await admin
+        .from("notification_prefs")
+        .select("*")
+        .in("user_id", userIds);
+      const prefsByUser = new Map(
+        ((prefRows ?? []) as NotificationPrefs[]).map((p) => [p.user_id, p]),
+      );
       const emails: EmailInput[] = [];
       for (const userId of userIds) {
+        if (!emailAllowed(prefsByUser.get(userId), input.type)) continue;
         const { data } = await admin.auth.admin.getUserById(userId);
         const to = data?.user?.email;
         if (!to) continue;

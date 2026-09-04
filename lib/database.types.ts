@@ -195,6 +195,18 @@ export type ExtraPaymentDetails = {
   updated_at: string;
 };
 
+export type NotificationPrefs = {
+  user_id: string;
+  email_applications: boolean;
+  email_messages: boolean;
+  email_opportunities: boolean;
+  email_team: boolean;
+  email_referrals: boolean;
+  email_digest: boolean;
+  last_digest_at: string | null;
+  updated_at: string;
+};
+
 export type CafeMember = {
   owner_id: string;
   member_id: string;
@@ -239,6 +251,7 @@ export type Database = {
       messages: Table<Message, "conversation_id" | "sender_id" | "body">;
       cafe_members: Table<CafeMember, "owner_id" | "member_id">;
       cafe_invites: Table<CafeInvite, "owner_id" | "email">;
+      notification_prefs: Table<NotificationPrefs, "user_id">;
     };
     Views: Record<string, never>;
     Functions: {
