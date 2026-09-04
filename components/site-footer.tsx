@@ -10,7 +10,10 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-6 text-[13px] text-muted-foreground sm:px-6">
-        <p>© {new Date().getFullYear()} Barista Gigs</p>
+        <p>
+          © {new Date().getFullYear()} Barista Gigs ·{" "}
+          <span className="font-display italic">Pour decisions welcome.</span>
+        </p>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-1">
           {LEGAL_LINKS.map((link) => (
             <Link

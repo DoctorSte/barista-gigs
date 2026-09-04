@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Briefcase, CalendarClock, Coffee, List, Map as MapIcon } from "lucide-react";
+import { Briefcase, CalendarClock, List, Map as MapIcon } from "lucide-react";
 import type { Announcement } from "@/lib/database.types";
 import { formatGigSchedule, formatPay } from "@/lib/format";
 import { SKILLS, skillLabel } from "@/lib/constants";
@@ -104,7 +104,7 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={Coffee}
+          mascot
           title="No gigs match"
           description="Try removing a filter — or check back soon."
         />

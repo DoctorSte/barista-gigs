@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Briefcase, CalendarClock, ClipboardList, Plus, Sparkles, Users } from "lucide-react";
+import { Briefcase, CalendarClock, Plus, Sparkles, Users } from "lucide-react";
 import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
 import { PLANS, isPlanId } from "@/lib/plans";
 import { LocationSwitcher } from "@/components/location-switcher";
@@ -150,7 +150,7 @@ export default async function ShopDashboardPage() {
 
       {gigs.length === 0 ? (
         <EmptyState
-          icon={ClipboardList}
+          mascot
           title="No gigs yet"
           description={
             subscribed
@@ -162,29 +162,47 @@ export default async function ShopDashboardPage() {
         <ul className="stagger flex flex-col gap-3">
           {gigs.map((gig) => {
             const applicants = gig.interests[0]?.count ?? 0;
+            const starts = new Date(gig.starts_at);
+            const isOpen = gig.status === "open";
             return (
               <li key={gig.id}>
                 <Link
                   href={`/cafe/gigs/${gig.id}`}
-                  className="pressable block rounded-lg border border-border bg-surface p-5 transition-colors duration-150 hover:border-border-strong"
+                  className="pressable flex items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-all duration-150 hover:-translate-y-px hover:border-border-strong hover:shadow-[0_8px_20px_-14px_rgb(0_0_0/0.3)] sm:p-5"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <h2 className="flex min-w-0 items-center gap-2 truncate font-display text-lg font-semibold tracking-tight">
-                      {gig.is_sos ? <Badge tone="danger">SOS</Badge> : null}
-                      {gig.title}
-                    </h2>
-                    <GigStatusBadge status={gig.status} />
+                  <div
+                    className={`flex w-14 shrink-0 flex-col items-center rounded-md border py-2 ${
+                      isOpen
+                        ? "border-accent/30 bg-accent-soft/60 text-accent"
+                        : "border-border bg-muted/50 text-muted-foreground"
+                    }`}
+                  >
+                    <span className="font-display text-xl font-semibold leading-none">
+                      {starts.getDate()}
+                    </span>
+                    <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">
+                      {starts.toLocaleDateString("en-GB", { month: "short" })}
+                    </span>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarClock className="size-4" />
-                      {formatGigSchedule(gig)}
-                    </span>
-                    <span>{formatPay(gig.pay_rate_cents, gig.pay_type)}</span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Users className="size-4" />
-                      {applicants} {applicants === 1 ? "applicant" : "applicants"}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-4">
+                      <h2 className="flex min-w-0 items-center gap-2 truncate font-display text-lg font-semibold tracking-tight">
+                        {gig.is_sos ? <Badge tone="danger">SOS</Badge> : null}
+                        {gig.title}
+                      </h2>
+                      <GigStatusBadge status={gig.status} />
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarClock className="size-4" />
+                        {formatGigSchedule(gig)}
+                      </span>
+                      <span>{formatPay(gig.pay_rate_cents, gig.pay_type)}</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Users className="size-4" />
+                        {applicants} {applicants === 1 ? "applicant" : "applicants"}
+                      </span>
+                    </div>
                   </div>
                 </Link>
               </li>

@@ -49,10 +49,6 @@ export default async function BillingPage({
         hasStripeCustomer={Boolean(subscription?.stripe_customer_id)}
       />
 
-      <p className="mt-6 text-center text-[13px] text-muted-foreground">
-        Multi-location management is rolling out — the Group plan reserves your locations.
-      </p>
-
       {!stripeConfigured ? (
         <p className="mt-6 rounded-md bg-muted/70 px-3.5 py-2.5 text-[13px] leading-relaxed text-muted-foreground">
           Stripe isn&apos;t configured in this environment, so choosing a plan activates a dev

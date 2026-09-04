@@ -1,16 +1,41 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, CalendarClock, Coffee, MessageSquare, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { getSession, homeForRole } from "@/lib/auth";
-import { getFeaturedCities } from "@/lib/city";
-import { PLANS } from "@/lib/plans";
+import { PLANS, type Plan } from "@/lib/plans";
+
+const STEPS = [
+  {
+    number: "01",
+    title: "Post the shift",
+    body: "Cafés publish gigs with dates, pay, and the skills the bar needs — from dialing in to latte art.",
+  },
+  {
+    number: "02",
+    title: "Baristas raise a hand",
+    body: "Freelance baristas in your city browse open gigs and pitch themselves in one tap.",
+  },
+  {
+    number: "03",
+    title: "Match and message",
+    body: "Accept the right fit and sort the details in chat. No agencies, no spreadsheets.",
+  },
+];
+
+function planFeatures(plan: Plan): string[] {
+  return [
+    plan.gigsPerMonth ? `${plan.gigsPerMonth} gigs a month` : "Unlimited gigs",
+    plan.locations === 1 ? "1 location" : `Up to ${plan.locations} locations`,
+    plan.teamAccounts === 1 ? "Single account" : `${plan.teamAccounts} team accounts`,
+    "Barista directory",
+    "Referral free months",
+  ];
+}
 
 export default async function LandingPage() {
   const { profile } = await getSession();
   if (profile) redirect(homeForRole(profile.role));
-
-  const cities = await getFeaturedCities();
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -54,58 +79,80 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Cities */}
-      {cities.length > 0 ? (
-        <section className="border-t border-border py-10">
-          <p className="mb-4 text-center text-[13px] font-medium uppercase tracking-widest text-muted-foreground">
-            Live in
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-display text-lg text-muted-foreground">
-            {cities.map((city) => (
-              <Link
-                key={city.id}
-                href={`/cities/${city.slug}`}
-                className="pressable transition-colors duration-150 hover:text-foreground"
-              >
-                {city.name}
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      {/* How it works — a real sequence, so the steps are numbered. */}
+      <section className="border-t border-border py-16">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {STEPS.map((step) => (
+            <div
+              key={step.number}
+              className="hover-raise rounded-lg border border-border bg-surface p-6"
+            >
+              <p className="mb-4 font-mono text-[13px] font-medium tracking-[0.2em] text-accent">
+                {step.number}
+              </p>
+              <h3 className="mb-1.5 font-display text-lg font-semibold">{step.title}</h3>
+              <p className="text-[15px] leading-relaxed text-muted-foreground">{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* How it works */}
-      <section className="grid gap-4 border-t border-border py-16 sm:grid-cols-3">
-        {[
-          {
-            icon: CalendarClock,
-            title: "Post the shift",
-            body: "Cafés publish gigs with dates, pay, and the skills the bar needs — from dialing in to latte art.",
-          },
-          {
-            icon: Coffee,
-            title: "Baristas raise a hand",
-            body: "Freelance baristas in your city browse open gigs and pitch themselves in one message.",
-          },
-          {
-            icon: MessageSquare,
-            title: "Match and message",
-            body: "Accept the right fit and sort the details in chat. No agencies, no spreadsheets.",
-          },
-        ].map((step) => (
-          <div key={step.title} className="rounded-lg border border-border bg-surface p-6">
-            <span className="mb-4 flex size-10 items-center justify-center rounded-full bg-accent-soft text-accent">
-              <step.icon className="size-5" strokeWidth={1.75} />
-            </span>
-            <h3 className="mb-1.5 font-display text-lg font-semibold">{step.title}</h3>
-            <p className="text-[15px] leading-relaxed text-muted-foreground">{step.body}</p>
+      {/* Barista Passport — free side of the marketplace, and the thing nobody else has. */}
+      <section className="pb-16">
+        <div className="pp-teaser relative overflow-hidden rounded-xl px-6 py-12 sm:px-12">
+          <div className="relative z-10 flex flex-col items-start gap-10 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-md">
+              <p className="pp-teaser-label mb-3">Free for baristas · forever</p>
+              <h2 className="pp-teaser-foil font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+                Every shift earns a stamp.
+              </h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-[#c9bfa8]">
+                Work a gig, and the café goes into your Barista Passport — a shareable page of
+                stamps, latte art, and the bars you&apos;ve run. Your career, documented.
+              </p>
+              <Link
+                href="/signup?role=extra"
+                className="pressable mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#d4b36a] px-6 text-[15px] font-medium text-[#1e3a2f] hover:bg-[#edd9a3]"
+              >
+                Start your passport
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+            {/* Stamp cluster — pure CSS keepsakes from the real passport. */}
+            <div
+              aria-hidden
+              className="relative mx-auto h-44 w-56 shrink-0 select-none sm:mx-0 sm:mr-4"
+            >
+              <div className="pp-teaser-stamp absolute left-0 top-2 flex size-28 -rotate-12 flex-col items-center justify-center rounded-full text-center">
+                <span className="font-mono text-[8px] tracking-[0.22em]">CAFÉ LUEUR</span>
+                <span className="mt-1 font-display text-lg font-semibold leading-none">29</span>
+                <span className="font-mono text-[8px] tracking-[0.22em]">AUG · PARIS</span>
+              </div>
+              <div className="pp-teaser-stamp pp-teaser-stamp-alt absolute right-0 top-0 flex size-24 rotate-6 flex-col items-center justify-center rounded-full text-center">
+                <span className="font-mono text-[8px] tracking-[0.22em]">BRUNCH RUSH</span>
+                <span className="mt-1 font-display text-base font-semibold leading-none">16</span>
+                <span className="font-mono text-[8px] tracking-[0.22em]">COVERED</span>
+              </div>
+              <div className="pp-teaser-hover absolute bottom-0 left-1/2 h-20 w-24 -translate-x-1/2 rotate-3">
+                <div className="pp-teaser-postage absolute inset-0" />
+                <div className="absolute inset-[6px] flex items-center justify-center bg-[#f2ead8]">
+                  <Image
+                    src="/mascot.png"
+                    alt=""
+                    width={300}
+                    height={277}
+                    className="h-auto w-12"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
+        </div>
       </section>
 
       {/* Pricing */}
       <section className="border-t border-border py-16">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
+        <div className="mx-auto flex flex-col items-center gap-8 text-center">
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-3xl font-semibold tracking-tight">
               Simple pricing for cafés
@@ -115,27 +162,41 @@ export default async function LandingPage() {
             </p>
           </div>
           <div className="grid w-full gap-4 sm:grid-cols-3">
-            {[
-              { plan: PLANS.occasional, features: "3 gigs a month" },
-              { plan: PLANS.regular, features: "Unlimited gigs" },
-              { plan: PLANS.group, features: "Unlimited gigs · up to 3 locations" },
-            ].map(({ plan, features }) => (
-              <div
-                key={plan.id}
-                className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-6"
-              >
-                <h3 className="font-display text-lg font-semibold">{plan.name}</h3>
-                <p className="font-display text-3xl font-semibold">
-                  <span className="text-base font-normal text-muted-foreground">from </span>
-                  €{plan.monthlyCents / 100}
-                  <span className="text-base font-normal text-muted-foreground">/month</span>
-                </p>
-                <p className="text-[13px] text-muted-foreground">
-                  or €{plan.yearlyCents / 100}/year
-                </p>
-                <p className="mt-2 text-[15px] text-muted-foreground">{features}</p>
-              </div>
-            ))}
+            {[PLANS.occasional, PLANS.regular, PLANS.group].map((plan) => {
+              const highlighted = plan.id === "regular";
+              return (
+                <div
+                  key={plan.id}
+                  className={
+                    highlighted
+                      ? "hover-raise relative flex flex-col rounded-lg border border-accent bg-surface p-6 text-left"
+                      : "hover-raise flex flex-col rounded-lg border border-border bg-surface p-6 text-left"
+                  }
+                >
+                  {highlighted ? (
+                    <span className="absolute -top-3 left-6 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-accent-foreground">
+                      Most popular
+                    </span>
+                  ) : null}
+                  <h3 className="font-display text-lg font-semibold">{plan.name}</h3>
+                  <p className="mt-3 font-display text-3xl font-semibold">
+                    €{plan.monthlyCents / 100}
+                    <span className="text-base font-normal text-muted-foreground">/month</span>
+                  </p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">
+                    or €{plan.yearlyCents / 100}/year — 2 months free
+                  </p>
+                  <ul className="mt-5 flex flex-col gap-2 text-[14px] text-muted-foreground">
+                    {planFeatures(plan).map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <Check className="size-4 shrink-0 text-success" strokeWidth={2.5} />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
           <Link
             href="/signup?role=shop"
@@ -145,11 +206,6 @@ export default async function LandingPage() {
           </Link>
         </div>
       </section>
-
-      <footer className="flex flex-col items-center gap-2 border-t border-border py-10 text-sm text-muted-foreground sm:flex-row sm:justify-between">
-        <p>© {new Date().getFullYear()} Barista Gigs</p>
-        <p className="font-display italic">Pour decisions welcome.</p>
-      </footer>
     </div>
   );
 }
