@@ -34,15 +34,36 @@ export async function requireProfile() {
   return { user, profile };
 }
 
-/** All of the owner's locations, oldest (primary) first. */
-export const getOwnerShops = cache(async (): Promise<CoffeeShop[]> => {
+/**
+ * Whose café workspace does this user act in? Their own if they own any
+ * location; otherwise the owner whose team they belong to.
+ */
+export const getEffectiveOwnerId = cache(async (): Promise<string | null> => {
   const { user } = await getSession();
-  if (!user) return [];
+  if (!user) return null;
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("coffee_shops")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", user.id);
+  if ((count ?? 0) > 0) return user.id;
+  const { data } = await supabase
+    .from("cafe_members")
+    .select("owner_id")
+    .eq("member_id", user.id)
+    .maybeSingle();
+  return (data?.owner_id as string | undefined) ?? user.id;
+});
+
+/** All of the workspace's locations, oldest (primary) first. */
+export const getOwnerShops = cache(async (): Promise<CoffeeShop[]> => {
+  const ownerId = await getEffectiveOwnerId();
+  if (!ownerId) return [];
   const supabase = await createClient();
   const { data } = await supabase
     .from("coffee_shops")
     .select("*")
-    .eq("owner_id", user.id)
+    .eq("owner_id", ownerId)
     .order("created_at");
   return (data as CoffeeShop[] | null) ?? [];
 });

@@ -33,6 +33,9 @@ export async function startSubscription(
   const { user, shop } = await requireShop();
   // Subscriptions are owner-level; the row always attaches to the primary location.
   const primary = (await getOwnerShops())[0] ?? shop;
+  if (primary.owner_id !== user.id) {
+    return { ok: false, error: "Only the account owner can manage billing." };
+  }
 
   if (!isStripeConfigured()) {
     if (!hasAdminClient()) {
@@ -105,7 +108,11 @@ export async function startSubscription(
 }
 
 export async function openBillingPortal(): Promise<ActionResult> {
-  await requireShop();
+  const { user, shop } = await requireShop();
+  const primary = (await getOwnerShops())[0] ?? shop;
+  if (primary.owner_id !== user.id) {
+    return { ok: false, error: "Only the account owner can manage billing." };
+  }
   if (!isStripeConfigured()) {
     return { ok: false, error: "Stripe isn't configured — nothing to manage." };
   }

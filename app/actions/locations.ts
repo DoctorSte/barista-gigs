@@ -37,6 +37,9 @@ export async function addLocation(
 ): Promise<ActionResult> {
   const { user } = await requireShop();
   const shops = await getOwnerShops();
+  if (shops[0] && shops[0].owner_id !== user.id) {
+    return { ok: false, error: "Only the account owner can add locations." };
+  }
   const subscription = await getOwnerSubscription();
   const plan = PLANS[isPlanId(subscription?.plan) ? subscription!.plan : "regular"];
 

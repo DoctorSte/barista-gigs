@@ -17,7 +17,9 @@ export type NotificationInput = {
     | "new_message"
     | "gig_invite"
     | "sos_gig"
-    | "referral_reward";
+    | "referral_reward"
+    | "team_invite"
+    | "team_joined";
   title: string;
   body?: string;
   href?: string;

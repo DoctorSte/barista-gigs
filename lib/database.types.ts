@@ -195,6 +195,21 @@ export type ExtraPaymentDetails = {
   updated_at: string;
 };
 
+export type CafeMember = {
+  owner_id: string;
+  member_id: string;
+  created_at: string;
+};
+
+export type CafeInvite = {
+  id: string;
+  owner_id: string;
+  email: string;
+  token: string;
+  created_at: string;
+  accepted_at: string | null;
+};
+
 type Table<Row, Required extends keyof Row> = {
   Row: Row;
   Insert: Pick<Row, Required> & Partial<Omit<Row, Required>>;
@@ -222,6 +237,8 @@ export type Database = {
       extras_payment_details: Table<ExtraPaymentDetails, "extra_id">;
       conversations: Table<Conversation, "announcement_id" | "shop_id" | "extra_id">;
       messages: Table<Message, "conversation_id" | "sender_id" | "body">;
+      cafe_members: Table<CafeMember, "owner_id" | "member_id">;
+      cafe_invites: Table<CafeInvite, "owner_id" | "email">;
     };
     Views: Record<string, never>;
     Functions: {

@@ -11,6 +11,7 @@ import { Badge, GigStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReferralLink } from "@/components/referral-link";
+import { TeamManager, type TeamInviteRow, type TeamMemberRow } from "@/components/team-manager";
 import type { Announcement, Subscription } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -22,7 +23,7 @@ function isActive(subscription: Subscription | null) {
 }
 
 export default async function ShopDashboardPage() {
-  const { shop } = await requireShop();
+  const { user, shop } = await requireShop();
   const supabase = await createClient();
 
   const [{ data: gigData }, subscription, shops] = await Promise.all([
@@ -57,6 +58,39 @@ export default async function ShopDashboardPage() {
     referred = (referredData ?? []) as typeof referred;
   }
   const freeMonths = referred.filter((r) => r.referral_reward_granted).length;
+
+  // Team management is owner-only; members see the workspace without this card.
+  const isOwner = shops[0]?.owner_id === user.id;
+  let teamMembers: TeamMemberRow[] = [];
+  let teamInvites: TeamInviteRow[] = [];
+  if (isOwner && hasAdminClient()) {
+    const admin = createAdminClient();
+    const [{ data: memberRows }, { data: inviteRows }] = await Promise.all([
+      admin.from("cafe_members").select("member_id").eq("owner_id", user.id),
+      admin
+        .from("cafe_invites")
+        .select("id, email")
+        .eq("owner_id", user.id)
+        .is("accepted_at", null)
+        .order("created_at"),
+    ]);
+    const memberIds = (memberRows ?? []).map((row) => row.member_id);
+    if (memberIds.length > 0) {
+      const { data: profileRows } = await admin
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", memberIds);
+      const names = new Map((profileRows ?? []).map((p) => [p.id, p.display_name]));
+      teamMembers = await Promise.all(
+        memberIds.map(async (id) => {
+          const { data } = await admin.auth.admin.getUserById(id);
+          return { id, name: names.get(id) ?? "Team member", email: data?.user?.email ?? null };
+        }),
+      );
+    }
+    teamInvites = (inviteRows ?? []) as TeamInviteRow[];
+  }
+  const teamSeatsUsed = 1 + teamMembers.length + teamInvites.length;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -158,6 +192,23 @@ export default async function ShopDashboardPage() {
           })}
         </ul>
       )}
+
+      {isOwner && subscribed ? (
+        <Card className="rise-in mt-6">
+          <h2 className="font-display text-lg font-semibold tracking-tight">Team</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Teammates share this workspace — gigs, applicants, and messages — across all your
+            locations. Billing, locations, and the team itself stay with you.
+          </p>
+          <TeamManager
+            members={teamMembers}
+            invites={teamInvites}
+            seatCap={plan.teamAccounts}
+            planName={plan.name}
+            canInviteMore={teamSeatsUsed < plan.teamAccounts}
+          />
+        </Card>
+      ) : null}
 
       <Card className="rise-in mt-6">
         <h2 className="font-display text-lg font-semibold tracking-tight">Refer a café</h2>
