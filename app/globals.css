@@ -151,15 +151,15 @@ body {
   outline-color: rgba(201, 191, 168, 0.3);
   color: #c9bfa8;
 }
+/* Perf grid is 12px with 3.5px holes; keep the element's box a multiple of 12. */
 .pp-teaser-postage {
   background: #f2ead8;
-  -webkit-mask-image: radial-gradient(circle 4.5px at center, transparent 98%, #000);
-  mask-image: radial-gradient(circle 4.5px at center, transparent 98%, #000);
-  -webkit-mask-size: 15px 15px;
-  mask-size: 15px 15px;
-  -webkit-mask-position: -7.5px -7.5px;
-  mask-position: -7.5px -7.5px;
-  transition: rotate 220ms var(--ease-out-strong), scale 220ms var(--ease-out-strong);
+  -webkit-mask-image: radial-gradient(circle 3.5px at center, transparent 98%, #000);
+  mask-image: radial-gradient(circle 3.5px at center, transparent 98%, #000);
+  -webkit-mask-size: 12px 12px;
+  mask-size: 12px 12px;
+  -webkit-mask-position: -6px -6px;
+  mask-position: -6px -6px;
 }
 .pp-teaser-hover {
   transition: rotate 220ms var(--ease-out-strong), scale 220ms var(--ease-out-strong);

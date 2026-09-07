@@ -77,6 +77,9 @@ export default async function LandingPage() {
             Staff your bar
           </Link>
         </div>
+        <p className="text-sm font-medium text-success">
+          100% free for baristas — no fees, no commission on your pay.
+        </p>
       </section>
 
       {/* How it works — a real sequence, so the steps are numbered. */}
@@ -133,9 +136,10 @@ export default async function LandingPage() {
                 <span className="mt-1 font-display text-base font-semibold leading-none">16</span>
                 <span className="font-mono text-[8px] tracking-[0.22em]">COVERED</span>
               </div>
-              <div className="pp-teaser-hover absolute bottom-0 left-1/2 h-20 w-24 -translate-x-1/2 rotate-3">
+              {/* 96×84px — exact multiples of the 12px perf grid, so scallops stay even. */}
+              <div className="pp-teaser-hover absolute bottom-0 left-1/2 h-[84px] w-24 -translate-x-1/2 rotate-3">
                 <div className="pp-teaser-postage absolute inset-0" />
-                <div className="absolute inset-[6px] flex items-center justify-center bg-[#f2ead8]">
+                <div className="absolute inset-[5px] flex items-center justify-center bg-[#f2ead8]">
                   <Image
                     src="/mascot.png"
                     alt=""
