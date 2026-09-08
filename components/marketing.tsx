@@ -23,11 +23,17 @@ export function FeatureGrid({ features }: { features: Feature[] }) {
 
 export type Faq = { question: string; answer: string };
 
-export function FaqSection({ faqs }: { faqs: Faq[] }) {
+export function FaqSection({
+  faqs,
+  heading = "Questions, answered",
+}: {
+  faqs: Faq[];
+  heading?: string;
+}) {
   return (
     <div className="mx-auto max-w-2xl">
       <h2 className="mb-6 text-center font-display text-3xl font-semibold tracking-tight">
-        Questions, answered
+        {heading}
       </h2>
       <div className="flex flex-col gap-2.5">
         {faqs.map((faq) => (

@@ -1,18 +1,21 @@
 import { Check } from "lucide-react";
 import { PLANS, type Plan } from "@/lib/plans";
+import { PLAN_CARDS_COPY, type Locale } from "@/lib/marketing-copy";
 
-function planFeatures(plan: Plan): string[] {
+function planFeatures(plan: Plan, locale: Locale): string[] {
+  const t = PLAN_CARDS_COPY[locale];
   return [
-    plan.gigsPerMonth ? `${plan.gigsPerMonth} gigs a month` : "Unlimited gigs",
-    plan.locations === 1 ? "1 location" : `Up to ${plan.locations} locations`,
-    plan.teamAccounts === 1 ? "Single account" : `${plan.teamAccounts} team accounts`,
-    "Barista directory",
-    "Referral free months",
+    plan.gigsPerMonth ? t.gigsPerMonth(plan.gigsPerMonth) : t.unlimitedGigs,
+    plan.locations === 1 ? t.oneLocation : t.locations(plan.locations),
+    plan.teamAccounts === 1 ? t.singleAccount : t.teamAccounts(plan.teamAccounts),
+    t.directory,
+    t.referrals,
   ];
 }
 
 /** The three-plan pricing grid used on marketing pages. */
-export function PlanCards() {
+export function PlanCards({ locale = "en" }: { locale?: Locale }) {
+  const t = PLAN_CARDS_COPY[locale];
   return (
     <div className="grid w-full gap-4 sm:grid-cols-3">
       {[PLANS.occasional, PLANS.regular, PLANS.group].map((plan) => {
@@ -28,19 +31,19 @@ export function PlanCards() {
           >
             {highlighted ? (
               <span className="absolute -top-3 left-6 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-accent-foreground">
-                Most popular
+                {t.mostPopular}
               </span>
             ) : null}
             <h3 className="font-display text-lg font-semibold">{plan.name}</h3>
             <p className="mt-3 font-display text-3xl font-semibold">
               €{plan.monthlyCents / 100}
-              <span className="text-base font-normal text-muted-foreground">/month</span>
+              <span className="text-base font-normal text-muted-foreground">{t.perMonth}</span>
             </p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              or €{plan.yearlyCents / 100}/year — 2 months free
+              {t.yearly(plan.yearlyCents / 100)}
             </p>
             <ul className="mt-5 flex flex-col gap-2 text-[14px] text-muted-foreground">
-              {planFeatures(plan).map((feature) => (
+              {planFeatures(plan, locale).map((feature) => (
                 <li key={feature} className="flex items-center gap-2">
                   <Check className="size-4 shrink-0 text-success" strokeWidth={2.5} />
                   {feature}

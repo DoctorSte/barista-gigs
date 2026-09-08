@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LangSwitcher } from "@/components/lang-switcher";
 
 const LEGAL_LINKS = [
   { href: "/for-cafes", label: "For cafés" },
@@ -17,6 +18,7 @@ export function SiteFooter() {
           <span className="font-display italic">Pour decisions welcome.</span>
         </p>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <LangSwitcher />
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.href}
