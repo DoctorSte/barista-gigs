@@ -1,6 +1,7 @@
 import { Globe, MapPin, Phone } from "lucide-react";
 import { machineTypeLabel } from "@/lib/constants";
 import { Avatar } from "@/components/ui/avatar";
+import { RatingStars } from "@/components/review-form";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CafeMap } from "@/components/cafe-map";
@@ -11,10 +12,15 @@ export function CafeCard({
   shop,
   avatarUrl,
   className,
+  rating = null,
+  reviewCount = 0,
 }: {
   shop: CoffeeShop;
   avatarUrl?: string | null;
   className?: string;
+  /** Average rating baristas gave this café, if any. */
+  rating?: number | null;
+  reviewCount?: number;
 }) {
   return (
     <Card className={className}>
@@ -25,6 +31,12 @@ export function CafeCard({
           <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="size-4 shrink-0" /> {shop.address}
           </p>
+          {rating != null ? (
+            <p className="mt-1 flex items-center gap-1.5 text-sm">
+              <RatingStars rating={rating} count={reviewCount} />
+              <span className="text-[13px] text-muted-foreground">from baristas</span>
+            </p>
+          ) : null}
         </div>
       </div>
       {shop.description ? (

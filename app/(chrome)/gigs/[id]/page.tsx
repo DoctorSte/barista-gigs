@@ -9,6 +9,7 @@ import { skillLabel, WEEKDAYS } from "@/lib/constants";
 import { Badge, InterestStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CafeCard } from "@/components/cafe-card";
+import { cafeTrustStats } from "@/lib/trust";
 import { InterestForm } from "@/components/interest-form";
 import type { Announcement, CoffeeShop, Interest } from "@/lib/database.types";
 
@@ -110,6 +111,9 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
       : [];
 
   const shop = gig.coffee_shops;
+  const cafeRating = shop
+    ? await cafeTrustStats(supabase, shop.id)
+    : { rating: null, reviewCount: 0 };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -177,6 +181,8 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
           shop={shop}
           avatarUrl={shop.profiles?.avatar_url}
           className="rise-in mt-8 [animation-delay:80ms]"
+          rating={cafeRating.rating}
+          reviewCount={cafeRating.reviewCount}
         />
       ) : null}
 

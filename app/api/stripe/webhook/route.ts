@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { grantReferralRewardIfEligible } from "@/lib/referrals";
+import { grantBaristaReferralBonusIfEligible, grantReferralRewardIfEligible } from "@/lib/referrals";
 import { isPlanId, planForPriceId, type BillingInterval, type PlanId } from "@/lib/plans";
 
 export const runtime = "nodejs";
@@ -68,6 +68,7 @@ async function upsertFromSubscription(subscription: Stripe.Subscription) {
     });
     if (mapStatus(subscription.status) === "active") {
       await grantReferralRewardIfEligible(shopId);
+      await grantBaristaReferralBonusIfEligible(shopId);
     }
     return;
   }

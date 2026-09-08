@@ -93,6 +93,19 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
     if (row.details) paymentByExtra[row.extra_id] = row.details;
   }
 
+  // Reviews this café already left, so the form hides after posting.
+  const interestIds = applicants.map((a) => a.id);
+  const { data: myReviewData } = interestIds.length
+    ? await supabase
+        .from("reviews")
+        .select("interest_id")
+        .eq("author_role", "shop")
+        .in("interest_id", interestIds)
+    : { data: [] };
+  const reviewedInterestIds = ((myReviewData ?? []) as { interest_id: string }[]).map(
+    (r) => r.interest_id,
+  );
+
   // CVs are in a private bucket — sign short-lived URLs for applicants that have one.
   const cvByExtra: Record<string, { url: string; filename: string }> = {};
   if (hasAdminClient()) {
@@ -141,6 +154,8 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
           workedByExtra={workedByExtra}
           paymentByExtra={paymentByExtra}
           cvByExtra={cvByExtra}
+          gigEnded={gig.ends_at < nowIso}
+          reviewedInterestIds={reviewedInterestIds}
         />
       </section>
 

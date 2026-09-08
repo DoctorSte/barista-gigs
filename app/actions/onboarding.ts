@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { homeForRole } from "@/lib/auth";
 import { resolveCityId } from "@/lib/city";
 import { geocodeAddress } from "@/lib/geocode";
@@ -85,9 +86,10 @@ export async function completeOnboarding(
       .eq("owner_id", user.id)
       .maybeSingle();
 
-    // Resolve a referral cookie (set by /r/[code]) into the referring shop.
-    // Best-effort: an unknown code is silently ignored.
+    // Resolve a referral cookie (set by /r/[code]) into the referrer — either
+    // another café or a barista. Best-effort: an unknown code is ignored.
     let referrerId: string | null = null;
+    let referrerExtraId: string | null = null;
     if (!existingShop || existingShop.referred_by === null) {
       const cookieStore = await cookies();
       const referralCode = cookieStore.get("referral_code")?.value;
@@ -97,7 +99,18 @@ export async function completeOnboarding(
           .select("id")
           .eq("referral_code", referralCode)
           .maybeSingle();
-        if (referrer && referrer.id !== existingShop?.id) referrerId = referrer.id;
+        if (referrer && referrer.id !== existingShop?.id) {
+          referrerId = referrer.id;
+        } else if (hasAdminClient()) {
+          const { data: extraReferrer } = await createAdminClient()
+            .from("extras_profiles")
+            .select("id, user_id")
+            .eq("referral_code", referralCode)
+            .maybeSingle();
+          if (extraReferrer && extraReferrer.user_id !== user.id) {
+            referrerExtraId = extraReferrer.id;
+          }
+        }
       }
     }
 
@@ -108,6 +121,7 @@ export async function completeOnboarding(
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
       ...(referrerId ? { referred_by: referrerId } : {}),
+      ...(referrerExtraId ? { referred_by_extra: referrerExtraId } : {}),
     };
     const { error } = existingShop
       ? await supabase.from("coffee_shops").update(values).eq("id", existingShop.id)

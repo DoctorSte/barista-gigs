@@ -67,6 +67,8 @@ export type CoffeeShop = {
   referral_code: string;
   referred_by: string | null;
   referral_reward_granted: boolean;
+  referred_by_extra: string | null;
+  extra_referral_bonus_granted: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -93,8 +95,19 @@ export type ExtraProfile = {
   availability: Availability;
   skills: string[];
   is_available: boolean;
+  referral_code: string;
   created_at: string;
   updated_at: string;
+};
+
+export type ReferralBonus = {
+  id: string;
+  extra_id: string;
+  shop_id: string;
+  amount_cents: number;
+  status: "pending" | "paid";
+  created_at: string;
+  paid_at: string | null;
 };
 
 export type Recommendation = {
@@ -151,12 +164,23 @@ export type Subscription = {
   updated_at: string;
 };
 
+export type Review = {
+  id: string;
+  interest_id: string;
+  author_role: Role;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};
+
 export type Interest = {
   id: string;
   announcement_id: string;
   extra_id: string;
   message: string;
   status: InterestStatus;
+  work_status: "completed" | "no_show" | null;
+  work_status_at: string | null;
   created_at: string;
 };
 
@@ -252,6 +276,8 @@ export type Database = {
       cafe_members: Table<CafeMember, "owner_id" | "member_id">;
       cafe_invites: Table<CafeInvite, "owner_id" | "email">;
       notification_prefs: Table<NotificationPrefs, "user_id">;
+      reviews: Table<Review, "interest_id" | "author_role" | "rating">;
+      referral_bonuses: Table<ReferralBonus, "extra_id" | "shop_id" | "amount_cents">;
     };
     Views: Record<string, never>;
     Functions: {

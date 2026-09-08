@@ -10,7 +10,12 @@ import { PassportLink } from "@/components/passport-link";
 import { ExtraProfileForm } from "@/components/extra-profile-form";
 import { PaymentDetailsForm } from "@/components/payment-details-form";
 import { PortfolioManager } from "@/components/portfolio-manager";
-import type { PortfolioPhoto } from "@/lib/database.types";
+import { ReferralLink } from "@/components/referral-link";
+import { Badge } from "@/components/ui/badge";
+import { formatDate, formatMoney } from "@/lib/format";
+import { BARISTA_REFERRAL_BONUS_CENTS } from "@/lib/referrals";
+import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
+import type { PortfolioPhoto, ReferralBonus } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "My profile" };
 
@@ -39,6 +44,24 @@ export default async function ProfilePage() {
   }[];
 
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
+
+  // Referred cafés may live in other cities — read them via the service role.
+  let referredCafes: { id: string; name: string; created_at: string }[] = [];
+  if (hasAdminClient()) {
+    const { data: referredData } = await createAdminClient()
+      .from("coffee_shops")
+      .select("id, name, created_at")
+      .eq("referred_by_extra", extra.id)
+      .order("created_at", { ascending: false });
+    referredCafes = (referredData ?? []) as typeof referredCafes;
+  }
+  const { data: bonusData } = await supabase
+    .from("referral_bonuses")
+    .select("*")
+    .eq("extra_id", extra.id);
+  const bonuses = (bonusData ?? []) as ReferralBonus[];
+  const bonusByShop = new Map(bonuses.map((b) => [b.shop_id, b]));
+  const earnedCents = bonuses.reduce((sum, b) => sum + b.amount_cents, 0);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -75,6 +98,54 @@ export default async function ProfilePage() {
         ) : null}
         <ExtraProfileForm profile={profile} extra={extra} />
         <PaymentDetailsForm details={paymentData?.details ?? ""} />
+        <div className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="font-display text-lg font-semibold tracking-tight">
+            Refer a café, earn {formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR")}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Know a café that should be hiring here? When they subscribe through your link, you get
+            a {formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR")} cash bonus — paid to the payment
+            details above.
+          </p>
+          <div className="mt-4">
+            <ReferralLink code={extra.referral_code} />
+          </div>
+          {referredCafes.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-sm font-medium">
+                {referredCafes.length} {referredCafes.length === 1 ? "café" : "cafés"} joined with
+                your link
+                {earnedCents > 0 ? ` · ${formatMoney(earnedCents, "EUR")} earned` : ""}
+              </p>
+              <ul className="mt-2.5 flex flex-col gap-1.5">
+                {referredCafes.map((cafe) => {
+                  const bonus = bonusByShop.get(cafe.id);
+                  return (
+                    <li
+                      key={cafe.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 px-3.5 py-2 text-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        {cafe.name}
+                        <span className="text-[12px] text-muted-foreground">
+                          joined {formatDate(cafe.created_at)}
+                        </span>
+                      </span>
+                      {bonus ? (
+                        <Badge tone="success">
+                          {formatMoney(bonus.amount_cents, "EUR")}{" "}
+                          {bonus.status === "paid" ? "paid" : "on its way"}
+                        </Badge>
+                      ) : (
+                        <Badge>Not subscribed yet</Badge>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
         <CvUpload userId={user.id} cvPath={extra.cv_path} cvFilename={extra.cv_filename} />
         <PortfolioManager
           userId={user.id}

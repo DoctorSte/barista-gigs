@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { appUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
-import { grantReferralRewardIfEligible } from "@/lib/referrals";
+import { grantBaristaReferralBonusIfEligible, grantReferralRewardIfEligible } from "@/lib/referrals";
 import { isPlanId, stripePriceId, type BillingInterval, type PlanId } from "@/lib/plans";
 import type { ActionResult } from "@/lib/validation";
 import type { Subscription } from "@/lib/database.types";
@@ -58,6 +58,7 @@ export async function startSubscription(
     });
     if (error) return { ok: false, error: "Could not activate the dev subscription." };
     await grantReferralRewardIfEligible(primary.id);
+    await grantBaristaReferralBonusIfEligible(primary.id);
     revalidatePath("/settings/billing");
     revalidatePath("/cafe/dashboard");
     return { ok: true };

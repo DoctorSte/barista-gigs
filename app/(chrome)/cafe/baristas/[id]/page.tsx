@@ -12,6 +12,9 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { InviteForm } from "@/components/invite-form";
+import { RatingStars } from "@/components/review-form";
+import { baristaTrustStats } from "@/lib/trust";
+import { formatRelative } from "@/lib/format";
 import type { ExtraProfile, PortfolioPhoto } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Barista profile" };
@@ -88,6 +91,33 @@ export default async function BaristaProfilePage({
   const name = barista.profiles?.display_name ?? "Barista";
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
 
+  const trust = (await baristaTrustStats(supabase, [barista.id]))[barista.id] ?? null;
+  // Cross-café review list; the RLS-scoped client would only surface the
+  // viewer's own reviews, so read via service role when available.
+  const reviewClient = hasAdminClient() ? createAdminClient() : supabase;
+  const { data: reviewData } = await reviewClient
+    .from("reviews")
+    .select(
+      "id, rating, comment, created_at, interests!inner(extra_id, announcements!inner(coffee_shops(name)))",
+    )
+    .eq("author_role", "shop")
+    .eq("interests.extra_id", barista.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  const cafeReviews = ((reviewData ?? []) as unknown as {
+    id: string;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+    interests: { announcements: { coffee_shops: { name: string } | null } };
+  }[]).map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    created_at: r.created_at,
+    cafeName: r.interests.announcements.coffee_shops?.name ?? "A café",
+  }));
+
   // CVs live in a private bucket; hand café viewers a short-lived signed URL.
   let cvUrl: string | null = null;
   if (barista.cv_path && hasAdminClient()) {
@@ -147,6 +177,26 @@ export default async function BaristaProfilePage({
           ) : null}
         </div>
 
+        {trust && (trust.completed > 0 || trust.noShows > 0 || trust.reviewCount > 0) ? (
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+            {trust.rating != null ? (
+              <RatingStars rating={trust.rating} count={trust.reviewCount} />
+            ) : null}
+            {trust.completed > 0 ? (
+              <span className="text-muted-foreground">
+                {trust.completed} confirmed {trust.completed === 1 ? "shift" : "shifts"}
+              </span>
+            ) : null}
+            {trust.showUpRate != null ? (
+              <span
+                className={trust.showUpRate >= 90 ? "font-medium text-success" : "text-muted-foreground"}
+              >
+                {trust.showUpRate}% show-up rate
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
         {barista.bio ? (
           <p className="mt-6 whitespace-pre-wrap text-[15px] leading-relaxed">{barista.bio}</p>
         ) : null}
@@ -205,6 +255,27 @@ export default async function BaristaProfilePage({
           </p>
         ) : null}
       </div>
+
+      {cafeReviews.length > 0 ? (
+        <section className="rise-in mt-10 [animation-delay:40ms]">
+          <h2 className="mb-3 font-display text-xl font-semibold">What cafés say</h2>
+          <ul className="flex flex-col gap-3">
+            {cafeReviews.map((review) => (
+              <li key={review.id} className="rounded-lg border border-border bg-surface p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <RatingStars rating={review.rating} />
+                  <p className="text-[13px] text-muted-foreground">
+                    {review.cafeName} · {formatRelative(review.created_at)}
+                  </p>
+                </div>
+                {review.comment ? (
+                  <p className="mt-2 text-sm leading-relaxed">{review.comment}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {photos.length > 0 ? (
         <section className="rise-in mt-10 [animation-delay:80ms]">

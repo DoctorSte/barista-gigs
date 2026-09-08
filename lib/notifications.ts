@@ -21,7 +21,9 @@ export type NotificationInput = {
     | "sos_gig"
     | "referral_reward"
     | "team_invite"
-    | "team_joined";
+    | "team_joined"
+    | "shift_completed"
+    | "new_review";
   title: string;
   body?: string;
   href?: string;

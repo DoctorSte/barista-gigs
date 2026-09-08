@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 import { requireShop } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { BaristasBrowser, type DirectoryBarista } from "@/components/baristas-browser";
+import { baristaTrustStats } from "@/lib/trust";
 import type { RateCard } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "Baristas" };
@@ -66,6 +67,8 @@ export default async function BaristasPage() {
     }
   }
 
+  const trustByExtra = await baristaTrustStats(supabase, extraIds);
+
   const baristas: DirectoryBarista[] = rows.map((row) => ({
     id: row.id,
     name: row.profiles?.display_name ?? "Barista",
@@ -78,6 +81,9 @@ export default async function BaristasPage() {
     skills: row.skills,
     recommendations: recommendationCounts.get(row.id) ?? 0,
     shifts: shiftCounts.get(row.id) ?? 0,
+    rating: trustByExtra[row.id]?.rating ?? null,
+    reviewCount: trustByExtra[row.id]?.reviewCount ?? 0,
+    completedShifts: trustByExtra[row.id]?.completed ?? 0,
   }));
 
   return (

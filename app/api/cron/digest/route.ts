@@ -8,7 +8,14 @@ import type { Notification, NotificationPrefs } from "@/lib/database.types";
 // emailed instantly (messages, declines, referral rewards, team joins).
 // Triggered by Vercel Cron; Vercel sends `Authorization: Bearer ${CRON_SECRET}`.
 
-const DIGEST_TYPES = ["new_message", "application_declined", "referral_reward", "team_joined"];
+const DIGEST_TYPES = [
+  "new_message",
+  "application_declined",
+  "referral_reward",
+  "team_joined",
+  "shift_completed",
+  "new_review",
+];
 const LOOKBACK_HOURS = 48;
 const MAX_LINES = 8;
 

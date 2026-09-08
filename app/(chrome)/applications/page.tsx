@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CalendarClock, MessageSquare, Send } from "lucide-react";
+import { CalendarClock, CheckCheck, MessageSquare, Send } from "lucide-react";
 import { requireExtra } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatGigSchedule, formatPay, formatRelative } from "@/lib/format";
 import { InterestStatusBadge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { ReviewForm } from "@/components/review-form";
 import type { Announcement, Interest } from "@/lib/database.types";
 
 export const metadata: Metadata = { title: "My applications" };
@@ -31,6 +32,19 @@ export default async function ApplicationsPage() {
   const interests = (interestData ?? []) as unknown as InterestRow[];
   const conversationByGig = new Map(
     (conversationData ?? []).map((c) => [c.announcement_id, c.id]),
+  );
+
+  // Reviews this barista already left, so the form hides after posting.
+  const completedIds = interests.filter((i) => i.work_status === "completed").map((i) => i.id);
+  const { data: myReviewData } = completedIds.length
+    ? await supabase
+        .from("reviews")
+        .select("interest_id")
+        .eq("author_role", "extra")
+        .in("interest_id", completedIds)
+    : { data: [] };
+  const reviewedIds = new Set(
+    ((myReviewData ?? []) as { interest_id: string }[]).map((r) => r.interest_id),
   );
 
   return (
@@ -89,13 +103,28 @@ export default async function ApplicationsPage() {
                     {formatPay(gig.pay_rate_cents, gig.pay_type)}
                   </p>
                 ) : null}
-                {interest.status === "accepted" && conversationId ? (
-                  <Link
-                    href={`/messages/${conversationId}`}
-                    className="pressable mt-3 inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success"
-                  >
-                    <MessageSquare className="size-4" /> Message the café
-                  </Link>
+                <div className="mt-3 flex flex-wrap items-center gap-2 empty:mt-0">
+                  {interest.status === "accepted" && conversationId ? (
+                    <Link
+                      href={`/messages/${conversationId}`}
+                      className="pressable inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success"
+                    >
+                      <MessageSquare className="size-4" /> Message the café
+                    </Link>
+                  ) : null}
+                  {interest.work_status === "completed" ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success">
+                      <CheckCheck className="size-4" /> Shift completed
+                    </span>
+                  ) : null}
+                </div>
+                {interest.work_status === "completed" && !reviewedIds.has(interest.id) ? (
+                  <div className="mt-3">
+                    <ReviewForm
+                      interestId={interest.id}
+                      subject={gig?.coffee_shops?.name ?? "the café"}
+                    />
+                  </div>
                 ) : null}
               </li>
             );

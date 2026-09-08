@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AtSign, Banknote, Check, FileText, Inbox, MessageSquare, RotateCcw, ThumbsUp, X } from "lucide-react";
+import { AtSign, Banknote, Check, CheckCheck, FileText, Inbox, MessageSquare, RotateCcw, ThumbsUp, UserX, X } from "lucide-react";
 import { toast } from "sonner";
 import { decideInterest } from "@/app/actions/gigs";
 import { toggleRecommendation } from "@/app/actions/recommendations";
+import { setWorkStatus } from "@/app/actions/trust";
+import { ReviewForm } from "@/components/review-form";
 import type { Interest, RateCard } from "@/lib/database.types";
 import { formatMoney, formatRelative } from "@/lib/format";
 import { skillLabel } from "@/lib/constants";
@@ -41,6 +43,8 @@ export function ApplicantList({
   workedByExtra,
   paymentByExtra,
   cvByExtra,
+  gigEnded = false,
+  reviewedInterestIds = [],
 }: {
   applicants: ApplicantRow[];
   conversationByExtra: Record<string, string>;
@@ -48,6 +52,9 @@ export function ApplicantList({
   workedByExtra: Record<string, number>;
   paymentByExtra: Record<string, string>;
   cvByExtra: Record<string, { url: string; filename: string }>;
+  gigEnded?: boolean;
+  /** Interests this café has already reviewed. */
+  reviewedInterestIds?: string[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -67,6 +74,24 @@ export function ApplicantList({
       const result = await decideInterest(interestId, decision);
       if (result.ok) {
         toast.success(decision === "accepted" ? "Application accepted" : "Application declined");
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
+
+  function markShift(interestId: string, workStatus: "completed" | "no_show" | null) {
+    startTransition(async () => {
+      const result = await setWorkStatus(interestId, workStatus);
+      if (result.ok) {
+        toast.success(
+          workStatus === "completed"
+            ? "Shift confirmed"
+            : workStatus === "no_show"
+              ? "Marked as no-show"
+              : "Cleared",
+        );
         router.refresh();
       } else {
         toast.error(result.error);
@@ -221,6 +246,43 @@ export function ApplicantList({
                       <MessageSquare className="size-4" /> Open conversation
                     </Link>
                   ) : null}
+                  {applicant.status === "accepted" && gigEnded && !applicant.work_status ? (
+                    <>
+                      <Button
+                        size="sm"
+                        loading={pending}
+                        onClick={() => markShift(applicant.id, "completed")}
+                      >
+                        <CheckCheck className="size-4" /> Worked the shift
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        loading={pending}
+                        onClick={() => markShift(applicant.id, "no_show")}
+                      >
+                        <UserX className="size-4" /> No-show
+                      </Button>
+                    </>
+                  ) : null}
+                  {applicant.work_status === "completed" ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success">
+                      <CheckCheck className="size-4" /> Shift confirmed
+                    </span>
+                  ) : null}
+                  {applicant.work_status === "no_show" ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-sm bg-danger-soft px-3 py-1.5 text-[13px] font-medium text-danger">
+                      <UserX className="size-4" /> No-show
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => markShift(applicant.id, null)}
+                        className="underline-offset-2 hover:underline"
+                      >
+                        Undo
+                      </button>
+                    </span>
+                  ) : null}
                   {applicant.status === "accepted" && extra ? (
                     <>
                       <Button
@@ -241,6 +303,12 @@ export function ApplicantList({
                     </>
                   ) : null}
                 </div>
+                {applicant.work_status === "completed" &&
+                !reviewedInterestIds.includes(applicant.id) ? (
+                  <div className="mt-3">
+                    <ReviewForm interestId={applicant.id} subject={name} />
+                  </div>
+                ) : null}
               </div>
             </div>
           </li>

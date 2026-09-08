@@ -9,6 +9,61 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { notify } from "@/lib/notifications";
 import { PLANS, isPlanId } from "@/lib/plans";
 
+/** Cash bonus a barista earns when a café they referred subscribes. */
+export const BARISTA_REFERRAL_BONUS_CENTS = 50_00;
+
+/**
+ * When a barista-referred café activates its first subscription, record a cash
+ * bonus for the barista. Payouts are manual (no Stripe Connect) — the bonus is
+ * tracked as pending and paid to the details on the barista's profile.
+ */
+export async function grantBaristaReferralBonusIfEligible(
+  subscribedShopId: string,
+): Promise<void> {
+  if (!hasAdminClient()) return;
+  const admin = createAdminClient();
+
+  try {
+    const { data: shop } = await admin
+      .from("coffee_shops")
+      .select("id, name, referred_by_extra, extra_referral_bonus_granted")
+      .eq("id", subscribedShopId)
+      .maybeSingle();
+    if (!shop?.referred_by_extra || shop.extra_referral_bonus_granted) return;
+
+    // Claim first so concurrent webhook deliveries can't double-grant.
+    const { data: claimed } = await admin
+      .from("coffee_shops")
+      .update({ extra_referral_bonus_granted: true })
+      .eq("id", shop.id)
+      .eq("extra_referral_bonus_granted", false)
+      .select("id");
+    if (!claimed || claimed.length === 0) return;
+
+    await admin.from("referral_bonuses").insert({
+      extra_id: shop.referred_by_extra,
+      shop_id: shop.id,
+      amount_cents: BARISTA_REFERRAL_BONUS_CENTS,
+    });
+
+    const { data: extra } = await admin
+      .from("extras_profiles")
+      .select("user_id")
+      .eq("id", shop.referred_by_extra)
+      .maybeSingle();
+    if (extra) {
+      await notify(extra.user_id, {
+        type: "referral_reward",
+        title: `${shop.name} subscribed — you earned a €${BARISTA_REFERRAL_BONUS_CENTS / 100} bonus`,
+        body: "We'll pay it out to the payment details on your profile.",
+        href: "/profile",
+      });
+    }
+  } catch {
+    // Rewards are best-effort; never break the subscription flow.
+  }
+}
+
 export async function grantReferralRewardIfEligible(subscribedShopId: string): Promise<void> {
   if (!hasAdminClient()) return;
   const admin = createAdminClient();

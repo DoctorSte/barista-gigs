@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChipGroup } from "@/components/ui/chip-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/field";
+import { RatingStars } from "@/components/review-form";
 import { cn } from "@/lib/utils";
 
 export type DirectoryBarista = {
@@ -27,6 +28,9 @@ export type DirectoryBarista = {
   languages: string[];
   recommendations: number;
   shifts: number;
+  rating: number | null;
+  reviewCount: number;
+  completedShifts: number;
 };
 
 export function BaristasBrowser({
@@ -200,8 +204,21 @@ export function BaristasBrowser({
                         ))}
                       </div>
                     ) : null}
-                    {barista.recommendations > 0 || barista.shifts > 0 ? (
+                    {barista.recommendations > 0 ||
+                    barista.shifts > 0 ||
+                    barista.rating != null ||
+                    barista.completedShifts > 0 ? (
                       <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-[13px]">
+                        {barista.rating != null ? (
+                          <RatingStars rating={barista.rating} count={barista.reviewCount} />
+                        ) : null}
+                        {barista.completedShifts > 0 ? (
+                          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                            <CalendarCheck className="size-3.5" />
+                            {barista.completedShifts} confirmed{" "}
+                            {barista.completedShifts === 1 ? "shift" : "shifts"}
+                          </span>
+                        ) : null}
                         {barista.recommendations > 0 ? (
                           <span className="inline-flex items-center gap-1.5 font-medium text-success">
                             <ThumbsUp className="size-3.5" />
