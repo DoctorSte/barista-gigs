@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 const LEGAL_LINKS = [
+  { href: "/for-cafes", label: "For cafés" },
+  { href: "/for-baristas", label: "For baristas" },
   { href: "/legal/terms", label: "Terms" },
   { href: "/legal/privacy", label: "Privacy" },
   { href: "/legal/disclaimer", label: "Disclaimers" },

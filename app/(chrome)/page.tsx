@@ -1,9 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Gift,
+  MapPin,
+  Siren,
+  Sparkles,
+  Stamp,
+  Users,
+} from "lucide-react";
 import { getSession, homeForRole } from "@/lib/auth";
-import { PLANS, type Plan } from "@/lib/plans";
+import { PlanCards } from "@/components/plan-cards";
+
+export const metadata: Metadata = {
+  description:
+    "Barista Gigs connects specialty cafés with freelance baristas for one-off shifts. Post a gig, hear from baristas in your city, and cover the bar — starting in Paris.",
+  alternates: { canonical: "/" },
+};
 
 const STEPS = [
   {
@@ -23,15 +39,41 @@ const STEPS = [
   },
 ];
 
-function planFeatures(plan: Plan): string[] {
-  return [
-    plan.gigsPerMonth ? `${plan.gigsPerMonth} gigs a month` : "Unlimited gigs",
-    plan.locations === 1 ? "1 location" : `Up to ${plan.locations} locations`,
-    plan.teamAccounts === 1 ? "Single account" : `${plan.teamAccounts} team accounts`,
-    "Barista directory",
-    "Referral free months",
-  ];
-}
+const CAFE_FEATURES = [
+  {
+    icon: Siren,
+    title: "SOS mode",
+    body: "Barista called in sick an hour before open? Flag the gig urgent and every barista in your city hears about it.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Track records you can trust",
+    body: "Confirmed shifts, show-up rates, and reviews from other cafés — on every applicant.",
+  },
+  {
+    icon: Users,
+    title: "Team accounts & locations",
+    body: "Give your managers the workspace, keep billing to yourself. Up to three locations on one plan.",
+  },
+];
+
+const BARISTA_FEATURES = [
+  {
+    icon: Stamp,
+    title: "The Barista Passport",
+    body: "Every confirmed shift stamps your shareable passport — your career, documented café by café.",
+  },
+  {
+    icon: MapPin,
+    title: "Gigs on a map",
+    body: "See every open shift in your city, filter by skill and rate, apply in one tap.",
+  },
+  {
+    icon: Gift,
+    title: "€50 per café you bring",
+    body: "Refer a café; when they subscribe, you get a cash bonus. And the platform stays free for you, always.",
+  },
+];
 
 export default async function LandingPage() {
   const { profile } = await getSession();
@@ -100,6 +142,70 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* Both sides of the bar */}
+      <section className="border-t border-border py-16">
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              For cafés
+            </p>
+            <h2 className="font-display text-2xl font-semibold tracking-tight">
+              Cover the bar, keep the standard
+            </h2>
+            <div className="mt-5 flex flex-col gap-3">
+              {CAFE_FEATURES.map((feature) => (
+                <div key={feature.title} className="flex gap-3.5 rounded-lg border border-border bg-surface p-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                    <feature.icon className="size-4.5" strokeWidth={1.75} />
+                  </span>
+                  <div>
+                    <h3 className="font-medium">{feature.title}</h3>
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                      {feature.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/for-cafes"
+              className="pressable mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-accent hover:underline"
+            >
+              Everything for cafés <ArrowRight className="size-4" />
+            </Link>
+          </div>
+          <div>
+            <p className="mb-2 font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              For baristas
+            </p>
+            <h2 className="font-display text-2xl font-semibold tracking-tight">
+              Your craft, on your terms
+            </h2>
+            <div className="mt-5 flex flex-col gap-3">
+              {BARISTA_FEATURES.map((feature) => (
+                <div key={feature.title} className="flex gap-3.5 rounded-lg border border-border bg-surface p-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                    <feature.icon className="size-4.5" strokeWidth={1.75} />
+                  </span>
+                  <div>
+                    <h3 className="font-medium">{feature.title}</h3>
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                      {feature.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/for-baristas"
+              className="pressable mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-accent hover:underline"
+            >
+              Everything for baristas <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Barista Passport — free side of the marketplace, and the thing nobody else has. */}
       <section className="pb-16">
         <div className="pp-teaser relative overflow-hidden rounded-xl px-6 py-12 sm:px-12">
@@ -165,43 +271,7 @@ export default async function LandingPage() {
               Free for baristas, always. Cafés pick the plan that fits their bar.
             </p>
           </div>
-          <div className="grid w-full gap-4 sm:grid-cols-3">
-            {[PLANS.occasional, PLANS.regular, PLANS.group].map((plan) => {
-              const highlighted = plan.id === "regular";
-              return (
-                <div
-                  key={plan.id}
-                  className={
-                    highlighted
-                      ? "hover-raise relative flex flex-col rounded-lg border border-accent bg-surface p-6 text-left"
-                      : "hover-raise flex flex-col rounded-lg border border-border bg-surface p-6 text-left"
-                  }
-                >
-                  {highlighted ? (
-                    <span className="absolute -top-3 left-6 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-accent-foreground">
-                      Most popular
-                    </span>
-                  ) : null}
-                  <h3 className="font-display text-lg font-semibold">{plan.name}</h3>
-                  <p className="mt-3 font-display text-3xl font-semibold">
-                    €{plan.monthlyCents / 100}
-                    <span className="text-base font-normal text-muted-foreground">/month</span>
-                  </p>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    or €{plan.yearlyCents / 100}/year — 2 months free
-                  </p>
-                  <ul className="mt-5 flex flex-col gap-2 text-[14px] text-muted-foreground">
-                    {planFeatures(plan).map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <Check className="size-4 shrink-0 text-success" strokeWidth={2.5} />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
+          <PlanCards />
           <Link
             href="/signup?role=shop"
             className="pressable inline-flex h-11 items-center rounded-md bg-accent px-6 text-[15px] font-medium text-accent-foreground hover:bg-accent/90"

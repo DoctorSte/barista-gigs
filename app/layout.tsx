@@ -25,19 +25,43 @@ const clashDisplay = localFont({
   display: "swap",
 });
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://baristagigs.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
     default: "Barista Gigs — coffee shifts, covered",
     template: "%s · Barista Gigs",
   },
   description:
     "Barista Gigs connects specialty cafés with skilled freelance baristas for one-off shifts across Europe.",
+  openGraph: {
+    siteName: "Barista Gigs",
+    type: "website",
+    locale: "en_US",
+    images: [{ url: "/mascot.png", width: 300, height: 277, alt: "Barista Gigs" }],
+  },
+  twitter: { card: "summary" },
+};
+
+const ORG_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Barista Gigs",
+  url: BASE_URL,
+  logo: `${BASE_URL}/mascot.png`,
+  description:
+    "A marketplace connecting specialty cafés with freelance baristas for one-off shifts.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${generalSans.variable} ${clashDisplay.variable} min-h-dvh`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
+        />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Analytics />
           {children}

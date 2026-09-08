@@ -21,9 +21,14 @@ const SHOP_LINKS: NavLink[] = [
   { href: "/messages", label: "Messages" },
 ];
 
+const GUEST_LINKS: NavLink[] = [
+  { href: "/for-cafes", label: "For cafés" },
+  { href: "/for-baristas", label: "For baristas" },
+];
+
 export async function SiteHeader() {
   const { user, profile } = await getSession();
-  const links = profile ? (profile.role === "shop" ? SHOP_LINKS : EXTRA_LINKS) : [];
+  const links = profile ? (profile.role === "shop" ? SHOP_LINKS : EXTRA_LINKS) : GUEST_LINKS;
   const city = profile ? await getCityById(profile.city_id) : null;
 
   let notifications: Notification[] = [];
