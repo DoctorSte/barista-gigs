@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Disclaimers" };
 
 export default function DisclaimerPage() {
   return (
-    <LegalPage title="Disclaimers" updated="20 August 2026">
+    <LegalPage title="Disclaimers" updated="8 September 2026">
       <LegalSection heading="Not an employer or staffing agency">
         <p>
           Barista Gigs is a listing and matching service. We are not the employer of any barista,
@@ -22,9 +22,12 @@ export default function DisclaimerPage() {
       <LegalSection heading="No vetting">
         <p>
           We do not run background checks, verify certifications, confirm work eligibility, or
-          audit cafés&rsquo; premises. Profiles, portfolios, recommendations, and gig descriptions
-          are written by users. Exercise the same judgment you would with any stranger: meet
-          first if you can, check references, and trust your instincts.
+          audit cafés&rsquo; premises. Profiles, portfolios, recommendations, reviews, and gig
+          descriptions are written by users. Reliability statistics (confirmed shifts, show-up
+          rates) and star ratings summarise what cafés and baristas recorded about each other —
+          we do not independently verify that any shift happened or happened as described.
+          Exercise the same judgment you would with any stranger: meet first if you can, check
+          references, and trust your instincts.
         </p>
       </LegalSection>
 
@@ -33,7 +36,9 @@ export default function DisclaimerPage() {
           All payment for shifts happens directly between café and barista. We do not hold funds,
           guarantee payment, mediate pay disputes, or verify the payment details baristas share.
           Only share payment information you are comfortable giving to a counterparty, and only
-          after a gig is actually agreed.
+          after a gig is actually agreed. The one payment we do make ourselves is the barista
+          referral bonus described in the Terms — it is a marketing reward from us, unrelated to
+          pay for any shift.
         </p>
       </LegalSection>
 
