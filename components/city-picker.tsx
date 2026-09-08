@@ -7,6 +7,7 @@ import type { CitySearchResult } from "@/lib/city";
 import { Input } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 export type PickedCity = {
   slug: string;
@@ -50,6 +51,7 @@ export function CityPicker({
   onChange: (city: PickedCity | null) => void;
   name?: string;
 }) {
+  const d = useDict();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CitySearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -116,7 +118,7 @@ export function CityPicker({
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Or search any city…"
+          placeholder={d.shopForm.citySearch}
           className="pl-9"
           aria-label="Search cities"
         />

@@ -4,6 +4,7 @@ import { requireExtra } from "@/lib/auth";
 import { getCityById } from "@/lib/city";
 import { createClient } from "@/lib/supabase/server";
 import { GigsBrowser, type BrowserGig } from "@/components/gigs-browser";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Jobs" };
 
@@ -21,14 +22,15 @@ export default async function JobsPage() {
     .order("created_at", { ascending: false });
 
   const jobs = (data ?? []) as unknown as BrowserGig[];
+  const d = await getDict();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Jobs</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.jobs.title}</h1>
         <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
           <MapPin className="size-4" />
-          {city?.name ?? "Your city"} — full- and part-time roles at cafés
+          {d.jobs.subtitle(city?.name ?? "…")}
         </p>
       </div>
 

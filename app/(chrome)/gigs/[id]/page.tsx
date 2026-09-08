@@ -10,6 +10,7 @@ import { Badge, InterestStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CafeCard } from "@/components/cafe-card";
 import { cafeTrustStats } from "@/lib/trust";
+import { dateLocale, getDict, getLocale } from "@/lib/i18n";
 import { InterestForm } from "@/components/interest-form";
 import type { Announcement, CoffeeShop, Interest } from "@/lib/database.types";
 
@@ -110,6 +111,8 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
           .map((day) => WEEKDAYS[day])
       : [];
 
+  const d = await getDict();
+  const loc = dateLocale(await getLocale());
   const shop = gig.coffee_shops;
   const cafeRating = shop
     ? await cafeTrustStats(supabase, shop.id)
@@ -121,7 +124,7 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
         href={gig.kind === "shift" ? "/gigs" : "/jobs"}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> {gig.kind === "shift" ? "All gigs" : "All jobs"}
+        <ArrowLeft className="size-4" /> {gig.kind === "shift" ? d.gigs.allGigs : d.gigs.allJobs}
       </Link>
 
       <div className="rise-in">
@@ -132,14 +135,14 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
             {gig.title}
           </h1>
           <span className="rounded-md bg-accent-soft px-3 py-1.5 text-lg font-semibold text-accent">
-            {formatPay(gig.pay_rate_cents, gig.pay_type)}
+            {formatPay(gig.pay_rate_cents, gig.pay_type, "EUR", loc)}
           </span>
         </div>
         {gig.kind !== "shift" ? (
           <p className="mt-3 flex items-center gap-1.5 text-[15px] text-muted-foreground">
             <Briefcase className="size-4" />
-            {formatListingKind(gig.kind)}
-            {gig.weekly_hours ? ` · ~${gig.weekly_hours} h/week` : ""}
+            {formatListingKind(gig.kind, loc)}
+            {gig.weekly_hours ? ` · ~${gig.weekly_hours} h/${loc.startsWith("fr") ? "semaine" : "week"}` : ""}
           </p>
         ) : gig.shifts.length > 0 ? (
           <ul className="mt-3 flex flex-col gap-1">
@@ -149,27 +152,26 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
                 className="flex items-center gap-1.5 text-[15px] text-muted-foreground"
               >
                 <CalendarClock className="size-4" />
-                {formatShift(shift)}
+                {formatShift(shift, loc)}
               </li>
             ))}
           </ul>
         ) : (
           <p className="mt-3 flex items-center gap-1.5 text-[15px] text-muted-foreground">
             <CalendarClock className="size-4" />
-            {formatShiftRange(gig.starts_at, gig.ends_at)}
+            {formatShiftRange(gig.starts_at, gig.ends_at, loc)}
           </p>
         )}
         {offDayNames.length > 0 ? (
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-warning-soft px-3 py-1.5 text-[13px] text-warning">
             <Info className="size-3.5 shrink-0" />
-            Heads up — {offDayNames.join(", ")} {offDayNames.length > 1 ? "are" : "is"} outside
-            your usual availability.
+            {d.gigs.offDays(offDayNames.join(", "), offDayNames.length > 1)}
           </p>
         ) : null}
         {gig.required_skills.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {gig.required_skills.map((skill) => (
-              <Badge key={skill}>{skillLabel(skill)}</Badge>
+              <Badge key={skill}>{d.labels.skills[skill] ?? skillLabel(skill)}</Badge>
             ))}
           </div>
         ) : null}
@@ -193,22 +195,19 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
             className="mb-4 flex items-start gap-2 rounded-md border border-danger/25 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
           >
             <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-            <p>
-              This overlaps with your accepted shift at{" "}
-              {conflictTitles.map((title) => `“${title}”`).join(", ")}.
-            </p>
+            <p>{d.gigs.conflict(conflictTitles.map((title) => `“${title}”`).join(", "))}</p>
           </div>
         ) : null}
         {interest ? (
           <Card className="flex items-center justify-between gap-4">
             <div>
-              <p className="font-medium">You applied to this gig</p>
+              <p className="font-medium">{d.gigs.youApplied}</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {interest.status === "accepted"
-                  ? "You're in — the café accepted your application."
+                  ? d.gigs.accepted
                   : interest.status === "declined"
-                    ? "The café went with someone else this time."
-                    : "The café hasn’t responded yet."}
+                    ? d.gigs.declined
+                    : d.gigs.pending}
               </p>
             </div>
             <InterestStatusBadge status={interest.status} />
@@ -217,7 +216,7 @@ export default async function GigDetailPage({ params }: { params: Promise<{ id: 
           <InterestForm announcementId={gig.id} />
         ) : (
           <Card>
-            <p className="text-sm text-muted-foreground">This gig is no longer open.</p>
+            <p className="text-sm text-muted-foreground">{d.gigs.noLongerOpen}</p>
           </Card>
         )}
       </div>

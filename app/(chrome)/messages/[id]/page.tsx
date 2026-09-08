@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/avatar";
 import { MessageThread } from "@/components/message-thread";
 import type { Conversation, Message } from "@/lib/database.types";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Conversation" };
 
@@ -42,6 +43,7 @@ export default async function ConversationPage({
     .order("created_at");
   const messages = (messageData ?? []) as Message[];
 
+  const d = await getDict();
   const counterpart =
     profile.role === "shop"
       ? conversation.extras_profiles?.profiles?.display_name ?? "Barista"
@@ -52,7 +54,7 @@ export default async function ConversationPage({
       <div className="flex items-center gap-3.5 border-b border-border py-4">
         <Link
           href="/messages"
-          aria-label="All conversations"
+          aria-label={d.messages.allConversations}
           className="pressable flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
         >
           <ArrowLeft className="size-4.5" />
@@ -61,7 +63,7 @@ export default async function ConversationPage({
         <div className="min-w-0">
           <p className="truncate font-medium leading-tight">{counterpart}</p>
           <p className="truncate text-[13px] text-muted-foreground">
-            {conversation.announcements?.title ?? "Gig conversation"}
+            {conversation.announcements?.title ?? d.messages.gigConversation}
           </p>
         </div>
       </div>

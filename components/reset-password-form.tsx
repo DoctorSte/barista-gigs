@@ -5,13 +5,15 @@ import { resetPassword } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
+import { useDict } from "@/components/i18n-provider";
 
 export function ResetPasswordForm() {
+  const d = useDict();
   const [state, action] = useActionState(resetPassword, null);
 
   return (
     <form action={action} className="flex flex-col gap-4">
-      <Field label="New password" hint="At least 8 characters">
+      <Field label={d.auth.newPassword} hint={d.auth.passwordHint}>
         {(id) => (
           <Input
             id={id}
@@ -24,14 +26,14 @@ export function ResetPasswordForm() {
           />
         )}
       </Field>
-      <Field label="Confirm password">
+      <Field label={d.auth.confirmPassword}>
         {(id) => (
           <Input id={id} name="confirm" type="password" autoComplete="new-password" required />
         )}
       </Field>
       <FormError message={state && !state.ok ? state.error : undefined} />
       <SubmitButton size="lg" className="w-full">
-        Update password
+        {d.auth.updatePassword}
       </SubmitButton>
     </form>
   );

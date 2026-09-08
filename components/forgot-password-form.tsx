@@ -2,12 +2,14 @@
 
 import { useActionState } from "react";
 import { MailCheck } from "lucide-react";
+import { useDict } from "@/components/i18n-provider";
 import { requestPasswordReset } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 
 export function ForgotPasswordForm() {
+  const d = useDict();
   const [state, action] = useActionState(requestPasswordReset, null);
 
   if (state?.ok) {
@@ -16,7 +18,7 @@ export function ForgotPasswordForm() {
         <span className="flex size-12 items-center justify-center rounded-full bg-success-soft text-success">
           <MailCheck className="size-6" strokeWidth={1.75} />
         </span>
-        <p className="font-medium">Check your inbox</p>
+        <p className="font-medium">{d.auth.checkInbox}</p>
         <p className="max-w-xs text-sm text-muted-foreground">
           If an account exists for that email, a reset link is on its way.
         </p>
@@ -26,14 +28,14 @@ export function ForgotPasswordForm() {
 
   return (
     <form action={action} className="flex flex-col gap-4">
-      <Field label="Email">
+      <Field label={d.auth.email}>
         {(id) => (
           <Input id={id} name="email" type="email" autoComplete="email" required autoFocus />
         )}
       </Field>
       <FormError message={state && !state.ok ? state.error : undefined} />
       <SubmitButton size="lg" className="w-full">
-        Send reset link
+        {d.auth.sendResetLink}
       </SubmitButton>
     </form>
   );

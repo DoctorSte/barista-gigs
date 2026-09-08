@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { getLocale } from "@/lib/i18n";
+import { I18nProvider } from "@/components/i18n-provider";
 import "./globals.css";
 
 const generalSans = localFont({
@@ -54,9 +56,10 @@ const ORG_JSON_LD = {
     "A marketplace connecting specialty cafés with freelance baristas for one-off shifts.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${generalSans.variable} ${clashDisplay.variable} min-h-dvh`}>
         <script
           type="application/ld+json"
@@ -64,7 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Analytics />
-          {children}
+          <I18nProvider locale={locale}>
+            {children}
+          </I18nProvider>
           <Toaster
             position="bottom-right"
             toastOptions={{

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { updateAvatar } from "@/app/actions/profile";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useDict } from "@/components/i18n-provider";
 
 const MAX_SIZE_MB = 4;
 
@@ -20,6 +21,7 @@ export function AvatarUpload({
   name: string;
   avatarUrl: string | null;
 }) {
+  const d = useDict();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -27,11 +29,11 @@ export function AvatarUpload({
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      toast.error("Only images can be uploaded");
+      toast.error(d.uploads.onlyImages);
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      toast.error(`Photos must be under ${MAX_SIZE_MB}MB`);
+      toast.error(d.uploads.imageTooBig(MAX_SIZE_MB));
       return;
     }
 
@@ -48,10 +50,10 @@ export function AvatarUpload({
 
       const result = await updateAvatar(path);
       if (!result.ok) throw new Error(result.error);
-      toast.success("Photo updated");
+      toast.success(d.uploads.photoUpdated);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload failed");
+      toast.error(error instanceof Error ? error.message : d.uploads.uploadFailed);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -62,7 +64,7 @@ export function AvatarUpload({
     startTransition(async () => {
       const result = await updateAvatar(null);
       if (result.ok) {
-        toast.success("Photo removed");
+        toast.success(d.uploads.photoRemoved);
         router.refresh();
       } else {
         toast.error(result.error);
@@ -80,11 +82,11 @@ export function AvatarUpload({
           loading={uploading}
           onClick={() => inputRef.current?.click()}
         >
-          <Camera className="size-4" /> {avatarUrl ? "Change photo" : "Add photo"}
+          <Camera className="size-4" /> {avatarUrl ? d.profile.changePhoto : d.profile.addPhoto}
         </Button>
         {avatarUrl ? (
           <Button variant="outline" size="sm" loading={pending} onClick={handleRemove}>
-            <Trash2 className="size-4" /> Remove
+            <Trash2 className="size-4" /> {d.common.remove}
           </Button>
         ) : null}
       </div>

@@ -12,12 +12,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/field";
 import { GigsMap } from "@/components/gigs-map";
 import { cn } from "@/lib/utils";
+import { useDict, useLocaleTag } from "@/components/i18n-provider";
 
 export type BrowserGig = Announcement & {
   coffee_shops: { name: string; address: string; lat: number | null; lng: number | null } | null;
 };
 
 export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
+  const d = useDict();
+  const loc = useLocaleTag();
   const [view, setView] = useState<"list" | "map">("list");
   const [skills, setSkills] = useState<string[]>([]);
   const [minRate, setMinRate] = useState("");
@@ -39,12 +42,12 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
         .map((gig) => ({
           id: gig.id,
           title: gig.title,
-          pay: formatPay(gig.pay_rate_cents, gig.pay_type),
+          pay: formatPay(gig.pay_rate_cents, gig.pay_type, "EUR", loc),
           shopName: gig.coffee_shops?.name ?? "Coffee shop",
           lat: gig.coffee_shops!.lat!,
           lng: gig.coffee_shops!.lng!,
         })),
-    [filtered],
+    [filtered, loc],
   );
 
   return (
@@ -52,7 +55,7 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2.5">
           <ChipGroup
-            options={[...SKILLS]}
+            options={SKILLS.map((s) => ({ value: s.value, label: d.labels.skills[s.value] ?? s.label }))}
             selected={skills}
             onToggle={(value) =>
               setSkills((prev) =>
@@ -61,7 +64,7 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
             }
           />
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Pays at least</span>
+            <span>{d.gigs.paysAtLeast}</span>
             <Input
               type="number"
               min={0}
@@ -71,15 +74,15 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
               className="h-8 w-20"
               aria-label="Minimum hourly rate in euros"
             />
-            <span>€/hr</span>
+            <span>€{d.common.perHour}</span>
           </div>
         </div>
 
         <div className="grid h-9 grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup">
           {(
             [
-              { value: "list", label: "List", icon: List },
-              { value: "map", label: "Map", icon: MapIcon },
+              { value: "list", label: d.gigs.list, icon: List },
+              { value: "map", label: d.gigs.map, icon: MapIcon },
             ] as const
           ).map((option) => (
             <button
@@ -105,17 +108,15 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
       {filtered.length === 0 ? (
         <EmptyState
           mascot
-          title="No gigs match"
-          description="Try removing a filter — or check back soon."
+          title={d.gigs.noMatch}
+          description={d.gigs.noMatchSub}
         />
       ) : view === "map" ? (
         <div className="flex flex-col gap-2">
           <GigsMap gigs={mapGigs} />
           {mapGigs.length < filtered.length ? (
             <p className="text-[13px] text-muted-foreground">
-              {filtered.length - mapGigs.length} gig
-              {filtered.length - mapGigs.length === 1 ? "" : "s"} without a map location{" "}
-              {filtered.length - mapGigs.length === 1 ? "is" : "are"} only in the list view.
+              {d.gigs.notOnMap(filtered.length - mapGigs.length)}
             </p>
           ) : null}
         </div>
@@ -138,7 +139,7 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
                     </h2>
                   </div>
                   <span className="shrink-0 rounded-md bg-accent-soft px-2.5 py-1 text-sm font-semibold text-accent">
-                    {formatPay(gig.pay_rate_cents, gig.pay_type)}
+                    {formatPay(gig.pay_rate_cents, gig.pay_type, "EUR", loc)}
                   </span>
                 </div>
                 <p className="mt-2.5 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -147,12 +148,12 @@ export function GigsBrowser({ gigs }: { gigs: BrowserGig[] }) {
                   ) : (
                     <CalendarClock className="size-4" />
                   )}
-                  {formatGigSchedule(gig)}
+                  {formatGigSchedule(gig, loc)}
                 </p>
                 {gig.required_skills.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {gig.required_skills.map((skill) => (
-                      <Badge key={skill}>{skillLabel(skill)}</Badge>
+                      <Badge key={skill}>{d.labels.skills[skill] ?? skillLabel(skill)}</Badge>
                     ))}
                   </div>
                 ) : null}

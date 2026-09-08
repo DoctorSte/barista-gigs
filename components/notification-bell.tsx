@@ -13,6 +13,7 @@ import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/ui/menu";
 import { formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/lib/database.types";
+import { useDict, useLocaleTag } from "@/components/i18n-provider";
 
 // Poll while the tab is visible; realtime isn't guaranteed to be enabled.
 const POLL_INTERVAL_MS = 30_000;
@@ -24,6 +25,8 @@ export function NotificationBell({
   notifications: Notification[];
   unreadCount: number;
 }) {
+  const d = useDict();
+  const loc = useLocaleTag();
   const router = useRouter();
   // Notifications that arrived via polling and aren't in the server props yet.
   const [fresh, setFresh] = useState<Notification[]>([]);
@@ -52,14 +55,14 @@ export function NotificationBell({
 
       if (incoming.length > 3) {
         toast(`${incoming.length} new notifications`, {
-          action: { label: "View", onClick: () => router.push("/notifications") },
+          action: { label: d.profile.view, onClick: () => router.push("/notifications") },
         });
       } else {
         for (const notification of incoming) {
           toast(notification.title, {
             description: notification.body ?? undefined,
             action: {
-              label: "View",
+              label: d.profile.view,
               onClick: () => router.push(notification.href ?? "/notifications"),
             },
           });
@@ -74,7 +77,7 @@ export function NotificationBell({
       clearInterval(interval);
       document.removeEventListener("visibilitychange", fetchNew);
     };
-  }, [notifications, router]);
+  }, [notifications, router, d]);
 
   const freshNotInProps = fresh.filter(
     (f) => !notifications.some((n) => n.id === f.id),
@@ -95,7 +98,7 @@ export function NotificationBell({
       trigger={() => (
         <span
           aria-label={
-            totalUnread > 0 ? `Notifications (${totalUnread} unread)` : "Notifications"
+            totalUnread > 0 ? d.notifications.unreadCount(totalUnread) : d.notifications.title
           }
           className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
         >
@@ -108,9 +111,9 @@ export function NotificationBell({
         </span>
       )}
     >
-      <MenuLabel>Notifications</MenuLabel>
+      <MenuLabel>{d.notifications.title}</MenuLabel>
       {items.length === 0 ? (
-        <MenuLabel>Nothing yet</MenuLabel>
+        <MenuLabel>{d.notifications.empty}</MenuLabel>
       ) : (
         items.map((notification) => (
           <MenuItem key={notification.id} onSelect={() => openNotification(notification)}>
@@ -132,7 +135,7 @@ export function NotificationBell({
                 </span>
               ) : null}
               <span className="text-xs text-muted-foreground">
-                {formatRelative(notification.created_at)}
+                {formatRelative(notification.created_at, loc)}
               </span>
             </span>
           </MenuItem>
@@ -140,7 +143,7 @@ export function NotificationBell({
       )}
       <MenuSeparator />
       <MenuItem onSelect={() => router.push("/notifications")}>
-        <Bell className="size-4 text-muted-foreground" /> View all
+        <Bell className="size-4 text-muted-foreground" /> {d.notifications.viewAll}
       </MenuItem>
       {totalUnread > 0 ? (
         <MenuItem
@@ -151,7 +154,7 @@ export function NotificationBell({
             });
           }}
         >
-          <CheckCheck className="size-4 text-muted-foreground" /> Mark all read
+          <CheckCheck className="size-4 text-muted-foreground" /> {d.notifications.markAllShort}
         </MenuItem>
       ) : null}
     </Menu>

@@ -7,6 +7,7 @@ import { formatRelative } from "@/lib/format";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { Conversation } from "@/lib/database.types";
+import { dateLocale, getDict, getLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Messages" };
 
@@ -36,27 +37,29 @@ export default async function MessagesPage() {
   }
 
   const { data } = await query;
+  const d = await getDict();
+  const loc = dateLocale(await getLocale());
   const conversations = (data ?? []) as unknown as ConversationRow[];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Messages</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.messages.title}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
           {profile.role === "shop"
-            ? "Conversations with baristas you've accepted."
-            : "Conversations with cafés that accepted you."}
+            ? d.messages.subShop
+            : d.messages.subExtra}
         </p>
       </div>
 
       {conversations.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
-          title="No conversations yet"
+          title={d.messages.empty}
           description={
             profile.role === "shop"
-              ? "Accept an application and a conversation opens automatically."
-              : "When a café accepts your application, your conversation shows up here."
+              ? d.messages.emptySubShop2
+              : d.messages.emptySubExtra2
           }
         />
       ) : (
@@ -78,7 +81,7 @@ export default async function MessagesPage() {
                       <p className="truncate font-medium">{counterpart}</p>
                       {conversation.last_message_at ? (
                         <span className="shrink-0 text-xs text-muted-foreground">
-                          {formatRelative(conversation.last_message_at)}
+                          {formatRelative(conversation.last_message_at, loc)}
                         </span>
                       ) : null}
                     </div>

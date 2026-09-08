@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 import type { AnnouncementStatus, InterestStatus } from "@/lib/database.types";
 
 type Tone = "neutral" | "accent" | "success" | "danger" | "warning";
@@ -28,25 +31,27 @@ export function Badge({
   );
 }
 
-const GIG_STATUS: Record<AnnouncementStatus, { label: string; tone: Tone }> = {
-  draft: { label: "Draft", tone: "neutral" },
-  open: { label: "Open", tone: "success" },
-  filled: { label: "Filled", tone: "accent" },
-  closed: { label: "Closed", tone: "neutral" },
+const GIG_STATUS: Record<AnnouncementStatus, { tone: Tone }> = {
+  draft: { tone: "neutral" },
+  open: { tone: "success" },
+  filled: { tone: "accent" },
+  closed: { tone: "neutral" },
 };
 
 export function GigStatusBadge({ status }: { status: AnnouncementStatus }) {
-  const { label, tone } = GIG_STATUS[status];
-  return <Badge tone={tone}>{label}</Badge>;
+  const d = useDict();
+  const { tone } = GIG_STATUS[status];
+  return <Badge tone={tone}>{d.status[status]}</Badge>;
 }
 
-const INTEREST_STATUS: Record<InterestStatus, { label: string; tone: Tone }> = {
-  pending: { label: "Pending", tone: "warning" },
-  accepted: { label: "Accepted", tone: "success" },
-  declined: { label: "Declined", tone: "neutral" },
+const INTEREST_STATUS: Record<InterestStatus, { tone: Tone }> = {
+  pending: { tone: "warning" },
+  accepted: { tone: "success" },
+  declined: { tone: "neutral" },
 };
 
 export function InterestStatusBadge({ status }: { status: InterestStatus }) {
-  const { label, tone } = INTEREST_STATUS[status];
-  return <Badge tone={tone}>{label}</Badge>;
+  const d = useDict();
+  const { tone } = INTEREST_STATUS[status];
+  return <Badge tone={tone}>{d.status[status]}</Badge>;
 }

@@ -4,6 +4,7 @@ import { requireProfile } from "@/lib/auth";
 import { getCityById, getFeaturedCities } from "@/lib/city";
 import { Card } from "@/components/ui/card";
 import { ChangeCityForm } from "@/components/change-city-form";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "City" };
 
@@ -14,24 +15,23 @@ export default async function CitySettingsPage() {
     getFeaturedCities(),
   ]);
 
+  const d = await getDict();
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Your city</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.settings.cityTitle}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
-          Gigs and profiles are matched within your city.
+          {d.settings.citySub}
         </p>
       </div>
 
       <Card className="p-8">
         <p className="flex items-center gap-2 font-display text-xl font-semibold">
           <MapPin className="size-5 text-accent" />
-          {city ? `${city.name}, ${city.country_code}` : "No city set"}
+          {city ? `${city.name}, ${city.country_code}` : d.settings.noCity}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          {profile.role === "shop"
-            ? "Moving your café closes any draft or open gigs. Filled gigs and message threads are kept."
-            : "Moving withdraws your pending applications. Accepted gigs and message threads are kept."}
+          {profile.role === "shop" ? d.settings.moveShop : d.settings.moveExtra}
         </p>
 
         <div className="mt-6">

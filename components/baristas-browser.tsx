@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/field";
 import { RatingStars } from "@/components/review-form";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 export type DirectoryBarista = {
   id: string;
@@ -40,6 +41,7 @@ export function BaristasBrowser({
   baristas: DirectoryBarista[];
   savedIds: string[];
 }) {
+  const d = useDict();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [skills, setSkills] = useState<string[]>([]);
@@ -88,7 +90,7 @@ export function BaristasBrowser({
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2.5">
         <ChipGroup
-          options={[...SKILLS]}
+          options={SKILLS.map((sk) => ({ value: sk.value, label: d.labels.skills[sk.value] ?? sk.label }))}
           selected={skills}
           onToggle={(value) =>
             setSkills((prev) =>
@@ -103,7 +105,7 @@ export function BaristasBrowser({
             onClick={() => setRecommendedOnly((v) => !v)}
             className={toggleClass(recommendedOnly)}
           >
-            <ThumbsUp className="size-3.5" /> Recommended
+            <ThumbsUp className="size-3.5" /> {d.barista.recommended}
           </button>
           <button
             type="button"
@@ -111,7 +113,7 @@ export function BaristasBrowser({
             onClick={() => setWorkedWithYou((v) => !v)}
             className={toggleClass(workedWithYou)}
           >
-            <CalendarCheck className="size-3.5" /> Worked with you
+            <CalendarCheck className="size-3.5" /> {d.barista.workedWithYou}
           </button>
           <button
             type="button"
@@ -119,10 +121,10 @@ export function BaristasBrowser({
             onClick={() => setSavedOnly((v) => !v)}
             className={toggleClass(savedOnly)}
           >
-            <Star className="size-3.5" /> Saved
+            <Star className="size-3.5" /> {d.barista.saved}
           </button>
           <span className="ml-1 flex items-center gap-2 text-sm text-muted-foreground">
-            Rate up to
+            {d.barista.rateUpTo}
             <Input
               type="number"
               min={0}
@@ -132,7 +134,7 @@ export function BaristasBrowser({
               className="h-8 w-20"
               aria-label="Maximum hourly rate in euros"
             />
-            €/hr
+            €{d.common.perHour}
           </span>
         </div>
       </div>
@@ -140,8 +142,8 @@ export function BaristasBrowser({
       {filtered.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No baristas match"
-          description="Try removing a filter — or check back soon."
+          title={d.barista.noneMatch}
+          description={d.barista.noneMatchSub}
         />
       ) : (
         <ul className="stagger flex flex-col gap-3">
@@ -180,22 +182,22 @@ export function BaristasBrowser({
                       </p>
                       {barista.hourlyRateCents != null ? (
                         <span className="shrink-0 rounded-md bg-accent-soft px-2.5 py-1 text-sm font-semibold text-accent">
-                          {formatMoney(barista.hourlyRateCents, barista.currency)}/hr
+                          {formatMoney(barista.hourlyRateCents, barista.currency)}{d.common.perHour}
                         </span>
                       ) : null}
                     </div>
                     <p className="mt-0.5 text-[13px] text-muted-foreground">
                       {[
                         barista.yearsExperience != null
-                          ? `${barista.yearsExperience} yrs experience`
+                          ? d.barista.yrsExperience(barista.yearsExperience)
                           : null,
                         barista.languages.length > 0
                           ? barista.languages.map(languageLabel).join(", ")
                           : null,
-                        barista.signatureDrink ? `Signature: ${barista.signatureDrink}` : null,
+                        barista.signatureDrink ? d.barista.signature(barista.signatureDrink) : null,
                       ]
                         .filter(Boolean)
-                        .join(" · ") || "Barista in your city"}
+                        .join(" · ") || d.barista.inYourCity}
                     </p>
                     {barista.skills.length > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -215,22 +217,19 @@ export function BaristasBrowser({
                         {barista.completedShifts > 0 ? (
                           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                             <CalendarCheck className="size-3.5" />
-                            {barista.completedShifts} confirmed{" "}
-                            {barista.completedShifts === 1 ? "shift" : "shifts"}
+                            {d.barista.confirmedShifts(barista.completedShifts)}
                           </span>
                         ) : null}
                         {barista.recommendations > 0 ? (
                           <span className="inline-flex items-center gap-1.5 font-medium text-success">
                             <ThumbsUp className="size-3.5" />
-                            {barista.recommendations}{" "}
-                            {barista.recommendations === 1 ? "recommendation" : "recommendations"}
+                            {d.barista.recommendations(barista.recommendations)}
                           </span>
                         ) : null}
                         {barista.shifts > 0 ? (
                           <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                             <CalendarCheck className="size-3.5" />
-                            {barista.shifts} {barista.shifts === 1 ? "shift" : "shifts"} at your
-                            shop
+                            {d.barista.shiftsAtYourShop(barista.shifts)}
                           </span>
                         ) : null}
                       </p>

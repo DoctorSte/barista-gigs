@@ -8,6 +8,7 @@ import type { Message } from "@/lib/database.types";
 import { formatDateTime } from "@/lib/format";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 const POLL_INTERVAL_MS = 4000;
 
@@ -20,6 +21,7 @@ export function MessageThread({
   currentUserId: string;
   initialMessages: Message[];
 }) {
+  const d = useDict();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -82,7 +84,7 @@ export function MessageThread({
       .single();
     setSending(false);
     if (error || !data) {
-      toast.error("Message didn't send. Try again.");
+      toast.error(d.messages.sendFailed);
       return;
     }
     setDraft("");
@@ -147,7 +149,7 @@ export function MessageThread({
             }
           }}
           rows={1}
-          placeholder="Write a message…"
+          placeholder={d.messages.typeMessage}
           aria-label="Message"
           className="max-h-36 min-h-11 flex-1 resize-none rounded-md border border-border bg-surface px-3.5 py-2.5 text-[15px] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground/70 focus:border-border-strong focus:ring-2 focus:ring-ring/25"
         />

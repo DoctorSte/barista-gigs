@@ -5,35 +5,22 @@ import { toast } from "sonner";
 import { setNotificationPref } from "@/app/actions/notification-settings";
 import { Switch } from "@/components/ui/switch";
 import type { EmailPrefKey } from "@/lib/notification-prefs";
+import { useDict } from "@/components/i18n-provider";
+import type { Dict } from "@/lib/i18n/en";
 
 type Row = { key: EmailPrefKey; label: string; description: string };
 
-function rowsForRole(role: "shop" | "extra"): { instant: Row[]; digest: Row[] } {
+function rowsForRole(role: "shop" | "extra", d: Dict): { instant: Row[]; digest: Row[] } {
+  const t = d.settings;
   if (role === "shop") {
     return {
       instant: [
-        {
-          key: "email_applications",
-          label: "New applicants",
-          description: "A barista applies to one of your gigs.",
-        },
-        {
-          key: "email_team",
-          label: "Team activity",
-          description: "Someone joins your café team, or you're invited to one.",
-        },
+        { key: "email_applications", label: t.newApplicants, description: t.newApplicantsSub },
+        { key: "email_team", label: t.teamActivity, description: t.teamActivitySub },
       ],
       digest: [
-        {
-          key: "email_messages",
-          label: "Messages",
-          description: "Unread messages from baristas.",
-        },
-        {
-          key: "email_referrals",
-          label: "Referral rewards",
-          description: "A café you referred earns you a free month.",
-        },
+        { key: "email_messages", label: t.messagesToggle, description: t.messagesSubShop },
+        { key: "email_referrals", label: t.referralRewards, description: t.referralRewardsSub },
       ],
     };
   }
@@ -41,21 +28,13 @@ function rowsForRole(role: "shop" | "extra"): { instant: Row[]; digest: Row[] } 
     instant: [
       {
         key: "email_applications",
-        label: "Application updates",
-        description: "Accepts arrive right away; declines are bundled into the digest.",
+        label: t.applicationUpdates,
+        description: t.applicationUpdatesSub,
       },
-      {
-        key: "email_opportunities",
-        label: "Invites & SOS gigs",
-        description: "A café invites you directly, or posts an urgent shift.",
-      },
+      { key: "email_opportunities", label: t.invitesSos, description: t.invitesSosSub },
     ],
     digest: [
-      {
-        key: "email_messages",
-        label: "Messages",
-        description: "Unread messages from cafés.",
-      },
+      { key: "email_messages", label: t.messagesToggle, description: t.messagesSubExtra },
     ],
   };
 }
@@ -67,9 +46,10 @@ export function NotificationSettingsForm({
   role: "shop" | "extra";
   initial: Record<EmailPrefKey, boolean>;
 }) {
+  const d = useDict();
   const [prefs, setPrefs] = useState(initial);
   const [, startTransition] = useTransition();
-  const { instant, digest } = rowsForRole(role);
+  const { instant, digest } = rowsForRole(role, d);
 
   function toggle(key: EmailPrefKey, value: boolean) {
     setPrefs((prev) => ({ ...prev, [key]: value }));
@@ -101,29 +81,29 @@ export function NotificationSettingsForm({
   return (
     <div>
       <h2 className="text-[13px] font-medium uppercase tracking-widest text-muted-foreground">
-        Emailed right away
+        {d.settings.emailedRightAway}
       </h2>
       <div className="mt-1 divide-y divide-border">{instant.map(renderRow)}</div>
 
       <h2 className="mt-8 text-[13px] font-medium uppercase tracking-widest text-muted-foreground">
-        Daily digest
+        {d.settings.dailyDigest}
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        One morning email bundling everything unread — nothing unread, no email.
+        {d.settings.digestIntro}
       </p>
       <div className="mt-2 divide-y divide-border">
         {digest.map(renderRow)}
         <div className="flex items-center justify-between gap-6 py-3.5">
           <div>
-            <p className="text-[15px] font-medium">Daily digest</p>
+            <p className="text-[15px] font-medium">{d.settings.digestToggle}</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Turn this off to stop digest emails entirely.
+              {d.settings.digestToggleSub}
             </p>
           </div>
           <Switch
             checked={prefs.email_digest}
             onCheckedChange={(value) => toggle("email_digest", value)}
-            aria-label="Daily digest"
+            aria-label={d.settings.digestToggle}
           />
         </div>
       </div>

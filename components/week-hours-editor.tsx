@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { WEEKDAYS } from "@/lib/constants";
 import type { AvailabilityWindow, OpeningHours } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 const SNAP = 30; // minutes
 const MIN_DURATION = 60;
@@ -42,6 +42,7 @@ export function WeekHoursEditor({
   defaultStart?: string;
   defaultEnd?: string;
 }) {
+  const d = useDict();
   const dragState = useRef<{
     day: number;
     mode: "start" | "end" | "move";
@@ -143,7 +144,7 @@ export function WeekHoursEditor({
 
   return (
     <div className="flex flex-col gap-1.5" onPointerMove={onPointerMove} onPointerUp={() => (dragState.current = null)}>
-      {WEEKDAYS.map((label, day) => {
+      {d.labels.weekdays.map((label, day) => {
         const b = boundsFor(day);
         const w = windowFor(day);
         const active = Boolean(w && b);

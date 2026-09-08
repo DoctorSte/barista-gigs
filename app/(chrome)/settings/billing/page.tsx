@@ -4,6 +4,7 @@ import { getOwnerSubscription, requireShop } from "@/lib/auth";
 import { isStripeConfigured } from "@/lib/stripe";
 import { isPlanId } from "@/lib/plans";
 import { PlanPicker } from "@/components/billing-actions";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -18,20 +19,20 @@ export default async function BillingPage({
   const active = subscription?.status === "active";
   const stripeConfigured = isStripeConfigured();
 
+  const d = await getDict();
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="mb-8 text-center">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Billing</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.settings.billingTitle}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
-          Pick the plan that fits your café — switch or cancel any time.
+          {d.settings.billingSub}
         </p>
       </div>
 
       {params.checkout === "success" ? (
         <div className="bubble-in mb-6 flex items-center gap-2.5 rounded-lg border border-success/25 bg-success-soft px-4 py-3 text-sm text-success">
           <BadgeCheck className="size-5 shrink-0" />
-          Payment received — your subscription is being activated. This page updates within a
-          minute.
+          {d.settings.paymentReceived}
         </div>
       ) : null}
       {params.checkout === "cancelled" ? (

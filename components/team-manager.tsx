@@ -7,6 +7,7 @@ import { Mail, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
 import { inviteMember, removeMember, revokeInvite } from "@/app/actions/team";
 import type { ActionResult } from "@/lib/validation";
+import { useDict } from "@/components/i18n-provider";
 
 export type TeamMemberRow = { id: string; name: string; email: string | null };
 export type TeamInviteRow = { id: string; email: string };
@@ -25,6 +26,7 @@ export function TeamManager({
   /** False when every seat (owner + members + pending invites) is taken. */
   canInviteMore: boolean;
 }) {
+  const d = useDict();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
@@ -36,13 +38,13 @@ export function TeamManager({
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
-      toast.success("Invite sent");
+      toast.success(d.cafe.inviteSent);
       formRef.current?.reset();
       router.refresh();
     } else {
       toast.error(state.error);
     }
-  }, [state, router]);
+  }, [state, router, d]);
 
   function run(action: () => Promise<ActionResult>, successMessage: string) {
     startTransition(async () => {
@@ -76,10 +78,10 @@ export function TeamManager({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => run(() => removeMember(member.id), "Team member removed")}
+                onClick={() => run(() => removeMember(member.id), d.cafe.memberRemoved)}
                 className="pressable inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[12px] font-medium text-muted-foreground hover:text-danger"
               >
-                <UserMinus className="size-3.5" /> Remove
+                <UserMinus className="size-3.5" /> {d.common.remove}
               </button>
             </li>
           ))}
@@ -91,15 +93,15 @@ export function TeamManager({
               <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
                 <Mail className="size-3.5 shrink-0" />
                 <span className="truncate">{invite.email}</span>
-                <span className="text-[12px]">invited</span>
+                <span className="text-[12px]">{d.cafe.invited}</span>
               </span>
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => run(() => revokeInvite(invite.id), "Invite revoked")}
+                onClick={() => run(() => revokeInvite(invite.id), d.cafe.inviteRevoked)}
                 className="pressable inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[12px] font-medium text-muted-foreground hover:text-danger"
               >
-                <X className="size-3.5" /> Revoke
+                <X className="size-3.5" /> {d.cafe.revoke}
               </button>
             </li>
           ))}
@@ -112,7 +114,7 @@ export function TeamManager({
             type="email"
             name="email"
             required
-            placeholder="teammate@cafe.com"
+            placeholder={d.cafe.teamPlaceholder}
             className="h-10 min-w-0 flex-1 rounded-md border border-border bg-surface px-3.5 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring"
           />
           <button
@@ -120,25 +122,25 @@ export function TeamManager({
             disabled={inviting}
             className="pressable inline-flex h-10 items-center rounded-md border border-border-strong bg-surface px-4 text-sm font-medium hover:bg-muted disabled:opacity-60"
           >
-            {inviting ? "Sending…" : "Send invite"}
+            {inviting ? d.common.loading : d.cafe.sendInvite}
           </button>
         </form>
       ) : (
         <p className="mt-4 text-sm text-muted-foreground">
           {seatCap === 1 ? (
             <>
-              The {planName} plan has a single account.{" "}
+              {d.cafe.singleSeat(planName)}{" "}
               <Link
                 href="/settings/billing"
                 className="underline-offset-2 hover:text-foreground hover:underline"
               >
-                Upgrade for team seats
+                {d.cafe.upgradeSeats}
               </Link>
               .
             </>
           ) : (
             <>
-              All {seatCap} seats on the {planName} plan are taken ({seatsUsed} in use).
+              {d.cafe.seatsTaken(seatCap, planName, seatsUsed)}
               {seatCap < 10 ? (
                 <>
                   {" "}
@@ -146,7 +148,7 @@ export function TeamManager({
                     href="/settings/billing"
                     className="underline-offset-2 hover:text-foreground hover:underline"
                   >
-                    Upgrade for more
+                    {d.cafe.upgradeMore}
                   </Link>
                   .
                 </>

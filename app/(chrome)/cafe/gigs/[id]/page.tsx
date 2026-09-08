@@ -11,6 +11,7 @@ import { ApplicantList, type ApplicantRow } from "@/components/applicant-list";
 import { GigStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Announcement } from "@/lib/database.types";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Manage gig" };
 
@@ -25,6 +26,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
     .eq("id", id)
     .eq("shop_id", shop.id)
     .maybeSingle();
+  const d = await getDict();
   const gig = gigData as Announcement | null;
   if (!gig) notFound();
 
@@ -126,7 +128,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
         href="/cafe/dashboard"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> Dashboard
+        <ArrowLeft className="size-4" /> {d.cafe.dashboardBack}
       </Link>
 
       <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
@@ -142,7 +144,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
       <section className="mb-10">
         <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold">
           <Users className="size-5 text-muted-foreground" />
-          Applicants
+          {d.cafe.applicantsHeading}
           <span className="text-base font-normal text-muted-foreground">
             {applicants.length}
           </span>
@@ -160,7 +162,7 @@ export default async function ManageGigPage({ params }: { params: Promise<{ id: 
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-xl font-semibold">Edit gig</h2>
+        <h2 className="mb-3 font-display text-xl font-semibold">{d.cafe.editGig}</h2>
         <Card>
           <GigForm gig={gig} openingHours={shop.opening_hours} />
         </Card>

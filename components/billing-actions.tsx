@@ -11,15 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useDict, useLocaleTag } from "@/components/i18n-provider";
+import { PLAN_CARDS_COPY } from "@/lib/marketing-copy";
+import { useLocale } from "@/components/i18n-provider";
 
-function features(plan: Plan): string[] {
+function features(plan: Plan, locale: "en" | "fr", savedBaristas: string): string[] {
+  const t = PLAN_CARDS_COPY[locale];
   return [
-    plan.gigsPerMonth === null ? "Unlimited gigs" : `${plan.gigsPerMonth} gigs a month`,
-    plan.locations === 1 ? "1 location" : `Up to ${plan.locations} locations`,
-    plan.teamAccounts === 1 ? "1 team account" : `${plan.teamAccounts} team accounts`,
-    "Barista directory",
-    "Saved baristas",
-    "Referral free months",
+    plan.gigsPerMonth === null ? t.unlimitedGigs : t.gigsPerMonth(plan.gigsPerMonth),
+    plan.locations === 1 ? t.oneLocation : t.locations(plan.locations),
+    plan.teamAccounts === 1 ? t.singleAccount : t.teamAccounts(plan.teamAccounts),
+    t.directory,
+    savedBaristas,
+    t.referrals,
   ];
 }
 
@@ -39,6 +43,9 @@ export function PlanPicker({
   hasStripeCustomer: boolean;
 }) {
   const router = useRouter();
+  const d = useDict();
+  const locale = useLocale();
+  const loc = useLocaleTag();
   const [interval, setInterval] = useState<BillingInterval>(currentInterval ?? "monthly");
   const [pendingPlan, setPendingPlan] = useState<PlanId | null>(null);
   const [pending, startTransition] = useTransition();
@@ -49,7 +56,7 @@ export function PlanPicker({
       const result = await action();
       // Redirect-based flows never resolve here; only handle explicit results.
       if (result?.ok) {
-        toast.success("Subscription active — you can post gigs now");
+        toast.success(d.settings.subActive);
         router.refresh();
       } else if (result && !result.ok && result.error) {
         toast.error(result.error);
@@ -67,8 +74,8 @@ export function PlanPicker({
         >
           {(
             [
-              ["monthly", "Monthly"],
-              ["yearly", "Yearly · 2 months free"],
+              ["monthly", d.settings.monthly],
+              ["yearly", d.settings.yearlyFree],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -107,24 +114,24 @@ export function PlanPicker({
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-display text-lg font-semibold">{plan.name}</p>
-                {isCurrent ? <Badge tone="success">Current plan</Badge> : null}
+                {isCurrent ? <Badge tone="success">{d.settings.currentPlan}</Badge> : null}
               </div>
               <p className="mt-1 text-[13px] text-muted-foreground">{plan.blurb}</p>
 
               <p className="mt-5 font-display text-3xl font-semibold">
                 {formatMoney(price)}
                 <span className="text-sm font-normal text-muted-foreground">
-                  /{interval === "monthly" ? "month" : "year"}
+                  /{interval === "monthly" ? d.settings.perMonthShort : d.settings.perYearShort}
                 </span>
               </p>
               {interval === "yearly" ? (
                 <p className="mt-1 text-[13px] text-muted-foreground">
-                  ≈ {formatMoney(Math.round(plan.yearlyCents / 12))}/month
+                  {d.settings.approxMonthly(formatMoney(Math.round(plan.yearlyCents / 12)))}
                 </p>
               ) : null}
 
               <ul className="mt-5 space-y-2 text-sm">
-                {features(plan).map((feature) => (
+                {features(plan, locale, d.settings.savedBaristas).map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
                     <Check className="size-4 shrink-0 text-accent" />
                     {feature}
@@ -140,7 +147,7 @@ export function PlanPicker({
                     disabled={pending}
                     onClick={() => run(() => startSubscription(planId, interval), planId)}
                   >
-                    Choose {plan.name}
+                    {d.settings.choose(plan.name)}
                   </Button>
                 ) : isCurrent ? (
                   <>
@@ -151,14 +158,14 @@ export function PlanPicker({
                         disabled={pending}
                         onClick={() => run(openBillingPortal, planId)}
                       >
-                        Manage in billing portal
+                        {d.settings.managePortal}
                       </Button>
                     ) : (
-                      <p className="text-sm text-muted-foreground">You&apos;re all set.</p>
+                      <p className="text-sm text-muted-foreground">{d.settings.allSet}</p>
                     )}
                     {currentPeriodEnd ? (
                       <p className="mt-2 text-[13px] text-muted-foreground">
-                        Renews {formatDate(currentPeriodEnd)}
+                        {d.settings.renews(formatDate(currentPeriodEnd, loc))}
                       </p>
                     ) : null}
                   </>
@@ -169,7 +176,7 @@ export function PlanPicker({
                     disabled={pending}
                     onClick={() => run(openBillingPortal, planId)}
                   >
-                    Switch in billing portal
+                    {d.settings.switchPortal}
                   </Button>
                 ) : (
                   <Button
@@ -178,7 +185,7 @@ export function PlanPicker({
                     disabled={pending}
                     onClick={() => run(() => startSubscription(planId, interval), planId)}
                   >
-                    Switch to {plan.name}
+                    {d.settings.switchTo(plan.name)}
                   </Button>
                 )}
               </div>

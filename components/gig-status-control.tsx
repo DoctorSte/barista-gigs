@@ -6,18 +6,19 @@ import { toast } from "sonner";
 import { setGigStatus } from "@/app/actions/gigs";
 import type { AnnouncementStatus } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
+import { useDict } from "@/components/i18n-provider";
 
-const NEXT_ACTIONS: Record<AnnouncementStatus, { label: string; to: AnnouncementStatus }[]> = {
-  draft: [{ label: "Publish", to: "open" }],
+const NEXT_ACTIONS: Record<AnnouncementStatus, { key: "publish" | "markFilled" | "close" | "reopen"; to: AnnouncementStatus }[]> = {
+  draft: [{ key: "publish", to: "open" }],
   open: [
-    { label: "Mark filled", to: "filled" },
-    { label: "Close", to: "closed" },
+    { key: "markFilled", to: "filled" },
+    { key: "close", to: "closed" },
   ],
   filled: [
-    { label: "Reopen", to: "open" },
-    { label: "Close", to: "closed" },
+    { key: "reopen", to: "open" },
+    { key: "close", to: "closed" },
   ],
-  closed: [{ label: "Reopen", to: "open" }],
+  closed: [{ key: "reopen", to: "open" }],
 };
 
 export function GigStatusControl({
@@ -28,6 +29,7 @@ export function GigStatusControl({
   status: AnnouncementStatus;
 }) {
   const router = useRouter();
+  const d = useDict();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -42,7 +44,7 @@ export function GigStatusControl({
             startTransition(async () => {
               const result = await setGigStatus(gigId, action.to);
               if (result.ok) {
-                toast.success(`Gig ${action.to === "open" ? "opened" : action.to}`);
+                toast.success(d.cafe.statusUpdated);
                 router.refresh();
               } else {
                 toast.error(result.error);
@@ -50,7 +52,7 @@ export function GigStatusControl({
             })
           }
         >
-          {action.label}
+          {d.cafe[action.key]}
         </Button>
       ))}
     </div>

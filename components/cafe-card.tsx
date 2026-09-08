@@ -1,5 +1,6 @@
 import { Globe, MapPin, Phone } from "lucide-react";
 import { machineTypeLabel } from "@/lib/constants";
+import { getDict } from "@/lib/i18n";
 import { Avatar } from "@/components/ui/avatar";
 import { RatingStars } from "@/components/review-form";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { CafeMap } from "@/components/cafe-map";
 import type { CoffeeShop } from "@/lib/database.types";
 
 /** The café card baristas see on gig pages — also used for the café's own preview. */
-export function CafeCard({
+export async function CafeCard({
   shop,
   avatarUrl,
   className,
@@ -22,6 +23,7 @@ export function CafeCard({
   rating?: number | null;
   reviewCount?: number;
 }) {
+  const d = await getDict();
   return (
     <Card className={className}>
       <div className="flex items-center gap-3">
@@ -34,7 +36,7 @@ export function CafeCard({
           {rating != null ? (
             <p className="mt-1 flex items-center gap-1.5 text-sm">
               <RatingStars rating={rating} count={reviewCount} />
-              <span className="text-[13px] text-muted-foreground">from baristas</span>
+              <span className="text-[13px] text-muted-foreground">{d.cafeCard.fromBaristas}</span>
             </p>
           ) : null}
         </div>
@@ -47,7 +49,7 @@ export function CafeCard({
           {shop.machines.map((machine, index) => (
             <Badge key={index}>
               {machine.name}
-              <span className="ml-1 opacity-60">{machineTypeLabel(machine.type)}</span>
+              <span className="ml-1 opacity-60">{d.labels.machines[machine.type] ?? machineTypeLabel(machine.type)}</span>
             </Badge>
           ))}
         </div>
@@ -60,7 +62,7 @@ export function CafeCard({
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-foreground"
           >
-            <Globe className="size-4" /> Website
+            <Globe className="size-4" /> {d.cafeCard.website}
           </a>
         ) : null}
         {shop.phone ? (
@@ -75,7 +77,7 @@ export function CafeCard({
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-foreground"
           >
-            <MapPin className="size-4" /> Open in Google Maps
+            <MapPin className="size-4" /> {d.cafeCard.openMaps}
           </a>
         ) : null}
       </div>

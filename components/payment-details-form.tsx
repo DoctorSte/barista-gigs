@@ -7,27 +7,28 @@ import { SubmitButton } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { Card } from "@/components/ui/card";
+import { useDict } from "@/components/i18n-provider";
 
 export function PaymentDetailsForm({ details }: { details: string }) {
+  const d = useDict();
   const [state, action] = useActionState(updatePaymentDetails, null);
   const error = state && !state.ok ? state : null;
 
   useEffect(() => {
-    if (state?.ok) toast.success("Payment details saved");
-  }, [state]);
+    if (state?.ok) toast.success(d.uploads.paymentSaved);
+  }, [state, d]);
 
   return (
     <Card>
       <form action={action} className="flex flex-col gap-5">
         <div>
-          <h2 className="font-display text-lg font-semibold">Payment details</h2>
+          <h2 className="font-display text-lg font-semibold">{d.profile.paymentDetails}</h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            How shops should pay you — IBAN, payment link, invoicing notes. Only shops that
-            accepted you for a gig can see this.
+            {d.profile.paymentDetailsSub}
           </p>
         </div>
 
-        <Field label="Details" error={error?.field === "details" ? error.error : undefined}>
+        <Field label={d.uploads.detailsLabel} error={error?.field === "details" ? error.error : undefined}>
           {(id) => (
             <Textarea
               id={id}
@@ -41,7 +42,7 @@ export function PaymentDetailsForm({ details }: { details: string }) {
         </Field>
 
         <FormError message={error && !error.field ? error.error : undefined} />
-        <SubmitButton className="self-start">Save payment details</SubmitButton>
+        <SubmitButton className="self-start">{d.profile.savePaymentDetails}</SubmitButton>
       </form>
     </Card>
   );

@@ -16,6 +16,7 @@ import { RatingStars } from "@/components/review-form";
 import { baristaTrustStats } from "@/lib/trust";
 import { formatRelative } from "@/lib/format";
 import type { ExtraProfile, PortfolioPhoto } from "@/lib/database.types";
+import { dateLocale, getDict, getLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Barista profile" };
 
@@ -88,6 +89,8 @@ export default async function BaristaProfilePage({
   const openGigs = (gigData ?? []) as { id: string; title: string }[];
   const alreadyAppliedGigIds = (interestData ?? []).map((row) => row.announcement_id as string);
 
+  const d = await getDict();
+  const loc = dateLocale(await getLocale());
   const name = barista.profiles?.display_name ?? "Barista";
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
 
@@ -129,7 +132,7 @@ export default async function BaristaProfilePage({
   const availableDays = (barista.availability?.weekly ?? [])
     .filter((w) => w.day >= 0 && w.day < WEEKDAYS.length)
     .sort((a, b) => a.day - b.day)
-    .map((w) => `${WEEKDAYS[w.day]} ${w.start}–${w.end}`);
+    .map((w) => `${d.labels.weekdays[w.day]} ${w.start}–${w.end}`);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -137,13 +140,13 @@ export default async function BaristaProfilePage({
         href={isSelfPreview ? "/profile" : "/cafe/baristas"}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> {isSelfPreview ? "Back to my profile" : "All baristas"}
+        <ArrowLeft className="size-4" /> {isSelfPreview ? d.barista.backToProfile : d.barista.allBaristas}
       </Link>
 
       {isSelfPreview ? (
         <p className="bubble-in mb-6 inline-flex items-center gap-2 rounded-lg border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
           <Eye className="size-4 shrink-0" />
-          Preview — this is how cafés see your profile.
+          {d.barista.previewNote}
         </p>
       ) : null}
 
@@ -156,23 +159,23 @@ export default async function BaristaProfilePage({
               <p className="mt-0.5 text-[15px] text-muted-foreground">
                 {[
                   barista.years_experience != null
-                    ? `${barista.years_experience} yrs experience`
+                    ? d.barista.yrsExperience(barista.years_experience)
                     : null,
                   barista.languages.length > 0
-                    ? `speaks ${barista.languages.map(languageLabel).join(", ")}`
+                    ? d.barista.speaks(barista.languages.map(languageLabel).join(", "))
                     : null,
                   availableDays.length > 0
-                    ? `usually available ${availableDays.join(", ")}`
+                    ? d.barista.usuallyAvailable(availableDays.join(", "))
                     : null,
                 ]
                   .filter(Boolean)
-                  .join(" · ") || "Barista in your city"}
+                  .join(" · ") || d.barista.inYourCity}
               </p>
             </div>
           </div>
           {barista.hourly_rate_cents != null ? (
             <span className="rounded-md bg-accent-soft px-3 py-1.5 text-lg font-semibold text-accent">
-              {formatMoney(barista.hourly_rate_cents, barista.currency)}/hr
+              {formatMoney(barista.hourly_rate_cents, barista.currency)}{d.common.perHour}
             </span>
           ) : null}
         </div>
@@ -184,14 +187,14 @@ export default async function BaristaProfilePage({
             ) : null}
             {trust.completed > 0 ? (
               <span className="text-muted-foreground">
-                {trust.completed} confirmed {trust.completed === 1 ? "shift" : "shifts"}
+                {d.barista.confirmedShifts(trust.completed)}
               </span>
             ) : null}
             {trust.showUpRate != null ? (
               <span
                 className={trust.showUpRate >= 90 ? "font-medium text-success" : "text-muted-foreground"}
               >
-                {trust.showUpRate}% show-up rate
+                {d.barista.showUpRate(trust.showUpRate)}
               </span>
             ) : null}
           </div>
@@ -204,7 +207,7 @@ export default async function BaristaProfilePage({
         {barista.skills.length > 0 ? (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {barista.skills.map((skill) => (
-              <Badge key={skill}>{skillLabel(skill)}</Badge>
+              <Badge key={skill}>{d.labels.skills[skill] ?? skillLabel(skill)}</Badge>
             ))}
           </div>
         ) : null}
@@ -216,7 +219,7 @@ export default async function BaristaProfilePage({
                 {rate.label} {formatMoney(rate.cents, barista.currency)}/hr
               </span>
             ))}
-            {barista.signature_drink ? <span>Signature: {barista.signature_drink}</span> : null}
+            {barista.signature_drink ? <span>{d.barista.signature(barista.signature_drink)}</span> : null}
             {barista.instagram_handle ? (
               <a
                 href={`https://instagram.com/${barista.instagram_handle}`}
@@ -240,7 +243,7 @@ export default async function BaristaProfilePage({
               className="pressable inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-muted-foreground hover:border-border-strong hover:text-foreground"
             >
               <FileText className="size-4 text-accent" />
-              View CV{barista.cv_filename ? ` (${barista.cv_filename})` : ""}
+              {d.profile.viewCv}{barista.cv_filename ? ` (${barista.cv_filename})` : ""}
             </a>
           </p>
         ) : null}
@@ -248,24 +251,23 @@ export default async function BaristaProfilePage({
         {recommendations.length > 0 ? (
           <p className="mt-5 inline-flex items-center gap-2 rounded-lg border border-success/25 bg-success-soft px-4 py-3 text-sm font-medium text-success">
             <ThumbsUp className="size-4 shrink-0" />
-            Recommended by{" "}
-            {recommendations
-              .map((rec) => rec.coffee_shops?.name ?? "a coffee shop")
-              .join(", ")}
+            {d.profile.recommendedBy(
+              recommendations.map((rec) => rec.coffee_shops?.name ?? "café").join(", "),
+            )}
           </p>
         ) : null}
       </div>
 
       {cafeReviews.length > 0 ? (
         <section className="rise-in mt-10 [animation-delay:40ms]">
-          <h2 className="mb-3 font-display text-xl font-semibold">What cafés say</h2>
+          <h2 className="mb-3 font-display text-xl font-semibold">{d.barista.whatCafesSay}</h2>
           <ul className="flex flex-col gap-3">
             {cafeReviews.map((review) => (
               <li key={review.id} className="rounded-lg border border-border bg-surface p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <RatingStars rating={review.rating} />
                   <p className="text-[13px] text-muted-foreground">
-                    {review.cafeName} · {formatRelative(review.created_at)}
+                    {review.cafeName} · {formatRelative(review.created_at, loc)}
                   </p>
                 </div>
                 {review.comment ? (
@@ -306,12 +308,12 @@ export default async function BaristaProfilePage({
         <Card>
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
             <Send className="size-4 text-muted-foreground" />
-            Invite to apply
+            {d.barista.inviteToApply}
           </h2>
           {openGigs.length > 0 ? (
             <>
               <p className="mt-1 text-sm text-muted-foreground">
-                Nudge {name} towards one of your open gigs — they&apos;ll get a notification.
+                {d.barista.inviteSub(name)}
               </p>
               <div className="mt-4">
                 <InviteForm

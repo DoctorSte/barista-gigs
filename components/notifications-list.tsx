@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/lib/database.types";
+import { useDict, useLocaleTag } from "@/components/i18n-provider";
 
 export function MarkAllReadButton() {
+  const d = useDict();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -34,12 +36,13 @@ export function MarkAllReadButton() {
         })
       }
     >
-      <CheckCheck className="size-4" /> Mark all read
+      <CheckCheck className="size-4" /> {d.notifications.markAllShort}
     </Button>
   );
 }
 
 export function NotificationsList({ notifications }: { notifications: Notification[] }) {
+  const loc = useLocaleTag();
   const router = useRouter();
 
   function markRead(notification: Notification) {
@@ -64,7 +67,7 @@ export function NotificationsList({ notifications }: { notifications: Notificati
                 <span className="truncate">{notification.title}</span>
               </p>
               <span className="shrink-0 text-xs text-muted-foreground">
-                {formatRelative(notification.created_at)}
+                {formatRelative(notification.created_at, loc)}
               </span>
             </div>
             {notification.body ? (

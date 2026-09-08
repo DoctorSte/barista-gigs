@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/ui/button";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { Card } from "@/components/ui/card";
+import { useDict } from "@/components/i18n-provider";
 
 function hoursToWindows(hours: OpeningHours | null): AvailabilityWindow[] {
   if (!hours) return [];
@@ -32,13 +33,14 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
   const [openingWindows, setOpeningWindows] = useState<AvailabilityWindow[]>(() =>
     hoursToWindows(shop.opening_hours),
   );
+  const d = useDict();
   const [isPublished, setIsPublished] = useState(shop.is_published);
   const [state, action] = useActionState(updateShopProfile, null);
   const error = state && !state.ok ? state : null;
 
   useEffect(() => {
-    if (state?.ok) toast.success("Café saved");
-  }, [state]);
+    if (state?.ok) toast.success(d.shopForm.saved);
+  }, [state, d]);
 
   return (
     <Card>
@@ -48,13 +50,13 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
             <h2 className="font-display text-lg font-semibold">Café details</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {isPublished
-                ? "Your café is visible to baristas in your city."
-                : "Your café is hidden — publish it so baristas can see who's hiring."}
+                ? d.shopForm.visible
+                : d.shopForm.hidden}
             </p>
           </div>
           <div className="flex items-center gap-2.5">
             <Label htmlFor="publish-switch" className="text-muted-foreground">
-              Published
+              {d.shopForm.published}
             </Label>
             <Switch
               id="publish-switch"
@@ -66,22 +68,22 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
           </div>
         </div>
 
-        <Field label="Café name" error={error?.field === "name" ? error.error : undefined}>
+        <Field label={d.shopForm.cafeName} error={error?.field === "name" ? error.error : undefined}>
           {(id) => <Input id={id} name="name" defaultValue={shop.name} required />}
         </Field>
 
-        <Field label="Address" error={error?.field === "address" ? error.error : undefined}>
+        <Field label={d.shopForm.address} error={error?.field === "address" ? error.error : undefined}>
           {(id) => <Input id={id} name="address" defaultValue={shop.address} required />}
         </Field>
 
-        <Field label="About the café">
+        <Field label={d.shopForm.about}>
           {(id) => (
             <Textarea id={id} name="description" defaultValue={shop.description ?? ""} maxLength={1000} />
           )}
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Website" error={error?.field === "website" ? error.error : undefined}>
+          <Field label={d.shopForm.website} error={error?.field === "website" ? error.error : undefined}>
             {(id) => (
               <Input
                 id={id}
@@ -92,14 +94,14 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
               />
             )}
           </Field>
-          <Field label="Phone">
+          <Field label={d.shopForm.phone}>
             {(id) => <Input id={id} name="phone" type="tel" defaultValue={shop.phone ?? ""} />}
           </Field>
         </div>
 
         <Field
-          label="Opening hours"
-          hint="Tap a day, then drag the bar to set hours. These bound the weekly shift scheduler when you post gigs."
+          label={d.shopForm.openingHours}
+          hint={d.shopForm.openingHoursHint}
         >
           {() => (
             <>
@@ -118,7 +120,7 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
           )}
         </Field>
 
-        <Field label="Machines" hint="What will the barista be working on?">
+        <Field label={d.shopForm.machines} hint={d.shopForm.machinesHint}>
           {() => (
             <div className="flex flex-col gap-2">
               {machines.map((machine, index) => (
@@ -145,7 +147,7 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
                   <Input
                     name="machineName"
                     value={machine.name}
-                    placeholder="e.g. La Marzocco Linea"
+                    placeholder={d.shopForm.machinePlaceholder}
                     maxLength={80}
                     aria-label="Machine name"
                     onChange={(e) =>
@@ -180,7 +182,7 @@ export function ShopProfileForm({ shop }: { shop: CoffeeShop }) {
         </Field>
 
         <FormError message={error && !error.field ? error.error : undefined} />
-        <SubmitButton className="self-start">Save café</SubmitButton>
+        <SubmitButton className="self-start">{d.shopForm.saveCafe}</SubmitButton>
       </form>
     </Card>
   );

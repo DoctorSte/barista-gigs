@@ -4,6 +4,7 @@ import { getExtraProfile, getSession, getShop, homeForRole, requireUser } from "
 import { getFeaturedCities } from "@/lib/city";
 import { AuthShell } from "@/components/auth-shell";
 import { OnboardingForm } from "@/components/onboarding-form";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Set up your account" };
 
@@ -25,11 +26,12 @@ export default async function OnboardingPage() {
       : "extra");
 
   const cities = await getFeaturedCities();
+  const d = await getDict();
 
   return (
     <AuthShell
-      title={initialRole === "shop" ? "Set up your café" : "Set up your profile"}
-      subtitle="Two minutes, then you're in."
+      title={initialRole === "shop" ? d.onboarding.setupCafe : d.onboarding.setupProfile}
+      subtitle={d.onboarding.twoMinutes}
     >
       <OnboardingForm
         featuredCities={cities}

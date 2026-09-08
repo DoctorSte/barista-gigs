@@ -16,6 +16,7 @@ import { formatDate, formatMoney } from "@/lib/format";
 import { BARISTA_REFERRAL_BONUS_CENTS } from "@/lib/referrals";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import type { PortfolioPhoto, ReferralBonus } from "@/lib/database.types";
+import { dateLocale, getDict, getLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "My profile" };
 
@@ -36,6 +37,8 @@ export default async function ProfilePage() {
       .eq("extra_id", extra.id)
       .maybeSingle(),
   ]);
+  const d = await getDict();
+  const loc = dateLocale(await getLocale());
   const photos = (photoData ?? []) as PortfolioPhoto[];
   const recommendations = (recData ?? []) as unknown as {
     id: string;
@@ -67,17 +70,17 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">My profile</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{d.profile.title}</h1>
           <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
             <MapPin className="size-4" />
-            {city?.name ?? "Your city"} — this is what cafés see when you apply.
+            {d.profile.subtitle(city?.name ?? "…")}
           </p>
         </div>
         <Link
           href={`/cafe/baristas/${extra.id}`}
           className="pressable inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3.5 py-2 text-[13px] font-medium text-muted-foreground hover:border-border-strong hover:text-foreground"
         >
-          <Eye className="size-4" /> See how cafés see you
+          <Eye className="size-4" /> {d.profile.seeHowCafesSeeYou}
         </Link>
       </div>
 
@@ -88,11 +91,12 @@ export default async function ProfilePage() {
           <div className="rounded-lg border border-success/25 bg-success-soft px-5 py-4">
             <p className="flex items-center gap-2 text-sm font-medium text-success">
               <ThumbsUp className="size-4" />
-              Recommended by{" "}
-              {recommendations.map((rec) => rec.coffee_shops?.name ?? "a coffee shop").join(", ")}
+              {d.profile.recommendedBy(
+                recommendations.map((rec) => rec.coffee_shops?.name ?? "café").join(", "),
+              )}
             </p>
             <p className="mt-0.5 text-[13px] text-success/80">
-              Shops you worked for can vouch for you — it shows on your applications.
+              {d.profile.recommendedHint}
             </p>
           </div>
         ) : null}
@@ -100,12 +104,10 @@ export default async function ProfilePage() {
         <PaymentDetailsForm details={paymentData?.details ?? ""} />
         <div className="rounded-lg border border-border bg-surface p-5">
           <h2 className="font-display text-lg font-semibold tracking-tight">
-            Refer a café, earn {formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR")}
+            {d.profile.referTitle(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Know a café that should be hiring here? When they subscribe through your link, you get
-            a {formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR")} cash bonus — paid to the payment
-            details above.
+            {d.profile.referSub(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
           </p>
           <div className="mt-4">
             <ReferralLink code={extra.referral_code} />
@@ -113,9 +115,10 @@ export default async function ProfilePage() {
           {referredCafes.length > 0 ? (
             <div className="mt-4">
               <p className="text-sm font-medium">
-                {referredCafes.length} {referredCafes.length === 1 ? "café" : "cafés"} joined with
-                your link
-                {earnedCents > 0 ? ` · ${formatMoney(earnedCents, "EUR")} earned` : ""}
+                {d.profile.referJoined(
+                  referredCafes.length,
+                  earnedCents > 0 ? formatMoney(earnedCents, "EUR") : "",
+                )}
               </p>
               <ul className="mt-2.5 flex flex-col gap-1.5">
                 {referredCafes.map((cafe) => {
@@ -128,16 +131,16 @@ export default async function ProfilePage() {
                       <span className="flex items-center gap-2">
                         {cafe.name}
                         <span className="text-[12px] text-muted-foreground">
-                          joined {formatDate(cafe.created_at)}
+                          {d.profile.joinedOn(formatDate(cafe.created_at, loc))}
                         </span>
                       </span>
                       {bonus ? (
                         <Badge tone="success">
                           {formatMoney(bonus.amount_cents, "EUR")}{" "}
-                          {bonus.status === "paid" ? "paid" : "on its way"}
+                          {bonus.status === "paid" ? d.profile.bonusPaid : d.profile.bonusOnWay}
                         </Badge>
                       ) : (
-                        <Badge>Not subscribed yet</Badge>
+                        <Badge>{d.profile.notSubscribedYet}</Badge>
                       )}
                     </li>
                   );

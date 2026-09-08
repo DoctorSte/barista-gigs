@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Plus, X } from "lucide-react";
 import { LANGUAGE_CODES, languageLabel, languageLabelEnglish, normalizeLanguage } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 export function LanguagePicker({
   value,
@@ -16,6 +17,7 @@ export function LanguagePicker({
   name?: string;
   max?: number;
 }) {
+  const d = useDict();
   const selected = useMemo(() => value.map(normalizeLanguage), [value]);
   const available = useMemo(
     () =>
@@ -54,7 +56,7 @@ export function LanguagePicker({
           )}
         >
           <Plus className="size-3.5" />
-          Add language
+          {d.profile.addLanguage}
           <select
             value=""
             aria-label="Add a language"

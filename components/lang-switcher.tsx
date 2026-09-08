@@ -17,6 +17,10 @@ export function LangSwitcher() {
   return (
     <Link
       href={target}
+      onClick={() => {
+        // Carry the choice into the app: signup and everything after follow it.
+        document.cookie = `locale=${isFr ? "en" : "fr"}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      }}
       className="inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-foreground"
     >
       <Languages className="size-3.5" />

@@ -3,16 +3,18 @@
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useDict } from "@/components/i18n-provider";
 
 export function ReferralLink({ code }: { code: string }) {
+  const d = useDict();
   const path = `/r/${code}`;
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${path}`);
-      toast.success("Link copied");
+      toast.success(d.common.copied);
     } catch {
-      toast.error("Could not copy the link");
+      toast.error(d.common.copyFailed);
     }
   }
 
@@ -23,7 +25,7 @@ export function ReferralLink({ code }: { code: string }) {
       </span>
       <Button type="button" variant="outline" size="sm" onClick={copy} className="shrink-0">
         <Copy className="size-3.5" />
-        Copy
+        {d.common.copy}
       </Button>
     </div>
   );

@@ -6,28 +6,28 @@ import { createClient } from "@/lib/supabase/server";
 import { NavLinks, type NavLink } from "@/components/nav-links";
 import { NotificationBell } from "@/components/notification-bell";
 import { UserMenu } from "@/components/user-menu";
+import { getDict } from "@/lib/i18n";
 import type { Notification } from "@/lib/database.types";
-
-const EXTRA_LINKS: NavLink[] = [
-  { href: "/gigs", label: "Gigs" },
-  { href: "/jobs", label: "Jobs" },
-  { href: "/applications", label: "Applications" },
-  { href: "/messages", label: "Messages" },
-];
-
-const SHOP_LINKS: NavLink[] = [
-  { href: "/cafe/dashboard", label: "Dashboard" },
-  { href: "/cafe/baristas", label: "Baristas" },
-  { href: "/messages", label: "Messages" },
-];
-
-const GUEST_LINKS: NavLink[] = [
-  { href: "/for-cafes", label: "For cafés" },
-  { href: "/for-baristas", label: "For baristas" },
-];
 
 export async function SiteHeader() {
   const { user, profile } = await getSession();
+  const d = await getDict();
+
+  const EXTRA_LINKS: NavLink[] = [
+    { href: "/gigs", label: d.nav.gigs },
+    { href: "/jobs", label: d.nav.jobs },
+    { href: "/applications", label: d.nav.applications },
+    { href: "/messages", label: d.nav.messages },
+  ];
+  const SHOP_LINKS: NavLink[] = [
+    { href: "/cafe/dashboard", label: d.nav.dashboard },
+    { href: "/cafe/baristas", label: d.nav.baristas },
+    { href: "/messages", label: d.nav.messages },
+  ];
+  const GUEST_LINKS: NavLink[] = [
+    { href: "/for-cafes", label: d.nav.forCafes },
+    { href: "/for-baristas", label: d.nav.forBaristas },
+  ];
   const links = profile ? (profile.role === "shop" ? SHOP_LINKS : EXTRA_LINKS) : GUEST_LINKS;
   const city = profile ? await getCityById(profile.city_id) : null;
 
@@ -90,13 +90,13 @@ export async function SiteHeader() {
                 href="/login"
                 className="pressable rounded-sm px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
               >
-                Log in
+                {d.common.logIn}
               </Link>
               <Link
                 href="/signup"
                 className="pressable rounded-sm bg-primary px-3.5 py-1.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"
               >
-                Sign up
+                {d.common.signUp}
               </Link>
             </>
           )}

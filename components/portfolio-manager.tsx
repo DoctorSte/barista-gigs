@@ -9,6 +9,7 @@ import { addPortfolioPhoto, deletePortfolioPhoto } from "@/app/actions/portfolio
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useDict } from "@/components/i18n-provider";
 
 const MAX_PHOTOS = 8;
 const MAX_SIZE_MB = 8;
@@ -20,17 +21,18 @@ export function PortfolioManager({
   userId: string;
   photos: { id: string; caption: string | null; url: string }[];
 }) {
+  const d = useDict();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      toast.error("Only images can be uploaded");
+      toast.error(d.uploads.onlyImages);
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      toast.error(`Images must be under ${MAX_SIZE_MB}MB`);
+      toast.error(d.uploads.imageTooBig(MAX_SIZE_MB));
       return;
     }
 
@@ -47,9 +49,9 @@ export function PortfolioManager({
 
       const result = await addPortfolioPhoto(path, "");
       if (!result.ok) throw new Error(result.error);
-      toast.success("Photo added");
+      toast.success(d.uploads.photoAdded);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload failed");
+      toast.error(error instanceof Error ? error.message : d.uploads.uploadFailed);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -59,7 +61,7 @@ export function PortfolioManager({
   function handleDelete(photoId: string) {
     startTransition(async () => {
       const result = await deletePortfolioPhoto(photoId);
-      if (result.ok) toast.success("Photo removed");
+      if (result.ok) toast.success(d.uploads.photoRemoved);
       else toast.error(result.error);
     });
   }
@@ -68,7 +70,7 @@ export function PortfolioManager({
     <Card>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-lg font-semibold">Portfolio</h2>
+          <h2 className="font-display text-lg font-semibold">{d.profile.portfolio}</h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Latte art, bar setups, anything that shows your craft. Up to {MAX_PHOTOS} photos.
           </p>
@@ -80,7 +82,7 @@ export function PortfolioManager({
           disabled={photos.length >= MAX_PHOTOS}
           onClick={() => inputRef.current?.click()}
         >
-          <ImagePlus className="size-4" /> Add photo
+          <ImagePlus className="size-4" /> {d.profile.addPhoto}
         </Button>
         <input
           ref={inputRef}
@@ -107,7 +109,7 @@ export function PortfolioManager({
               />
               <button
                 type="button"
-                aria-label="Delete photo"
+                aria-label={d.uploads.deletePhoto}
                 disabled={pending}
                 onClick={() => handleDelete(photo.id)}
                 className="pressable absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-black/55 text-white opacity-0 backdrop-blur-sm transition-opacity duration-150 focus-visible:opacity-100 group-hover:opacity-100"

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { updateCv } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useDict } from "@/components/i18n-provider";
 
 const MAX_SIZE_MB = 5;
 const ACCEPTED = [".pdf", ".doc", ".docx"];
@@ -21,6 +22,7 @@ export function CvUpload({
   cvPath: string | null;
   cvFilename: string | null;
 }) {
+  const d = useDict();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -29,11 +31,11 @@ export function CvUpload({
   async function handleFile(file: File) {
     const extension = `.${file.name.split(".").pop()?.toLowerCase()}`;
     if (!ACCEPTED.includes(extension)) {
-      toast.error("Upload a PDF or Word document");
+      toast.error(d.uploads.cvType);
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      toast.error(`CVs must be under ${MAX_SIZE_MB}MB`);
+      toast.error(d.uploads.cvTooBig(MAX_SIZE_MB));
       return;
     }
 
@@ -50,10 +52,10 @@ export function CvUpload({
       if (!result.ok) throw new Error(result.error);
       // Best-effort: remove the previous file so the bucket doesn't collect stale CVs.
       if (cvPath) void supabase.storage.from("cvs").remove([cvPath]);
-      toast.success("CV uploaded");
+      toast.success(d.uploads.cvUploaded);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload failed");
+      toast.error(error instanceof Error ? error.message : d.uploads.uploadFailed);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -65,7 +67,7 @@ export function CvUpload({
       const result = await updateCv(null, null);
       if (result.ok) {
         if (cvPath) void createClient().storage.from("cvs").remove([cvPath]);
-        toast.success("CV removed");
+        toast.success(d.uploads.cvRemoved);
         router.refresh();
       } else {
         toast.error(result.error);
@@ -80,8 +82,8 @@ export function CvUpload({
           <h2 className="font-display text-lg font-semibold">CV</h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {cvPath
-              ? "Cafés can view it on your profile and applications."
-              : "Optional — useful when applying for full- and part-time jobs."}
+              ? d.uploads.cvVisible
+              : d.profile.cvSub}
           </p>
           {cvPath ? (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-3 py-1.5 text-sm">
@@ -97,11 +99,11 @@ export function CvUpload({
             loading={uploading}
             onClick={() => inputRef.current?.click()}
           >
-            <Upload className="size-4" /> {cvPath ? "Replace" : "Upload CV"}
+            <Upload className="size-4" /> {cvPath ? d.uploads.replace : d.profile.uploadCv}
           </Button>
           {cvPath ? (
             <Button variant="outline" size="sm" loading={pending} onClick={handleRemove}>
-              <Trash2 className="size-4" /> Remove
+              <Trash2 className="size-4" /> {d.common.remove}
             </Button>
           ) : null}
         </div>

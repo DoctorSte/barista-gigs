@@ -14,8 +14,10 @@ import { SubmitButton } from "@/components/ui/button";
 import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { Card } from "@/components/ui/card";
+import { useDict } from "@/components/i18n-provider";
 
 export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: ExtraProfile }) {
+  const d = useDict();
   const [skills, setSkills] = useState<string[]>(extra.skills);
   const [rates, setRates] = useState<{ label: string; amount: string }[]>(
     (extra.rates ?? []).map((rate) => ({ label: rate.label, amount: String(rate.cents / 100) })),
@@ -27,40 +29,40 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
   const error = state && !state.ok ? state : null;
 
   useEffect(() => {
-    if (state?.ok) toast.success("Profile saved");
-  }, [state]);
+    if (state?.ok) toast.success(d.profile.profileSaved);
+  }, [state, d]);
 
   return (
     <Card>
       <form action={action} className="flex flex-col gap-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-lg font-semibold">About you</h2>
+            <h2 className="font-display text-lg font-semibold">{d.profile.aboutYou}</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {isAvailable ? "You're visible to cafés in your city." : "You're hidden from search."}
+              {isAvailable ? d.profile.aboutYouSub : d.uploads.hiddenFromSearch}
             </p>
           </div>
           <div className="flex items-center gap-2.5">
             <Label htmlFor="availability-switch" className="text-muted-foreground">
-              Available
+              {d.profile.available}
             </Label>
             <Switch
               id="availability-switch"
               checked={isAvailable}
               onCheckedChange={setIsAvailable}
-              aria-label="Available for gigs"
+              aria-label={d.profile.available}
             />
             <input type="hidden" name="isAvailable" value={String(isAvailable)} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Display name" error={error?.field === "displayName" ? error.error : undefined}>
+          <Field label={d.onboarding.displayName} error={error?.field === "displayName" ? error.error : undefined}>
             {(id) => <Input id={id} name="displayName" defaultValue={profile.display_name} required />}
           </Field>
           <Field
-            label="Username"
-            hint="Unlocks your shareable Barista Passport."
+            label={d.profile.username}
+            hint={d.profile.usernameHint}
             error={error?.field === "username" ? error.error : undefined}
           >
             {(id) => (
@@ -68,19 +70,19 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
                 id={id}
                 name="username"
                 defaultValue={profile.username ?? ""}
-                placeholder="e.g. lea.pours"
+                placeholder={d.uploads.usernamePlaceholder}
                 maxLength={30}
               />
             )}
           </Field>
         </div>
 
-        <Field label="Bio">
+        <Field label={d.onboarding.bio}>
           {(id) => <Textarea id={id} name="bio" defaultValue={extra.bio ?? ""} maxLength={600} />}
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Years of experience">
+          <Field label={d.onboarding.yearsExperience}>
             {(id) => (
               <Input
                 id={id}
@@ -92,7 +94,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
               />
             )}
           </Field>
-          <Field label="Hourly rate (€)">
+          <Field label={d.onboarding.hourlyRate}>
             {(id) => (
               <Input
                 id={id}
@@ -107,8 +109,8 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
         </div>
 
         <Field
-          label="More rates"
-          hint="Different price for events, catering, training? Add them here."
+          label={d.profile.moreRates}
+          hint={d.profile.ratesHint}
         >
           {() => (
             <div className="flex flex-col gap-2">
@@ -117,7 +119,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
                   <Input
                     name="rateLabel"
                     value={rate.label}
-                    placeholder="e.g. Events & catering"
+                    placeholder={d.uploads.ratePlaceholder}
                     maxLength={40}
                     aria-label="Rate name"
                     onChange={(e) =>
@@ -157,7 +159,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
                   onClick={() => setRates((prev) => [...prev, { label: "", amount: "" }])}
                   className="pressable inline-flex items-center gap-1.5 self-start rounded-sm px-2 py-1.5 text-[13px] font-medium text-accent"
                 >
-                  <Plus className="size-4" /> Add a rate
+                  <Plus className="size-4" /> {d.profile.addRate}
                 </button>
               ) : null}
             </div>
@@ -165,18 +167,18 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Signature drink" hint="Your party trick.">
+          <Field label={d.profile.signatureDrink} hint={d.profile.partyTrick}>
             {(id) => (
               <Input
                 id={id}
                 name="signatureDrink"
                 defaultValue={extra.signature_drink ?? ""}
-                placeholder="e.g. Cascara tonic espresso"
+                placeholder={d.uploads.signaturePlaceholder}
                 maxLength={80}
               />
             )}
           </Field>
-          <Field label="Instagram" error={error?.field === "instagramHandle" ? error.error : undefined}>
+          <Field label={d.profile.instagram} error={error?.field === "instagramHandle" ? error.error : undefined}>
             {(id) => (
               <Input
                 id={id}
@@ -189,10 +191,10 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
           </Field>
         </div>
 
-        <Field label="Skills">
+        <Field label={d.profile.skills}>
           {() => (
             <ChipGroup
-              options={[...SKILLS]}
+              options={SKILLS.map((sk) => ({ value: sk.value, label: d.labels.skills[sk.value] ?? sk.label }))}
               selected={skills}
               onToggle={(value) =>
                 setSkills((prev) =>
@@ -204,13 +206,13 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
           )}
         </Field>
 
-        <Field label="Languages" hint="Which languages can you serve customers in?">
+        <Field label={d.profile.languages} hint={d.uploads.languagesHint}>
           {() => <LanguagePicker value={languages} onChange={setLanguages} />}
         </Field>
 
         <Field
-          label="Usual availability"
-          hint="Tap a day, then drag the bar's edges to set your hours. Cafés see this and gigs outside it warn you."
+          label={d.uploads.usualAvailability}
+          hint={d.uploads.availabilityHint}
         >
           {() => (
             <>
@@ -221,7 +223,7 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
         </Field>
 
         <FormError message={error && !error.field ? error.error : undefined} />
-        <SubmitButton className="self-start">Save profile</SubmitButton>
+        <SubmitButton className="self-start">{d.profile.saveProfile}</SubmitButton>
       </form>
     </Card>
   );

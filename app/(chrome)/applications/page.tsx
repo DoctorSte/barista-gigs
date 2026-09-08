@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ReviewForm } from "@/components/review-form";
 import type { Announcement, Interest } from "@/lib/database.types";
+import { dateLocale, getDict, getLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "My applications" };
 
@@ -29,6 +30,8 @@ export default async function ApplicationsPage() {
     supabase.from("conversations").select("id, announcement_id").eq("extra_id", extra.id),
   ]);
 
+  const d = await getDict();
+  const loc = dateLocale(await getLocale());
   const interests = (interestData ?? []) as unknown as InterestRow[];
   const conversationByGig = new Map(
     (conversationData ?? []).map((c) => [c.announcement_id, c.id]),
@@ -50,20 +53,20 @@ export default async function ApplicationsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">My applications</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.applications.title}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
-          Every gig you&apos;ve raised your hand for.
+          {d.applications.subtitle}
         </p>
       </div>
 
       {interests.length === 0 ? (
         <EmptyState
           icon={Send}
-          title="No applications yet"
-          description="Browse open gigs in your city and send your first application."
+          title={d.applications.empty}
+          description={d.applications.emptySub}
           action={
             <Link href="/gigs">
-              <Button variant="outline">Browse gigs</Button>
+              <Button variant="outline">{d.applications.browseGigs}</Button>
             </Link>
           }
         />
@@ -80,8 +83,8 @@ export default async function ApplicationsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="truncate text-sm text-muted-foreground">
-                      {gig?.coffee_shops?.name ?? "Coffee shop"} · applied{" "}
-                      {formatRelative(interest.created_at)}
+                      {gig?.coffee_shops?.name ?? "Café"} ·{" "}
+                      {d.applications.appliedAgo(formatRelative(interest.created_at, loc))}
                     </p>
                     {gig ? (
                       <Link
@@ -91,7 +94,7 @@ export default async function ApplicationsPage() {
                         {gig.title}
                       </Link>
                     ) : (
-                      <p className="mt-0.5 font-display text-lg font-semibold">Gig removed</p>
+                      <p className="mt-0.5 font-display text-lg font-semibold">{d.applications.gigRemoved}</p>
                     )}
                   </div>
                   <InterestStatusBadge status={interest.status} />
@@ -99,8 +102,8 @@ export default async function ApplicationsPage() {
                 {gig ? (
                   <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <CalendarClock className="size-4" />
-                    {formatGigSchedule(gig)} ·{" "}
-                    {formatPay(gig.pay_rate_cents, gig.pay_type)}
+                    {formatGigSchedule(gig, loc)} ·{" "}
+                    {formatPay(gig.pay_rate_cents, gig.pay_type, "EUR", loc)}
                   </p>
                 ) : null}
                 <div className="mt-3 flex flex-wrap items-center gap-2 empty:mt-0">
@@ -109,12 +112,12 @@ export default async function ApplicationsPage() {
                       href={`/messages/${conversationId}`}
                       className="pressable inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success"
                     >
-                      <MessageSquare className="size-4" /> Message the café
+                      <MessageSquare className="size-4" /> {d.applications.messageCafe}
                     </Link>
                   ) : null}
                   {interest.work_status === "completed" ? (
                     <span className="inline-flex items-center gap-1.5 rounded-sm bg-success-soft px-3 py-1.5 text-[13px] font-medium text-success">
-                      <CheckCheck className="size-4" /> Shift completed
+                      <CheckCheck className="size-4" /> {d.applications.shiftCompleted}
                     </span>
                   ) : null}
                 </div>

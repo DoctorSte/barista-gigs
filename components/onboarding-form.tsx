@@ -10,6 +10,7 @@ import { SubmitButton } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 export function OnboardingForm({
   featuredCities,
@@ -22,6 +23,7 @@ export function OnboardingForm({
   initialName: string;
   roleLocked: boolean;
 }) {
+  const d = useDict();
   const [role, setRole] = useState(initialRole);
   const [city, setCity] = useState<PickedCity | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
@@ -49,19 +51,19 @@ export function OnboardingForm({
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {option === "extra" ? "Barista" : "Café"}
+              {option === "extra" ? d.onboarding.barista : d.onboarding.cafe}
             </button>
           ))}
         </div>
       ) : null}
 
-      <Field label={role === "shop" ? "Your name" : "Display name"} error={error?.field === "displayName" ? error.error : undefined}>
+      <Field label={role === "shop" ? d.auth.yourName : d.onboarding.displayName} error={error?.field === "displayName" ? error.error : undefined}>
         {(id) => <Input id={id} name="displayName" defaultValue={initialName} required />}
       </Field>
 
       <Field
-        label="Your city"
-        hint="Gigs and profiles are matched within a city."
+        label={d.onboarding.yourCity}
+        hint={d.onboarding.cityHint}
         error={error?.field === "city" ? error.error : undefined}
       >
         {() => <CityPicker featured={featuredCities} value={city} onChange={setCity} />}
@@ -69,27 +71,27 @@ export function OnboardingForm({
 
       {role === "shop" ? (
         <>
-          <Field label="Café name" error={error?.field === "shopName" ? error.error : undefined}>
+          <Field label={d.onboarding.cafeName} error={error?.field === "shopName" ? error.error : undefined}>
             {(id) => <Input id={id} name="shopName" placeholder="e.g. Kaffebar Nord" required />}
           </Field>
-          <Field label="Address" error={error?.field === "address" ? error.error : undefined}>
+          <Field label={d.onboarding.address} error={error?.field === "address" ? error.error : undefined}>
             {(id) => <Input id={id} name="address" placeholder="Street and number" required />}
           </Field>
         </>
       ) : (
         <>
-          <Field label="Bio" hint="Optional — a couple of lines about your coffee background.">
+          <Field label={d.onboarding.bio} hint={d.onboarding.bioHint}>
             {(id) => <Textarea id={id} name="bio" maxLength={600} />}
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Years of experience">
+            <Field label={d.onboarding.yearsExperience}>
               {(id) => <Input id={id} name="yearsExperience" type="number" min={0} max={60} />}
             </Field>
-            <Field label="Hourly rate (€)">
+            <Field label={d.onboarding.hourlyRate}>
               {(id) => <Input id={id} name="hourlyRate" type="number" min={0} step="0.5" />}
             </Field>
           </div>
-          <Field label="Skills">
+          <Field label={d.onboarding.skills}>
             {() => (
               <ChipGroup
                 options={[...SKILLS]}
@@ -108,7 +110,7 @@ export function OnboardingForm({
 
       <FormError message={error && !error.field ? error.error : undefined} />
       <SubmitButton size="lg" className="w-full">
-        {role === "shop" ? "Open café account" : "Start finding gigs"}
+        {role === "shop" ? d.onboarding.openCafeAccount : d.onboarding.startFindingGigs}
       </SubmitButton>
     </form>
   );

@@ -7,6 +7,7 @@ import { MapPin, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { switchLocation } from "@/app/actions/locations";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 export function LocationSwitcher({
   locations,
@@ -20,6 +21,7 @@ export function LocationSwitcher({
   /** Shown instead of the add button when the plan's location cap is reached. */
   upgradeHint: boolean;
 }) {
+  const d = useDict();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -58,14 +60,14 @@ export function LocationSwitcher({
           href="/cafe/locations/new"
           className="pressable inline-flex items-center gap-1 rounded-full border border-dashed border-border-strong px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
         >
-          <Plus className="size-3.5" /> Add location
+          <Plus className="size-3.5" /> {d.cafe.addLocation}
         </Link>
       ) : upgradeHint ? (
         <Link
           href="/settings/billing"
           className="text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
-          Upgrade to Group for up to 3 locations
+          {d.cafe.upgradeLocations}
         </Link>
       ) : null}
     </div>

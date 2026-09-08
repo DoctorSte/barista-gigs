@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { inviteToGig } from "@/app/actions/invites";
 import { Button } from "@/components/ui/button";
 import { Field, Select } from "@/components/ui/field";
+import { useDict } from "@/components/i18n-provider";
 
 export function InviteForm({
   extraId,
@@ -16,6 +17,7 @@ export function InviteForm({
   gigs: { id: string; title: string }[];
   alreadyAppliedGigIds: string[];
 }) {
+  const d = useDict();
   const applied = new Set(alreadyAppliedGigIds);
   const [gigId, setGigId] = useState(() => gigs.find((gig) => !applied.has(gig.id))?.id ?? "");
   const [pending, startTransition] = useTransition();
@@ -25,7 +27,7 @@ export function InviteForm({
     startTransition(async () => {
       const result = await inviteToGig(extraId, gigId);
       if (result.ok) {
-        toast.success("Invite sent");
+        toast.success(d.barista.inviteSent);
       } else {
         toast.error(result.error);
       }
@@ -34,23 +36,23 @@ export function InviteForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <Field label="Gig">
+      <Field label={d.barista.gig}>
         {(id) => (
           <Select id={id} value={gigId} onChange={(event) => setGigId(event.target.value)}>
             <option value="" disabled>
-              Select a gig
+              {d.barista.selectGig}
             </option>
             {gigs.map((gig) => (
               <option key={gig.id} value={gig.id} disabled={applied.has(gig.id)}>
                 {gig.title}
-                {applied.has(gig.id) ? " — already applied" : ""}
+                {applied.has(gig.id) ? d.barista.alreadyApplied : ""}
               </option>
             ))}
           </Select>
         )}
       </Field>
       <Button onClick={send} loading={pending} disabled={!gigId} className="self-start">
-        <Send className="size-4" /> Send invite
+        <Send className="size-4" /> {d.barista.sendInvite}
       </Button>
     </div>
   );

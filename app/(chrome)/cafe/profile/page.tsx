@@ -5,6 +5,7 @@ import { requireShop } from "@/lib/auth";
 import { getCityById } from "@/lib/city";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { ShopProfileForm } from "@/components/shop-profile-form";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Café profile" };
 
@@ -12,14 +13,15 @@ export default async function ShopProfilePage() {
   const { user, profile, shop } = await requireShop();
   const city = await getCityById(shop.city_id);
 
+  const d = await getDict();
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Café profile</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{d.shopForm.profileTitle}</h1>
           <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
             <MapPin className="size-4" />
-            {city?.name ?? "Your city"} — this is what baristas see on your gigs.
+            {d.shopForm.profileSub(city?.name ?? "…")}
           </p>
         </div>
         <Link

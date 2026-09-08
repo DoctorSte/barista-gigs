@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BaristasBrowser, type DirectoryBarista } from "@/components/baristas-browser";
 import { baristaTrustStats } from "@/lib/trust";
 import type { RateCard } from "@/lib/database.types";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Baristas" };
 
@@ -34,6 +35,7 @@ export default async function BaristasPage() {
     .eq("is_available", true)
     .neq("user_id", user.id)
     .order("created_at");
+  const d = await getDict();
   const rows = (data ?? []) as unknown as BaristaRow[];
 
   const extraIds = rows.map((barista) => barista.id);
@@ -89,10 +91,10 @@ export default async function BaristasPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Baristas</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.barista.directoryTitle}</h1>
         <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
           <MapPin className="size-4" />
-          Available baristas in your city
+          {d.barista.directorySub}
         </p>
       </div>
 

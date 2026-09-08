@@ -13,6 +13,7 @@ import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { FormError } from "@/components/form-error";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -63,10 +64,7 @@ function initialShifts(gig?: Announcement): GigShift[] {
   return [{ date: "", start: "", end: "" }];
 }
 
-const JOB_KINDS = [
-  { value: "full_time" as const, label: "Full-time" },
-  { value: "part_time" as const, label: "Part-time" },
-];
+
 
 export function GigForm({
   gig,
@@ -85,6 +83,7 @@ export function GigForm({
   /** Café opening hours; bounds the weekly scheduler when set. */
   openingHours?: OpeningHours | null;
 }) {
+  const d = useDict();
   const defaults = gig ?? template;
   const mode = modeProp ?? (defaults && defaults.kind !== "shift" ? "job" : "shift");
   const [skills, setSkills] = useState<string[]>(defaults?.required_skills ?? []);
@@ -104,19 +103,23 @@ export function GigForm({
   const [state, action] = useActionState(gig ? updateGig : createGig, null);
   const error = state && !state.ok ? state : null;
   const isJob = kind !== "shift";
+  const JOB_KINDS = [
+    { value: "full_time" as const, label: d.gigForm.fullTime },
+    { value: "part_time" as const, label: d.gigForm.partTime },
+  ];
   const payTypeOptions = isJob
     ? ([
-        { value: "hourly", label: "Per hour" },
-        { value: "monthly", label: "Per month" },
+        { value: "hourly", label: d.gigForm.perHourOpt },
+        { value: "monthly", label: d.gigForm.perMonthOpt },
       ] as const)
     : ([
-        { value: "hourly", label: "Per hour" },
-        { value: "flat", label: "Flat rate" },
+        { value: "hourly", label: d.gigForm.perHourOpt },
+        { value: "flat", label: d.gigForm.flatRate },
       ] as const);
 
   useEffect(() => {
-    if (state?.ok) toast.success("Gig saved");
-  }, [state]);
+    if (state?.ok) toast.success(d.gigForm.saved);
+  }, [state, d]);
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -156,11 +159,11 @@ export function GigForm({
       ) : null}
 
       <Field
-        label="Title (optional)"
+        label={d.gigForm.titleOptional}
         hint={
           isJob
-            ? "Leave it blank and we'll call it a full- or part-time barista role."
-            : "Leave it blank and we'll name the gig after its dates."
+            ? d.gigForm.titleHintJob
+            : d.gigForm.titleHintGig
         }
         error={error?.field === "title" ? error.error : undefined}
       >
@@ -169,14 +172,14 @@ export function GigForm({
             id={id}
             name="title"
             defaultValue={defaults?.title}
-            placeholder={isJob ? "e.g. Head barista" : "e.g. Saturday brunch rush cover"}
+            placeholder={isJob ? d.gigForm.titlePlaceholderJob : d.gigForm.titlePlaceholderGig}
           />
         )}
       </Field>
 
       <Field
-        label="Description"
-        hint="What's the shift like? Machines, volume, dress code, who to ask for."
+        label={d.gigForm.description}
+        hint={d.gigForm.descriptionHint}
         error={error?.field === "description" ? error.error : undefined}
       >
         {(id) => (
@@ -194,8 +197,8 @@ export function GigForm({
 
       {isJob ? (
         <Field
-          label="Hours per week (optional)"
-          hint="Roughly how many hours a week is this role?"
+          label={d.gigForm.hoursPerWeek}
+          hint={d.gigForm.hoursPerWeekHint}
           error={error?.field === "weeklyHours" ? error.error : undefined}
         >
           {(id) => (
@@ -215,8 +218,8 @@ export function GigForm({
       <div className="grid w-fit grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup" aria-label="Schedule type">
         {(
           [
-            { value: "dates", label: "Specific dates" },
-            { value: "pattern", label: "Weekly schedule" },
+            { value: "dates", label: d.gigForm.specificDates },
+            { value: "pattern", label: d.gigForm.weeklySchedule },
           ] as const
         ).map((option) => (
           <button
@@ -240,11 +243,11 @@ export function GigForm({
 
       {scheduleMode === "pattern" ? (
         <Field
-          label="Weekly schedule"
+          label={d.gigForm.weeklySchedule}
           hint={
             openingHours
-              ? "Tap a day, drag the bar to set hours — bounded by your opening hours. Repeats every week between the two dates."
-              : "Tap a day, drag the bar to set hours. Repeats every week between the two dates. Tip: set your opening hours on the café profile to bound this."
+              ? d.gigForm.weeklyHintBounded
+              : d.gigForm.weeklyHintUnbounded
           }
           error={error?.field?.startsWith("shifts") ? error.error : undefined}
         >
@@ -297,8 +300,8 @@ export function GigForm({
         </Field>
       ) : (
       <Field
-        label="Dates"
-        hint="Add every date this gig covers. An end time earlier than the start means the shift runs past midnight."
+        label={d.gigForm.dates}
+        hint={d.gigForm.datesHint}
         error={error?.field?.startsWith("shifts") ? error.error : undefined}
       >
         {() => (
@@ -344,7 +347,7 @@ export function GigForm({
                 {shifts.length > 1 ? (
                   <button
                     type="button"
-                    aria-label="Remove date"
+                    aria-label={d.gigForm.removeDate}
                     onClick={() => setShifts((prev) => prev.filter((_, i) => i !== index))}
                     className="pressable rounded-sm p-2 text-muted-foreground hover:text-foreground"
                   >
@@ -364,7 +367,7 @@ export function GigForm({
                 }
                 className="pressable inline-flex items-center gap-1.5 self-start rounded-sm px-2 py-1.5 text-[13px] font-medium text-accent"
               >
-                <Plus className="size-4" /> Add a date
+                <Plus className="size-4" /> {d.gigForm.addDate}
               </button>
             ) : null}
           </div>
@@ -379,9 +382,9 @@ export function GigForm({
           <div className="flex items-start gap-2.5">
             <Siren className={cn("mt-0.5 size-4 shrink-0", isSos ? "text-danger" : "text-muted-foreground")} />
             <div>
-              <Label htmlFor="sos-switch">SOS — urgent cover</Label>
+              <Label htmlFor="sos-switch">{d.gigForm.sosLabel}</Label>
               <p className="mt-0.5 text-[13px] text-muted-foreground">
-                Publishing pings every available barista in your city right away.
+                {d.gigForm.sosHint}
               </p>
             </div>
           </div>
@@ -391,7 +394,7 @@ export function GigForm({
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Pay (€)" error={error?.field === "payRateCents" ? error.error : undefined}>
+        <Field label={d.gigForm.pay} error={error?.field === "payRateCents" ? error.error : undefined}>
           {(id) => (
             <Input
               id={id}
@@ -404,7 +407,7 @@ export function GigForm({
             />
           )}
         </Field>
-        <Field label="Pay type">
+        <Field label={d.gigForm.payType}>
           {() => (
             <div className="grid h-10 grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup">
               {payTypeOptions.map((option) => (
@@ -431,10 +434,10 @@ export function GigForm({
         </Field>
       </div>
 
-      <Field label="Required skills" hint="Optional — helps the right baristas find you.">
+      <Field label={d.gigForm.requiredSkills} hint={d.gigForm.requiredSkillsHint}>
         {() => (
           <ChipGroup
-            options={[...SKILLS]}
+            options={SKILLS.map((sk) => ({ value: sk.value, label: d.labels.skills[sk.value] ?? sk.label }))}
             selected={skills}
             onToggle={(value) =>
               setSkills((prev) =>
@@ -448,7 +451,7 @@ export function GigForm({
 
       <FormError message={error && !error.field ? error.error : undefined} />
       <SubmitButton className="self-start">
-        {gig ? "Save changes" : mode === "job" ? "Publish job" : "Publish gig"}
+        {gig ? d.gigForm.saveChanges : mode === "job" ? d.gigForm.publishJob : d.gigForm.publishGig}
       </SubmitButton>
     </form>
   );

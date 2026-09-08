@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { leaveReview } from "@/app/actions/trust";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/components/i18n-provider";
 
 /** Inline star + comment form; collapses to a button until opened. */
 export function ReviewForm({ interestId, subject }: { interestId: string; subject: string }) {
+  const d = useDict();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
@@ -20,20 +22,20 @@ export function ReviewForm({ interestId, subject }: { interestId: string; subjec
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Star className="size-4" /> Review {subject}
+        <Star className="size-4" /> {d.review.review(subject)}
       </Button>
     );
   }
 
   function submit() {
     if (rating === 0) {
-      toast.error("Pick a rating first");
+      toast.error(d.review.pickRating);
       return;
     }
     startTransition(async () => {
       const result = await leaveReview(interestId, rating, comment);
       if (result.ok) {
-        toast.success("Review posted");
+        toast.success(d.review.posted);
         setOpen(false);
         router.refresh();
       } else {
@@ -73,15 +75,15 @@ export function ReviewForm({ interestId, subject }: { interestId: string; subjec
         onChange={(event) => setComment(event.target.value)}
         maxLength={500}
         rows={2}
-        placeholder={`How was working with ${subject}? (optional)`}
+        placeholder={d.review.placeholder(subject)}
         className="mt-2.5 w-full resize-y rounded-md border border-border bg-surface px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-ring"
       />
       <div className="mt-2 flex items-center gap-2">
         <Button size="sm" loading={pending} onClick={submit}>
-          Post review
+          {d.review.post}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-          Cancel
+          {d.common.cancel}
         </Button>
       </div>
     </div>

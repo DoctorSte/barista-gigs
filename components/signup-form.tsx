@@ -8,25 +8,17 @@ import { SubmitButton } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { cn } from "@/lib/utils";
-
-const ROLES = [
-  {
-    value: "extra" as const,
-    icon: Coffee,
-    title: "I'm a barista",
-    caption: "Find shifts near you",
-  },
-  {
-    value: "shop" as const,
-    icon: Store,
-    title: "I run a café",
-    caption: "Hire trusted extras",
-  },
-];
+import { useDict } from "@/components/i18n-provider";
 
 export function SignupForm({ initialRole }: { initialRole?: "shop" | "extra" }) {
   const [role, setRole] = useState<"shop" | "extra">(initialRole ?? "extra");
   const [state, action] = useActionState(signUp, null);
+  const d = useDict();
+
+  const roles = [
+    { value: "extra" as const, icon: Coffee, title: d.auth.iAmBarista, caption: d.auth.iAmBaristaSub },
+    { value: "shop" as const, icon: Store, title: d.auth.iAmCafe, caption: d.auth.iAmCafeSub },
+  ];
 
   if (state?.ok && state.data?.needsConfirmation) {
     return (
@@ -34,9 +26,9 @@ export function SignupForm({ initialRole }: { initialRole?: "shop" | "extra" }) 
         <span className="flex size-12 items-center justify-center rounded-full bg-success-soft text-success">
           <MailCheck className="size-6" strokeWidth={1.75} />
         </span>
-        <p className="font-medium">Check your inbox</p>
+        <p className="font-medium">{d.auth.checkInbox}</p>
         <p className="max-w-xs text-sm text-muted-foreground">
-          We sent you a confirmation link. Click it to finish setting up your account.
+          {d.auth.confirmationSent}
         </p>
       </div>
     );
@@ -45,8 +37,8 @@ export function SignupForm({ initialRole }: { initialRole?: "shop" | "extra" }) 
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="role" value={role} />
-      <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Account type">
-        {ROLES.map((option) => {
+      <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label={d.auth.accountType}>
+        {roles.map((option) => {
           const active = role === option.value;
           return (
             <button
@@ -73,29 +65,29 @@ export function SignupForm({ initialRole }: { initialRole?: "shop" | "extra" }) 
           );
         })}
       </div>
-      <Field label={role === "shop" ? "Your name" : "Full name"}>
+      <Field label={role === "shop" ? d.auth.yourName : d.auth.fullName}>
         {(id) => <Input id={id} name="displayName" autoComplete="name" required />}
       </Field>
-      <Field label="Email">
+      <Field label={d.auth.email}>
         {(id) => <Input id={id} name="email" type="email" autoComplete="email" required />}
       </Field>
-      <Field label="Password" hint="At least 8 characters">
+      <Field label={d.auth.password} hint={d.auth.passwordHint}>
         {(id) => (
           <Input id={id} name="password" type="password" autoComplete="new-password" required minLength={8} />
         )}
       </Field>
       <FormError message={state && !state.ok ? state.error : undefined} />
       <SubmitButton size="lg" className="w-full">
-        Create account
+        {d.auth.createAccount}
       </SubmitButton>
       <p className="text-center text-[13px] text-muted-foreground">
-        By creating an account you agree to the{" "}
+        {d.auth.agreePrefix}{" "}
         <a href="/legal/terms" className="text-accent hover:underline">
-          Terms of Service
+          {d.auth.termsOfService}
         </a>{" "}
-        and{" "}
+        {d.auth.and}{" "}
         <a href="/legal/privacy" className="text-accent hover:underline">
-          Privacy Policy
+          {d.auth.privacyPolicy}
         </a>
         .
       </p>

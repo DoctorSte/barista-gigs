@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { NotificationSettingsForm } from "@/components/notification-settings-form";
 import type { NotificationPrefs } from "@/lib/database.types";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Notifications" };
 
@@ -17,12 +18,13 @@ export default async function NotificationSettingsPage() {
     .maybeSingle();
   const prefs = (data as NotificationPrefs | null) ?? null;
 
+  const d = await getDict();
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Notifications</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{d.settings.notifTitle}</h1>
         <p className="mt-1 text-[15px] text-muted-foreground">
-          Choose which emails you receive. In-app notifications always show up under the bell.
+          {d.settings.notifSub}
         </p>
       </div>
 

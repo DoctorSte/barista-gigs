@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ReferralLink } from "@/components/referral-link";
 import { TeamManager, type TeamInviteRow, type TeamMemberRow } from "@/components/team-manager";
 import type { Announcement, Subscription } from "@/lib/database.types";
+import { dateLocale, getDict, getLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -36,6 +37,9 @@ export default async function ShopDashboardPage() {
     getOwnerShops(),
   ]);
 
+  const d = await getDict();
+  const appLocale = await getLocale();
+  const loc = dateLocale(appLocale);
   const gigs = (gigData ?? []) as unknown as GigRow[];
   const subscribed = isActive(subscription);
   const plan = PLANS[isPlanId(subscription?.plan) ? subscription!.plan : "regular"];
@@ -106,8 +110,7 @@ export default async function ShopDashboardPage() {
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">{shop.name}</h1>
           <p className="mt-1 text-[15px] text-muted-foreground">
-            {openCount} open {openCount === 1 ? "gig" : "gigs"} · {pendingApplicants}{" "}
-            {pendingApplicants === 1 ? "application" : "applications"}
+            {d.cafe.openGigsCount(openCount, pendingApplicants)}
           </p>
         </div>
         {subscribed ? (
@@ -116,13 +119,13 @@ export default async function ShopDashboardPage() {
               href="/cafe/gigs/new"
               className="pressable inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              <Plus className="size-4" /> Post a gig
+              <Plus className="size-4" /> {d.cafe.postGig}
             </Link>
             <Link
               href="/cafe/jobs/new"
               className="pressable inline-flex h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium hover:bg-muted"
             >
-              <Briefcase className="size-4" /> Post a job
+              <Briefcase className="size-4" /> {d.cafe.postJob}
             </Link>
           </div>
         ) : null}
@@ -133,9 +136,9 @@ export default async function ShopDashboardPage() {
           <div className="flex items-start gap-3">
             <Sparkles className="mt-0.5 size-5 shrink-0 text-accent" />
             <div>
-              <p className="font-medium">Activate your subscription to post gigs</p>
+              <p className="font-medium">{d.cafe.activate}</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Unlimited gigs, applicant messaging, one flat monthly price.
+                {d.cafe.activateSub}
               </p>
             </div>
           </div>
@@ -143,7 +146,7 @@ export default async function ShopDashboardPage() {
             href="/settings/billing"
             className="pressable inline-flex h-9 items-center rounded-sm bg-accent px-4 text-[13px] font-medium text-accent-foreground hover:bg-accent/90"
           >
-            Set up billing
+            {d.cafe.setUpBilling}
           </Link>
         </div>
       ) : null}
@@ -151,12 +154,8 @@ export default async function ShopDashboardPage() {
       {gigs.length === 0 ? (
         <EmptyState
           mascot
-          title="No gigs yet"
-          description={
-            subscribed
-              ? "Post your first gig and baristas in your city will see it instantly."
-              : "Once billing is set up, your gigs will show up here."
-          }
+          title={d.cafe.noGigs}
+          description={subscribed ? d.cafe.noGigsSubActive : d.cafe.noGigsSubInactive}
         />
       ) : (
         <ul className="stagger flex flex-col gap-3">
@@ -181,7 +180,7 @@ export default async function ShopDashboardPage() {
                       {starts.getDate()}
                     </span>
                     <span className="mt-1 text-[10px] font-medium uppercase tracking-widest">
-                      {starts.toLocaleDateString("en-GB", { month: "short" })}
+                      {starts.toLocaleDateString(loc, { month: "short" })}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
@@ -195,12 +194,12 @@ export default async function ShopDashboardPage() {
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5">
                         <CalendarClock className="size-4" />
-                        {formatGigSchedule(gig)}
+                        {formatGigSchedule(gig, loc)}
                       </span>
-                      <span>{formatPay(gig.pay_rate_cents, gig.pay_type)}</span>
+                      <span>{formatPay(gig.pay_rate_cents, gig.pay_type, "EUR", loc)}</span>
                       <span className="inline-flex items-center gap-1.5">
                         <Users className="size-4" />
-                        {applicants} {applicants === 1 ? "applicant" : "applicants"}
+                        {applicants} {d.common.applicants(applicants)}
                       </span>
                     </div>
                   </div>
@@ -213,11 +212,8 @@ export default async function ShopDashboardPage() {
 
       {isOwner && subscribed ? (
         <Card className="rise-in mt-6">
-          <h2 className="font-display text-lg font-semibold tracking-tight">Team</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Teammates share this workspace — gigs, applicants, and messages — across all your
-            locations. Billing, locations, and the team itself stay with you.
-          </p>
+          <h2 className="font-display text-lg font-semibold tracking-tight">{d.cafe.team}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{d.cafe.teamSub}</p>
           <TeamManager
             members={teamMembers}
             invites={teamInvites}
@@ -229,10 +225,9 @@ export default async function ShopDashboardPage() {
       ) : null}
 
       <Card className="rise-in mt-6">
-        <h2 className="font-display text-lg font-semibold tracking-tight">Refer a café</h2>
+        <h2 className="font-display text-lg font-semibold tracking-tight">{d.cafe.referTitle}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Know a café that needs extra hands? Share your link — when they subscribe, you get a
-          month free.
+          {d.cafe.referSub}
         </p>
         <div className="mt-4">
           <ReferralLink code={shop.referral_code} />
@@ -240,10 +235,8 @@ export default async function ShopDashboardPage() {
         {referred.length > 0 ? (
           <div className="mt-4">
             <p className="text-sm font-medium">
-              {referred.length} {referred.length === 1 ? "café" : "cafés"} joined with your link
-              {freeMonths > 0
-                ? ` · ${freeMonths} free ${freeMonths === 1 ? "month" : "months"} earned`
-                : ""}
+              {d.cafe.referJoined(referred.length)}
+              {freeMonths > 0 ? d.cafe.freeMonths(freeMonths) : ""}
             </p>
             <ul className="mt-2.5 flex flex-col gap-1.5">
               {referred.map((r) => (
@@ -254,13 +247,13 @@ export default async function ShopDashboardPage() {
                   <span className="flex items-center gap-2">
                     {r.name}
                     <span className="text-[12px] text-muted-foreground">
-                      joined {formatDate(r.created_at)}
+                      {d.profile.joinedOn(formatDate(r.created_at, loc))}
                     </span>
                   </span>
                   {r.referral_reward_granted ? (
-                    <Badge tone="success">Free month earned</Badge>
+                    <Badge tone="success">{d.cafe.freeMonthEarned}</Badge>
                   ) : (
-                    <Badge>Not subscribed yet</Badge>
+                    <Badge>{d.cafe.notSubscribed}</Badge>
                   )}
                 </li>
               ))}
