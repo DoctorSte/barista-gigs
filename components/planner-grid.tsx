@@ -364,6 +364,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           {/* Barista rows */}
           {data.baristas.map((barista) => {
             const rowBlocks = blocksForBarista(barista.extraId);
+            if (rowBlocks.length === 0) return null;
             return (
               <div key={barista.extraId} className={cn("grid border-b border-border/70", GRID_COLS)}>
                 <div className="pl-3">

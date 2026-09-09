@@ -511,7 +511,8 @@ export const en = {
     openRow: "Open shifts",
     hours: (label: string) => label,
     applicants: (n: number) => `${n} ${n === 1 ? "applicant" : "applicants"}`,
-    noPeople: "Baristas you save or accept — and staff you add — show up as rows here.",
+    noPeople:
+      "Post a shift on the Open row and it goes up for grabs — baristas appear here once they take one. Add your own staff below to schedule them directly.",
     addPerson: "Add person",
     addPersonPlaceholder: "Name, e.g. Jules",
     add: "Add",

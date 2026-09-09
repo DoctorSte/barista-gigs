@@ -68,21 +68,8 @@ export default async function PlannerPage({
     extras_profiles: BaristaJoin;
   }[];
 
-  // Roster: baristas ever accepted at this café + saved baristas.
-  const [{ data: acceptedData }, { data: savedData }] = await Promise.all([
-    supabase
-      .from("interests")
-      .select(
-        "extras_profiles:extra_id(id, hourly_rate_cents, profiles:user_id(display_name, avatar_url)), announcements!inner(shop_id)",
-      )
-      .eq("status", "accepted")
-      .eq("announcements.shop_id", shop.id),
-    supabase
-      .from("saved_baristas")
-      .select("extras_profiles:extra_id(id, hourly_rate_cents, profiles:user_id(display_name, avatar_url))")
-      .eq("shop_id", shop.id),
-  ]);
-
+  // Rows only for baristas who actually hold a shift this week: the planner
+  // is "post it up for grabs", not a roster of everyone you've worked with.
   const baristaMap = new Map<
     string,
     { extraId: string; name: string; avatarUrl: string | null; hourlyRateCents: number | null }
@@ -95,12 +82,6 @@ export default async function PlannerPage({
       avatarUrl: join.profiles?.avatar_url ?? null,
       hourlyRateCents: join.hourly_rate_cents,
     });
-  }
-  for (const row of (acceptedData ?? []) as unknown as { extras_profiles: BaristaJoin }[]) {
-    addBarista(row.extras_profiles);
-  }
-  for (const row of (savedData ?? []) as unknown as { extras_profiles: BaristaJoin }[]) {
-    addBarista(row.extras_profiles);
   }
   for (const row of interestRows) if (row.status === "accepted") addBarista(row.extras_profiles);
 

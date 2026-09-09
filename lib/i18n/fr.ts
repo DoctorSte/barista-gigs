@@ -522,7 +522,7 @@ export const fr: Dict = {
     hours: (label) => label,
     applicants: (n) => `${n} candidat${n === 1 ? "" : "s"}`,
     noPeople:
-      "Les baristas que vous enregistrez ou acceptez — et le personnel que vous ajoutez — apparaissent ici en lignes.",
+      "Publiez un shift sur la ligne Shifts ouverts et il est à prendre — les baristas apparaissent ici dès qu'ils en prennent un. Ajoutez votre propre équipe ci-dessous pour la planifier directement.",
     addPerson: "Ajouter une personne",
     addPersonPlaceholder: "Nom, ex. Jules",
     add: "Ajouter",
