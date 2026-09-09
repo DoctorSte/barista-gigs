@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Briefcase, CalendarClock, Plus, Sparkles, Users } from "lucide-react";
+import { Briefcase, CalendarClock, CalendarDays, Plus, Sparkles, Users } from "lucide-react";
 import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
 import { PLANS, isPlanId } from "@/lib/plans";
 import { LocationSwitcher } from "@/components/location-switcher";
@@ -115,6 +115,12 @@ export default async function ShopDashboardPage() {
         </div>
         {subscribed ? (
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/cafe/planner"
+              className="pressable inline-flex h-10 items-center gap-2 rounded-md border border-border-strong bg-surface px-4 text-sm font-medium hover:bg-muted"
+            >
+              <CalendarDays className="size-4" /> {d.planner.title}
+            </Link>
             <Link
               href="/cafe/gigs/new"
               className="pressable inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"

@@ -21,6 +21,7 @@ export async function SiteHeader() {
   ];
   const SHOP_LINKS: NavLink[] = [
     { href: "/cafe/dashboard", label: d.nav.dashboard },
+    { href: "/cafe/planner", label: d.nav.planner },
     { href: "/cafe/baristas", label: d.nav.baristas },
     { href: "/messages", label: d.nav.messages },
   ];

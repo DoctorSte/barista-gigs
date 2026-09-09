@@ -246,6 +246,24 @@ export type CafeInvite = {
   accepted_at: string | null;
 };
 
+export type CafeStaff = {
+  id: string;
+  shop_id: string;
+  name: string;
+  created_at: string;
+};
+
+export type PlannerShift = {
+  id: string;
+  shop_id: string;
+  staff_id: string;
+  date: string; // YYYY-MM-DD
+  start_min: number; // minutes from midnight
+  end_min: number; // <= start_min means past midnight
+  note: string | null;
+  created_at: string;
+};
+
 type Table<Row, Required extends keyof Row> = {
   Row: Row;
   Insert: Pick<Row, Required> & Partial<Omit<Row, Required>>;
@@ -278,6 +296,8 @@ export type Database = {
       notification_prefs: Table<NotificationPrefs, "user_id">;
       reviews: Table<Review, "interest_id" | "author_role" | "rating">;
       referral_bonuses: Table<ReferralBonus, "extra_id" | "shop_id" | "amount_cents">;
+      cafe_staff: Table<CafeStaff, "shop_id" | "name">;
+      planner_shifts: Table<PlannerShift, "shop_id" | "staff_id" | "date" | "start_min" | "end_min">;
     };
     Views: Record<string, never>;
     Functions: {

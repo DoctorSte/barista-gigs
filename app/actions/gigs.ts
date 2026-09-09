@@ -199,6 +199,7 @@ export async function createGig(
   }
 
   revalidatePath("/cafe/dashboard");
+  revalidatePath("/cafe/planner");
   redirect(`/cafe/gigs/${data.id}`);
 }
 
@@ -241,6 +242,7 @@ export async function updateGig(
   if (error) return { ok: false, error: "Could not save the gig. Try again." };
 
   revalidatePath("/cafe/dashboard");
+  revalidatePath("/cafe/planner");
   revalidatePath(`/cafe/gigs/${gigId}`);
   return { ok: true };
 }
@@ -257,6 +259,7 @@ export async function setGigStatus(gigId: string, status: AnnouncementStatus): P
   if (error) return { ok: false, error: "Could not update the gig status." };
 
   revalidatePath("/cafe/dashboard");
+  revalidatePath("/cafe/planner");
   revalidatePath(`/cafe/gigs/${gigId}`);
   return { ok: true };
 }
