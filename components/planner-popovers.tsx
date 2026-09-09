@@ -14,11 +14,11 @@ import { SubmitButton, Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { useDict, useLocaleTag } from "@/components/i18n-provider";
-import type { PlannerBarista, PlannerBlock } from "@/components/planner-grid";
+import type { PlannerBlock } from "@/components/planner-grid";
 import type { OpeningHours } from "@/lib/database.types";
 
 export type EditorState =
-  | { type: "create-gig"; date: string; barista?: PlannerBarista }
+  | { type: "create-gig"; date: string }
   | { type: "create-internal"; date: string; staff: { id: string; name: string } }
   | { type: "detail-gig"; block: PlannerBlock }
   | { type: "detail-internal"; block: PlannerBlock };
@@ -68,14 +68,12 @@ function weekdayIdx(date: string): number {
 /** Creates a marketplace gig from a planner cell; optionally invites a barista. */
 function CreateGigEditor({
   date,
-  barista,
   shopName,
   openingHours,
   subscribed,
   onClose,
 }: {
   date: string;
-  barista?: PlannerBarista;
   shopName: string;
   openingHours: OpeningHours | null;
   subscribed: boolean;
@@ -85,7 +83,7 @@ function CreateGigEditor({
   const loc = useLocaleTag();
   const defaults = defaultCellTimes(openingHours, weekdayIdx(date));
   const [state, action] = useActionState(createGig, null);
-  const title = barista ? d.planner.newGigFor(barista.name) : d.planner.newGig;
+  const title = d.planner.newGig;
   const dateLabel = fromDateKey(date).toLocaleDateString(loc, {
     weekday: "long",
     day: "numeric",
@@ -110,7 +108,6 @@ function CreateGigEditor({
           <input type="hidden" name="kind" value="shift" />
           <input type="hidden" name="payType" value="hourly" />
           <input type="hidden" name="shiftDate" value={date} />
-          {barista ? <input type="hidden" name="inviteExtraId" value={barista.extraId} /> : null}
           <div className="grid grid-cols-2 gap-3">
             <Field label={d.planner.start}>
               {(id) => (
@@ -131,7 +128,7 @@ function CreateGigEditor({
                 type="number"
                 min={1}
                 step={0.5}
-                defaultValue={barista?.hourlyRateCents ? barista.hourlyRateCents / 100 : 20}
+                defaultValue={20}
                 required
               />
             )}
@@ -152,9 +149,6 @@ function CreateGigEditor({
               />
             )}
           </Field>
-          {barista ? (
-            <p className="text-[13px] text-muted-foreground">{d.planner.invitedHint}</p>
-          ) : null}
           <FormError message={state && !state.ok ? state.error : undefined} />
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>
@@ -399,7 +393,6 @@ export function PlannerEditor({
     return (
       <CreateGigEditor
         date={editor.date}
-        barista={editor.barista}
         shopName={shopName}
         openingHours={openingHours}
         subscribed={subscribed}

@@ -382,12 +382,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
                   )}
                 </div>
                 {data.days.map((date) =>
-                  renderCell(
-                    date,
-                    rowBlocks.filter((b) => b.date === date),
-                    () => setEditor({ type: "create-gig", date, barista }),
-                    d.planner.newGigFor(barista.name),
-                  ),
+                  renderCell(date, rowBlocks.filter((b) => b.date === date), null, ""),
                 )}
               </div>
             );
