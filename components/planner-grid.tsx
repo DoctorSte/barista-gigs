@@ -425,6 +425,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           data={data}
           date={activeDay}
           rows={dayRows}
+          conflictIds={conflictIds}
           onSelectDate={(day) => router.replace(plannerHref({ day }), { scroll: false })}
           onOpenBlock={(block) =>
             setEditor(

@@ -29,36 +29,23 @@ function blockMinutes(block: PlannerBlock): number {
 }
 
 /**
- * Stacks a row's overlapping shifts into lanes so a double-booking reads as
- * two bars sitting on top of each other rather than one hiding the other.
- * Lanes come from the saved times, not the dragged ones, so the row doesn't
- * reshuffle under the pointer mid-drag.
+ * Stacks a row's shifts into lanes so two that run at the same time sit above
+ * each other instead of one hiding the other. Overlapping is normal — several
+ * gigs can run at once — so lanes carry no warning of their own. Lanes come
+ * from the saved times, not the dragged ones, so the row doesn't reshuffle
+ * under the pointer mid-drag.
  */
-function assignLanes(blocks: PlannerBlock[]): {
-  lane: Map<string, number>;
-  lanes: number;
-  conflicts: Set<string>;
-} {
+function assignLanes(blocks: PlannerBlock[]): { lane: Map<string, number>; lanes: number } {
   const lane = new Map<string, number>();
-  const conflicts = new Set<string>();
   const laneEnds: number[] = [];
-  const sorted = [...blocks].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
-  sorted.forEach((block, index) => {
+  for (const block of [...blocks].sort((a, b) => toMinutes(a.start) - toMinutes(b.start))) {
     const start = toMinutes(block.start);
-    const end = start + blockMinutes(block);
-    for (const other of sorted.slice(index + 1)) {
-      const otherStart = toMinutes(other.start);
-      if (otherStart < end && start < otherStart + blockMinutes(other)) {
-        conflicts.add(block.id);
-        conflicts.add(other.id);
-      }
-    }
     let slot = laneEnds.findIndex((laneEnd) => laneEnd <= start);
     if (slot === -1) slot = laneEnds.length;
-    laneEnds[slot] = end;
+    laneEnds[slot] = start + blockMinutes(block);
     lane.set(block.id, slot);
-  });
-  return { lane, lanes: Math.max(laneEnds.length, 1), conflicts };
+  }
+  return { lane, lanes: Math.max(laneEnds.length, 1) };
 }
 
 /**
@@ -70,6 +57,7 @@ export function PlannerDayView({
   data,
   date,
   rows,
+  conflictIds,
   onSelectDate,
   onOpenBlock,
   onCreateInternal,
@@ -78,6 +66,8 @@ export function PlannerDayView({
   data: PlannerData;
   date: string;
   rows: Row[];
+  /** Same-person double-bookings, computed once for the whole week. */
+  conflictIds: Set<string>;
   onSelectDate: (date: string) => void;
   onOpenBlock: (block: PlannerBlock) => void;
   onCreateInternal: (staffId: string, date: string) => void;
@@ -291,7 +281,7 @@ export function PlannerDayView({
           ) : null}
 
           {rows.map((row) => {
-            const { lane, lanes, conflicts } = assignLanes(row.blocks);
+            const { lane, lanes } = assignLanes(row.blocks);
             return (
             <div key={row.key} className="flex border-b border-border/60 last:border-b-0">
               <div className="flex w-48 shrink-0 items-center gap-2 border-r border-border/60 px-3 py-2">
@@ -345,6 +335,7 @@ export function PlannerDayView({
 
                 {row.blocks.map((block) => {
                   const { start, end } = liveTimes(block);
+                  const conflict = conflictIds.has(block.id);
                   const draggable = block.kind === "internal";
                   const overnight = end > 1440;
                   return (
@@ -354,7 +345,7 @@ export function PlannerDayView({
                         "absolute flex items-center rounded-md px-2 text-[11px] font-medium shadow-sm",
                         barClass(block, past),
                         draggable ? "cursor-grab touch-none active:cursor-grabbing" : "cursor-pointer",
-                        conflicts.has(block.id) && "ring-1 ring-danger",
+                        conflict && "ring-1 ring-danger",
                         draft?.id === block.id && "z-10 ring-2 ring-ring",
                       )}
                       style={{
@@ -375,7 +366,11 @@ export function PlannerDayView({
                         }
                         if (!draft) onOpenBlock(block);
                       }}
-                      title={`${toHHMM(start)}–${toHHMM(end % 1440)}${block.title ? ` · ${block.title}` : ""}`}
+                      title={
+                        conflict
+                          ? d.planner.doubleBooked
+                          : `${toHHMM(start)}–${toHHMM(end % 1440)}${block.title ? ` · ${block.title}` : ""}`
+                      }
                     >
                       {draggable ? (
                         <span
