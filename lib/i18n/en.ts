@@ -551,6 +551,8 @@ export const en = {
     clear: "Clear",
     results: (n: number) => `${n} result${n === 1 ? "" : "s"}`,
     any: "Any",
+    skills: "Skills",
+    selected: (n: number) => `${n} selected`,
     // gigs
     minRate: "Min €/hr",
     duration: "Length",

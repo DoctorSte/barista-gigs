@@ -11,11 +11,11 @@ import { languageLabel, SKILLS, skillLabel } from "@/lib/constants";
 import type { Availability } from "@/lib/database.types";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ChipGroup } from "@/components/ui/chip-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   FilterBar,
   FilterInput,
+  FilterMultiSelect,
   FilterPill,
   FilterSelect,
   FilterToggle,
@@ -174,15 +174,6 @@ export function BaristasBrowser({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2.5">
-        <ChipGroup
-          options={SKILLS.map((sk) => ({ value: sk.value, label: d.labels.skills[sk.value] ?? sk.label }))}
-          selected={skills}
-          onToggle={(value) =>
-            setSkills((prev) =>
-              prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
-            )
-          }
-        />
         <FilterBar
           label={d.filters.filters}
           clearLabel={d.filters.clear}
@@ -190,6 +181,21 @@ export function BaristasBrowser({
           activeCount={activeCount}
           onClear={clearAll}
         >
+          <FilterMultiSelect
+            label={d.filters.skills}
+            anyLabel={d.filters.any}
+            selectedLabel={d.filters.selected}
+            options={SKILLS.map((sk) => ({
+              value: sk.value,
+              label: d.labels.skills[sk.value] ?? sk.label,
+            }))}
+            selected={skills}
+            onToggle={(value) =>
+              setSkills((prev) =>
+                prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+              )
+            }
+          />
           <FilterToggle
             label={d.barista.recommended}
             active={recommendedOnly}

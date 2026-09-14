@@ -561,6 +561,8 @@ export const fr: Dict = {
     clear: "Effacer",
     results: (n) => `${n} résultat${n === 1 ? "" : "s"}`,
     any: "Tous",
+    skills: "Compétences",
+    selected: (n) => `${n} sélectionnées`,
     minRate: "Min €/h",
     duration: "Durée",
     durationShort: "Jusqu'à 4 h",

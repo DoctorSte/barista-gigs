@@ -1,7 +1,7 @@
 "use client";
 
-import { SlidersHorizontal, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,6 +15,7 @@ export function FilterBar({
   activeCount,
   onClear,
   children,
+  trailing,
 }: {
   label: string;
   clearLabel: string;
@@ -22,6 +23,8 @@ export function FilterBar({
   activeCount: number;
   onClear: () => void;
   children: ReactNode;
+  /** Rendered after the result count, e.g. a view switcher. */
+  trailing?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-2.5">
@@ -42,6 +45,7 @@ export function FilterBar({
           </button>
         ) : null}
         <span className="ml-auto text-[13px] text-muted-foreground">{resultLabel}</span>
+        {trailing}
       </div>
     </div>
   );
@@ -159,5 +163,97 @@ export function FilterToggle({
       {Icon ? <Icon className="size-3.5" /> : null}
       {label}
     </button>
+  );
+}
+
+/** Multi-select pill: collapses a long chip list (skills) into one control. */
+export function FilterMultiSelect({
+  label,
+  options,
+  selected,
+  onToggle,
+  anyLabel,
+  selectedLabel,
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onToggle: (value: string) => void;
+  anyLabel: string;
+  selectedLabel: (count: number) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const summary =
+    selected.length === 0
+      ? anyLabel
+      : selected.length === 1
+        ? (options.find((option) => option.value === selected[0])?.label ?? anyLabel)
+        : selectedLabel(selected.length);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((value) => !value)}
+        className={cn(
+          "pressable inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] outline-none",
+          "focus-visible:ring-2 focus-visible:ring-ring",
+          selected.length > 0
+            ? "border-foreground/35 bg-muted text-foreground"
+            : "border-border bg-surface text-muted-foreground hover:border-border-strong",
+        )}
+      >
+        <span>{label}</span>
+        <span className="font-medium text-foreground">{summary}</span>
+        <ChevronDown className="size-3 opacity-60" />
+      </button>
+      {open ? (
+        <div className="menu-panel absolute left-0 z-40 mt-1.5 max-h-72 w-56 overflow-auto rounded-md border border-border bg-surface-raised p-1.5 shadow-lg shadow-black/8">
+          {options.map((option) => {
+            const checked = selected.includes(option.value);
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={checked}
+                onClick={() => onToggle(option.value)}
+                className="flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 text-left text-[13px] outline-none transition-colors duration-100 hover:bg-muted focus-visible:bg-muted"
+              >
+                <span
+                  className={cn(
+                    "flex size-4 shrink-0 items-center justify-center rounded-[4px] border",
+                    checked ? "border-foreground bg-foreground" : "border-border-strong",
+                  )}
+                >
+                  {checked ? <Check className="size-3 text-background" strokeWidth={3} /> : null}
+                </span>
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }

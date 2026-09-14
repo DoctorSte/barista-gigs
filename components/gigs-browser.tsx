@@ -9,9 +9,14 @@ import { SKILLS, skillLabel } from "@/lib/constants";
 import { shiftDuration, toMinutes } from "@/lib/planner";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { Badge } from "@/components/ui/badge";
-import { ChipGroup } from "@/components/ui/chip-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FilterBar, FilterInput, FilterPill, FilterSelect } from "@/components/ui/filter-bar";
+import {
+  FilterBar,
+  FilterInput,
+  FilterMultiSelect,
+  FilterPill,
+  FilterSelect,
+} from "@/components/ui/filter-bar";
 import { GigsMap } from "@/components/gigs-map";
 import { useGeolocation } from "@/components/use-geolocation";
 import { cn } from "@/lib/utils";
@@ -169,11 +174,47 @@ export function GigsBrowser({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <ChipGroup
-            options={SKILLS.map((s) => ({
-              value: s.value,
-              label: d.labels.skills[s.value] ?? s.label,
+        <FilterBar
+          label={d.filters.filters}
+          clearLabel={d.filters.clear}
+          resultLabel={d.filters.results(filtered.length)}
+          activeCount={activeCount}
+          onClear={clearAll}
+          trailing={
+            <div className="grid h-8 grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup">
+              {(
+                [
+                  { value: "list", label: d.gigs.list, icon: List },
+                  { value: "map", label: d.gigs.map, icon: MapIcon },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={view === option.value}
+                  onClick={() => setView(option.value)}
+                  className={cn(
+                    "pressable inline-flex items-center gap-1.5 rounded-sm px-2.5 text-[12px] font-medium outline-none transition-colors duration-150",
+                    "focus-visible:ring-2 focus-visible:ring-ring",
+                    view === option.value
+                      ? "bg-surface-raised text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <option.icon className="size-3.5" /> {option.label}
+                </button>
+              ))}
+            </div>
+          }
+        >
+          <FilterMultiSelect
+            label={d.filters.skills}
+            anyLabel={d.filters.any}
+            selectedLabel={d.filters.selected}
+            options={SKILLS.map((sk) => ({
+              value: sk.value,
+              label: d.labels.skills[sk.value] ?? sk.label,
             }))}
             selected={skills}
             onToggle={(value) =>
@@ -182,40 +223,6 @@ export function GigsBrowser({
               )
             }
           />
-          <div className="grid h-9 grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup">
-            {(
-              [
-                { value: "list", label: d.gigs.list, icon: List },
-                { value: "map", label: d.gigs.map, icon: MapIcon },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                role="radio"
-                aria-checked={view === option.value}
-                onClick={() => setView(option.value)}
-                className={cn(
-                  "pressable inline-flex items-center gap-1.5 rounded-sm px-3 text-[13px] font-medium outline-none transition-colors duration-150",
-                  "focus-visible:ring-2 focus-visible:ring-ring",
-                  view === option.value
-                    ? "bg-surface-raised text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <option.icon className="size-4" /> {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <FilterBar
-          label={d.filters.filters}
-          clearLabel={d.filters.clear}
-          resultLabel={d.filters.results(filtered.length)}
-          activeCount={activeCount}
-          onClear={clearAll}
-        >
           <FilterPill label={d.filters.minRate} active={Boolean(minRate)}>
             <FilterInput
               type="number"
