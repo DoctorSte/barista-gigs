@@ -11,7 +11,7 @@ import { defaultCellTimes, fromDateKey, toMinutes } from "@/lib/planner";
 import { GigStatusBadge } from "@/components/ui/badge";
 import { GigStatusControl } from "@/components/gig-status-control";
 import { SubmitButton, Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
 import { useDict, useLocaleTag } from "@/components/i18n-provider";
 import type { PlannerBlock } from "@/components/planner-grid";
@@ -185,6 +185,7 @@ function InternalEditor({
   const [start, setStart] = useState(block?.start || defaults.start);
   const [end, setEnd] = useState(block?.end || defaults.end);
   const [note, setNote] = useState(block?.note ?? "");
+  const [repeatWeeks, setRepeatWeeks] = useState("1");
   const [pending, startTransition] = useTransition();
   const dateLabel = fromDateKey(date).toLocaleDateString(loc, {
     weekday: "long",
@@ -202,7 +203,12 @@ function InternalEditor({
       const payload = { startMin: toMinutes(start), endMin: toEndMin(end), note };
       const result =
         mode === "create"
-          ? await createPlannerShift({ staffId: block?.staffId ?? "", date, ...payload })
+          ? await createPlannerShift({
+              staffId: block?.staffId ?? "",
+              date,
+              repeatWeeks: Number(repeatWeeks),
+              ...payload,
+            })
           : await updatePlannerShift({ id: block?.plannerShiftId ?? "", ...payload });
       if (result.ok) {
         toast.success(d.planner.shiftSaved);
@@ -251,6 +257,24 @@ function InternalEditor({
             <Input id={id} value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} />
           )}
         </Field>
+        {mode === "create" ? (
+          <Field label={d.planner.repeat}>
+            {(id) => (
+              <Select
+                id={id}
+                value={repeatWeeks}
+                onChange={(event) => setRepeatWeeks(event.target.value)}
+              >
+                <option value="1">{d.planner.repeatOnce}</option>
+                {[4, 8, 12, 26].map((weeks) => (
+                  <option key={weeks} value={String(weeks)}>
+                    {d.planner.repeatWeeks(weeks)}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        ) : null}
         <div className="flex items-center justify-between gap-2">
           {mode === "edit" ? (
             <Button variant="ghost" size="sm" loading={pending} onClick={remove} className="text-danger">

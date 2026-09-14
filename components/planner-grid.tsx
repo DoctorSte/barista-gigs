@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { CalendarDays, ChevronLeft, ChevronRight, Inbox, Plus, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Inbox,
+  Plus,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
-import { addStaff, removeStaff } from "@/app/actions/planner";
+import { addStaff, copyPreviousWeek, removeStaff } from "@/app/actions/planner";
 import {
   absRange,
   addDays,
@@ -20,6 +28,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useDict, useLocaleTag } from "@/components/i18n-provider";
 import { PlannerEditor, type EditorState } from "@/components/planner-popovers";
+import { PlannerDayView } from "@/components/planner-day-view";
 import { cn } from "@/lib/utils";
 import type { AnnouncementStatus, GigShift, OpeningHours, PayType } from "@/lib/database.types";
 
@@ -85,6 +94,29 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [newName, setNewName] = useState("");
   const [pending, startTransition] = useTransition();
+
+  // View and selected day live in the URL so week navigation keeps them and a
+  // particular day is shareable, the same way ?week= already is.
+  const params = useSearchParams();
+  const view = params.get("view") === "day" ? "day" : "week";
+  const dayParam = params.get("day");
+  const activeDay =
+    dayParam && data.days.includes(dayParam)
+      ? dayParam
+      : data.days.includes(data.todayKey)
+        ? data.todayKey
+        : data.days[0]!;
+
+  function plannerHref(next: { week?: string; view?: "week" | "day"; day?: string | null }) {
+    const search = new URLSearchParams();
+    const week = next.week ?? data.weekStart;
+    if (week) search.set("week", week);
+    const nextView = next.view ?? view;
+    if (nextView === "day") search.set("view", "day");
+    const day = next.day === undefined ? activeDay : next.day;
+    if (nextView === "day" && day) search.set("day", day);
+    return `/cafe/planner?${search.toString()}`;
+  }
 
   const monday = fromDateKey(data.weekStart);
   const prevWeek = dateKey(addDays(monday, -7));
@@ -168,6 +200,22 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
         router.refresh();
       } else {
         toast.error(result.error);
+      }
+    });
+  }
+
+  function runCopyLastWeek() {
+    startTransition(async () => {
+      const result = await copyPreviousWeek(data.weekStart);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      const copied = result.data?.copied ?? 0;
+      if (copied === 0) toast.info(d.planner.nothingToCopy);
+      else {
+        toast.success(d.planner.copied(copied));
+        router.refresh();
       }
     });
   }
@@ -268,6 +316,37 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     );
   }
 
+  const dayRows = [
+    {
+      key: "open",
+      name: d.planner.openRow,
+      kind: "open" as const,
+      blocks: openBlocks.filter((b) => b.date === activeDay),
+      weekMinutes: 0,
+    },
+    ...data.baristas.map((barista) => {
+      const rowBlocks = blocksForBarista(barista.extraId);
+      return {
+        key: `barista:${barista.extraId}`,
+        name: barista.name,
+        avatarUrl: barista.avatarUrl,
+        kind: "barista" as const,
+        blocks: rowBlocks.filter((b) => b.date === activeDay),
+        weekMinutes: rowBlocks.reduce((sum, b) => sum + blockMinutes(b), 0),
+      };
+    }),
+    ...data.staff.map((person) => {
+      const rowBlocks = blocksForStaff(person.id);
+      return {
+        key: `staff:${person.id}`,
+        name: person.name,
+        kind: "staff" as const,
+        blocks: rowBlocks.filter((b) => b.date === activeDay),
+        weekMinutes: rowBlocks.reduce((sum, b) => sum + blockMinutes(b), 0),
+      };
+    }),
+  ].filter((row) => row.kind !== "barista" || row.blocks.length > 0);
+
   const sumMinutes = (blocks: PlannerBlock[]) =>
     blocks.reduce((sum, b) => sum + blockMinutes(b), 0);
 
@@ -284,22 +363,55 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
             {d.planner.subtitle(weekRangeLabel)}
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <div className="mr-1 grid h-9 grid-cols-2 gap-1 rounded-md bg-muted p-1" role="radiogroup">
+            {(
+              [
+                { value: "week", label: d.planner.week },
+                { value: "day", label: d.planner.day },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={view === option.value}
+                onClick={() => router.replace(plannerHref({ view: option.value }), { scroll: false })}
+                className={cn(
+                  "pressable rounded-sm px-3 text-[13px] font-medium outline-none transition-colors duration-150",
+                  "focus-visible:ring-2 focus-visible:ring-ring",
+                  view === option.value
+                    ? "bg-surface-raised text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={runCopyLastWeek}
+            className="pressable inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] font-medium hover:bg-muted disabled:opacity-60"
+          >
+            <Copy className="size-3.5" /> {d.planner.copyLastWeek}
+          </button>
           <Link
-            href={`/cafe/planner?week=${prevWeek}`}
+            href={plannerHref({ week: prevWeek, day: null })}
             aria-label={d.planner.prevWeek}
             className="pressable flex size-9 items-center justify-center rounded-md border border-border bg-surface hover:bg-muted"
           >
             <ChevronLeft className="size-4" />
           </Link>
           <Link
-            href="/cafe/planner"
+            href={plannerHref({ week: data.todayKey, day: null })}
             className="pressable flex h-9 items-center rounded-md border border-border bg-surface px-3.5 text-[13px] font-medium hover:bg-muted"
           >
             {d.planner.today}
           </Link>
           <Link
-            href={`/cafe/planner?week=${nextWeek}`}
+            href={plannerHref({ week: nextWeek, day: null })}
             aria-label={d.planner.nextWeek}
             className="pressable flex size-9 items-center justify-center rounded-md border border-border bg-surface hover:bg-muted"
           >
@@ -308,6 +420,26 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
         </div>
       </div>
 
+      {view === "day" ? (
+        <PlannerDayView
+          data={data}
+          date={activeDay}
+          rows={dayRows}
+          onSelectDate={(day) => router.replace(plannerHref({ day }), { scroll: false })}
+          onOpenBlock={(block) =>
+            setEditor(
+              block.kind === "internal"
+                ? { type: "detail-internal", block }
+                : { type: "detail-gig", block },
+            )
+          }
+          onCreateGig={(date) => setEditor({ type: "create-gig", date })}
+          onCreateInternal={(staffId, date) => {
+            const person = data.staff.find((s) => s.id === staffId);
+            if (person) setEditor({ type: "create-internal", date, staff: person });
+          }}
+        />
+      ) : (
       <div className="overflow-x-auto rounded-lg border border-border bg-surface">
         <div className="min-w-[960px]">
           {/* Day header */}
@@ -468,6 +600,8 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           </div>
         </div>
       </div>
+
+      )}
 
       <PlannerEditor
         editor={editor}
