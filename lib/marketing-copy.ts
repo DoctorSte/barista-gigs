@@ -54,12 +54,48 @@ export type AudiencePageCopy = {
   finalCta: { title: string; body: string; ctaLabel: string };
 };
 
+export type ShowcaseItem = { eyebrow: string; title: string; body: string };
+
+export type ShowcaseCopy = {
+  heading: string;
+  planner: ShowcaseItem;
+  sos: ShowcaseItem;
+  trust: ShowcaseItem;
+  directory: ShowcaseItem;
+  mock: {
+    weekOf: string;
+    openShifts: string;
+    team: string;
+    hours: string;
+    sosLabel: string;
+    sosTitle: string;
+    sosTime: string;
+    alerted: string;
+    appliedNow: string;
+    appliedMin: string;
+    confirmedShifts: string;
+    showUpRate: string;
+    reviewQuote: string;
+    reviewAuthor: string;
+    accept: string;
+    decline: string;
+    filterRating: string;
+    filterExperience: string;
+    filterLanguage: string;
+    filterFree: string;
+    results: string;
+    perHour: string;
+    directoryRows: { name: string; meta: string; rate: string }[];
+  };
+};
+
 export type ForCafesCopy = AudiencePageCopy & {
   messagingTitle: string;
   messagingBody: string;
   pricingHeading: string;
   pricingSub: string;
   ctaStartHiring: string;
+  showcase: ShowcaseCopy;
 };
 
 export type PlanCardsCopy = {
@@ -324,6 +360,58 @@ export const FOR_CAFES_COPY: Record<Locale, ForCafesCopy> = {
           "Yes — alongside one-off gigs you can post full-time and part-time job listings, with CVs attached to applications.",
       },
     ],
+    showcase: {
+      heading: "See it working",
+      planner: {
+        eyebrow: "The planner",
+        title: "Your whole week on one screen",
+        body: "Every shift, who's covering it, and the gaps that still need hands. Click an empty day to post a shift — it goes up for grabs to baristas in your city, and lands back on the grid the moment someone takes it.",
+      },
+      sos: {
+        eyebrow: "SOS mode",
+        title: "Someone calls in sick at 6am",
+        body: "Mark the gig urgent and every available barista in your city is alerted at once — by notification and email. Applications usually start landing before you've finished opening.",
+      },
+      trust: {
+        eyebrow: "Track records",
+        title: "Know who you're letting behind the bar",
+        body: "Each applicant carries the record they built here: shifts confirmed by other cafés, their show-up rate, and reviews from the people who worked with them. You confirm and review in return.",
+      },
+      directory: {
+        eyebrow: "The directory",
+        title: "Or skip the wait and go looking",
+        body: "Browse every available barista in your city and narrow by rating, experience, languages, or who's free on a specific date. Save the ones you like and invite them straight to a shift.",
+      },
+      mock: {
+        weekOf: "Week of 14–20 Sept",
+        openShifts: "Open shifts",
+        team: "Team",
+        hours: "h",
+        sosLabel: "SOS",
+        sosTitle: "Morning bar — urgent cover",
+        sosTime: "Today, 07:00–14:00",
+        alerted: "42 baristas alerted in Paris",
+        appliedNow: "applied just now",
+        appliedMin: "applied 4 min ago",
+        confirmedShifts: "38 confirmed shifts",
+        showUpRate: "100% show-up rate",
+        reviewQuote: "\u201cHandled a packed Saturday solo and dialled in the new roast without being asked.\u201d",
+        reviewAuthor: "Café Lueur",
+        accept: "Accept",
+        decline: "Decline",
+        filterRating: "4+ stars",
+        filterExperience: "3+ yrs",
+        filterLanguage: "Français",
+        filterFree: "Free Sat 20",
+        results: "6 results",
+        perHour: "/hr",
+        directoryRows: [
+          { name: "Léa Marchand", meta: "6 yrs · Latte art, Espresso", rate: "€26" },
+          { name: "Yuki Tanaka", meta: "5 yrs · Pour over, Cupping", rate: "€25" },
+          { name: "Karim Haddad", meta: "7 yrs · Roasting, Espresso", rate: "€28" },
+        ],
+      },
+    },
     finalCta: {
       title: "Your next shift is one post away",
       body: "Create your café's profile, post your first gig, and meet the baristas keeping your city caffeinated.",
@@ -406,6 +494,58 @@ export const FOR_CAFES_COPY: Record<Locale, ForCafesCopy> = {
           "Oui — en plus des gigs ponctuels, vous pouvez publier des offres à temps plein et à temps partiel, avec CV joints aux candidatures.",
       },
     ],
+    showcase: {
+      heading: "Voyez-le fonctionner",
+      planner: {
+        eyebrow: "Le planning",
+        title: "Toute votre semaine sur un écran",
+        body: "Chaque shift, qui le couvre, et les trous qui cherchent encore des bras. Cliquez sur un jour vide pour publier un shift — il part à prendre pour les baristas de votre ville et revient sur la grille dès que quelqu'un l'accepte.",
+      },
+      sos: {
+        eyebrow: "Le mode SOS",
+        title: "Un arrêt maladie à 6 h du matin",
+        body: "Marquez le gig urgent et tous les baristas disponibles de votre ville sont alertés d'un coup — notification et e-mail. Les candidatures arrivent souvent avant la fin de l'ouverture.",
+      },
+      trust: {
+        eyebrow: "Les parcours",
+        title: "Sachez qui passe derrière votre comptoir",
+        body: "Chaque candidat arrive avec le parcours qu'il a construit ici : shifts confirmés par d'autres cafés, taux de présence et avis de ceux qui ont travaillé avec lui. Vous confirmez et évaluez en retour.",
+      },
+      directory: {
+        eyebrow: "L'annuaire",
+        title: "Ou allez les chercher directement",
+        body: "Parcourez tous les baristas disponibles de votre ville et filtrez par note, expérience, langues ou disponibilité à une date précise. Enregistrez vos favoris et invitez-les sur un shift.",
+      },
+      mock: {
+        weekOf: "Semaine du 14–20 sept.",
+        openShifts: "Shifts ouverts",
+        team: "Équipe",
+        hours: "h",
+        sosLabel: "SOS",
+        sosTitle: "Comptoir du matin — urgent",
+        sosTime: "Aujourd'hui, 07:00–14:00",
+        alerted: "42 baristas alertés à Paris",
+        appliedNow: "a candidaté à l'instant",
+        appliedMin: "a candidaté il y a 4 min",
+        confirmedShifts: "38 shifts confirmés",
+        showUpRate: "100 % de présence",
+        reviewQuote: "\u00ab A tenu un samedi bondé en solo et calé la nouvelle torréfaction sans qu'on lui demande. \u00bb",
+        reviewAuthor: "Café Lueur",
+        accept: "Accepter",
+        decline: "Refuser",
+        filterRating: "4+ étoiles",
+        filterExperience: "3+ ans",
+        filterLanguage: "Français",
+        filterFree: "Dispo sam. 20",
+        results: "6 résultats",
+        perHour: "/h",
+        directoryRows: [
+          { name: "Léa Marchand", meta: "6 ans · Latte art, Espresso", rate: "26 €" },
+          { name: "Yuki Tanaka", meta: "5 ans · Filtre, Cupping", rate: "25 €" },
+          { name: "Karim Haddad", meta: "7 ans · Torréfaction, Espresso", rate: "28 €" },
+        ],
+      },
+    },
     finalCta: {
       title: "Votre prochain shift est à une annonce près",
       body: "Créez le profil de votre café, publiez votre premier gig et rencontrez les baristas qui font tourner votre ville.",

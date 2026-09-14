@@ -8,7 +8,6 @@ import {
   Gift,
   MapPin,
   MessageSquare,
-  Search,
   Siren,
   Sparkles,
   Stamp,
@@ -21,11 +20,18 @@ import {
 import { PlanCards } from "@/components/plan-cards";
 import { CtaBand, FaqJsonLd, FaqSection, FeatureGrid } from "@/components/marketing";
 import {
+  DirectoryMock,
+  PlannerMock,
+  SosMock,
+  TrackRecordMock,
+} from "@/components/marketing-mocks";
+import {
   FOR_BARISTAS_COPY,
   FOR_CAFES_COPY,
   LANDING_COPY,
   type Locale,
   type PassportCopy,
+  type ShowcaseItem,
 } from "@/lib/marketing-copy";
 
 /** Locale-aware renderings of the marketing pages. Copy lives in
@@ -77,6 +83,30 @@ function PassportBand({ copy }: { copy: PassportCopy }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** One feature, told by a replica of the screen it lives on. */
+function ShowcaseRow({
+  copy,
+  mock,
+  flip,
+}: {
+  copy: ShowcaseItem;
+  mock: React.ReactNode;
+  flip?: boolean;
+}) {
+  return (
+    <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+      <div className={flip ? "lg:order-2" : undefined}>
+        <p className="mb-2 font-mono text-[12px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+          {copy.eyebrow}
+        </p>
+        <h3 className="font-display text-2xl font-semibold tracking-tight">{copy.title}</h3>
+        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{copy.body}</p>
+      </div>
+      <div className={flip ? "lg:order-1" : undefined}>{mock}</div>
     </div>
   );
 }
@@ -223,14 +253,13 @@ export function LandingView({ locale }: { locale: Locale }) {
 
 export function ForCafesView({ locale }: { locale: Locale }) {
   const t = FOR_CAFES_COPY[locale];
-  const features = withIcons(t.features, [
-    CalendarClock,
-    Siren,
-    BadgeCheck,
-    Search,
-    Users,
-    Gift,
-  ]);
+  // SOS, track records and the directory get full showcase blocks below, so
+  // the grid keeps only what they don't cover.
+  const gridFeatures = withIcons(
+    [t.features[0]!, t.features[4]!, t.features[5]!],
+    [CalendarClock, Users, Gift],
+  );
+  const show = t.showcase;
 
   return (
     <div lang={locale} className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -263,10 +292,22 @@ export function ForCafesView({ locale }: { locale: Locale }) {
       </section>
 
       <section className="border-t border-border py-16">
+        <h2 className="mb-10 text-center font-display text-3xl font-semibold tracking-tight">
+          {show.heading}
+        </h2>
+        <div className="flex flex-col gap-16">
+          <ShowcaseRow copy={show.planner} mock={<PlannerMock t={show.mock} />} />
+          <ShowcaseRow copy={show.sos} mock={<SosMock t={show.mock} />} flip />
+          <ShowcaseRow copy={show.trust} mock={<TrackRecordMock t={show.mock} />} />
+          <ShowcaseRow copy={show.directory} mock={<DirectoryMock t={show.mock} />} flip />
+        </div>
+      </section>
+
+      <section className="border-t border-border py-16">
         <h2 className="mb-8 text-center font-display text-3xl font-semibold tracking-tight">
           {t.featuresHeading}
         </h2>
-        <FeatureGrid features={features} />
+        <FeatureGrid features={gridFeatures} />
       </section>
 
       <section className="pb-16">
