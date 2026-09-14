@@ -2,50 +2,54 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Monochrome palette: value, not hue, carries hierarchy. The single kept
+   colour is danger — errors, SOS and conflicts must not rely on weight alone.
+   Positive/pending/inactive states step down in value instead: ink → grey →
+   light grey. */
 :root {
-  --background: #f7f3ec;
-  --surface: #fffdf8;
+  --background: #f6f6f7;
+  --surface: #ffffff;
   --surface-raised: #ffffff;
-  --foreground: #251d15;
-  --muted: #efe8dc;
-  --muted-foreground: #6f6355;
-  --border: #e5dbcb;
-  --border-strong: #d4c6b1;
-  --primary: #2a211a;
-  --primary-foreground: #f8f3ea;
-  --accent: #b95f2e;
-  --accent-soft: #f3e3d3;
+  --foreground: #0b0b0c;
+  --muted: #f0f0f1;
+  --muted-foreground: #6b6b70;
+  --border: #e4e4e7;
+  --border-strong: #c9c9cf;
+  --primary: #0b0b0c;
+  --primary-foreground: #ffffff;
+  --accent: #0b0b0c;
+  --accent-soft: #f0f0f1;
   --accent-foreground: #ffffff;
-  --success: #3e7a4e;
-  --success-soft: #e3efe4;
-  --danger: #b23c2a;
-  --danger-soft: #f7e4df;
-  --warning: #9a6b1f;
-  --warning-soft: #f5ead2;
-  --ring: #b95f2e;
+  --success: #16161a;
+  --success-soft: #ededef;
+  --danger: #b3261e;
+  --danger-soft: #fbeceb;
+  --warning: #6b6b70;
+  --warning-soft: #f0f0f1;
+  --ring: #0b0b0c;
 }
 
 .dark {
-  --background: #17110c;
-  --surface: #201913;
-  --surface-raised: #261e17;
-  --foreground: #f0e9de;
-  --muted: #2b221a;
-  --muted-foreground: #a5978a;
-  --border: #342a20;
-  --border-strong: #4a3c2e;
-  --primary: #f0e9de;
-  --primary-foreground: #241b13;
-  --accent: #d98c4f;
-  --accent-soft: #3a2a1c;
-  --accent-foreground: #1d150e;
-  --success: #7fbb8d;
-  --success-soft: #22301f;
-  --danger: #e07862;
-  --danger-soft: #3a221c;
-  --warning: #d9ae62;
-  --warning-soft: #362a16;
-  --ring: #d98c4f;
+  --background: #0a0a0b;
+  --surface: #121214;
+  --surface-raised: #17171a;
+  --foreground: #f4f4f5;
+  --muted: #1d1d21;
+  --muted-foreground: #a1a1a8;
+  --border: #26262b;
+  --border-strong: #3a3a42;
+  --primary: #f4f4f5;
+  --primary-foreground: #0a0a0b;
+  --accent: #f4f4f5;
+  --accent-soft: #232328;
+  --accent-foreground: #0a0a0b;
+  --success: #f4f4f5;
+  --success-soft: #232328;
+  --danger: #dc3b34;
+  --danger-soft: #2a1514;
+  --warning: #a1a1a8;
+  --warning-soft: #1d1d21;
+  --ring: #f4f4f5;
 }
 
 @theme inline {
@@ -120,9 +124,9 @@ body {
   background:
     radial-gradient(140% 120% at 20% 0%, rgba(255, 255, 255, 0.07), transparent 45%),
     repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 5px),
-    linear-gradient(160deg, #1e3a2f 0%, #142921 100%);
+    linear-gradient(160deg, #1c1c1f 0%, #0e0e10 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(212, 179, 106, 0.35),
+    inset 0 0 0 1px rgba(201, 201, 207, 0.3),
     inset 0 0 60px rgba(0, 0, 0, 0.45);
 }
 .pp-teaser-label {
@@ -130,30 +134,30 @@ body {
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #d4b36a;
+  color: #c9c9cf;
 }
 .pp-teaser-foil {
-  background: linear-gradient(105deg, #9c7c3c 0%, #d4b36a 30%, #edd9a3 50%, #d4b36a 68%, #9c7c3c 100%);
+  background: linear-gradient(105deg, #8e8e96 0%, #c9c9cf 30%, #ffffff 50%, #c9c9cf 68%, #8e8e96 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .pp-teaser-stamp {
-  border: 2px solid rgba(237, 217, 163, 0.65);
-  outline: 1px dashed rgba(237, 217, 163, 0.35);
+  border: 2px solid rgba(242, 242, 244, 0.6);
+  outline: 1px dashed rgba(242, 242, 244, 0.3);
   outline-offset: -7px;
-  color: #edd9a3;
-  background: rgba(237, 217, 163, 0.06);
+  color: #f2f2f4;
+  background: rgba(242, 242, 244, 0.06);
   transition: rotate 220ms var(--ease-out-strong), scale 220ms var(--ease-out-strong);
 }
 .pp-teaser-stamp-alt {
-  border-color: rgba(201, 191, 168, 0.5);
-  outline-color: rgba(201, 191, 168, 0.3);
-  color: #c9bfa8;
+  border-color: rgba(161, 161, 168, 0.5);
+  outline-color: rgba(161, 161, 168, 0.3);
+  color: #a1a1a8;
 }
 /* Perf grid is 12px with 3.5px holes; keep the element's box a multiple of 12. */
 .pp-teaser-postage {
-  background: #f2ead8;
+  background: #f3f3f4;
   -webkit-mask-image: radial-gradient(circle 3.5px at center, transparent 98%, #000);
   mask-image: radial-gradient(circle 3.5px at center, transparent 98%, #000);
   -webkit-mask-size: 12px 12px;
@@ -243,17 +247,17 @@ body {
 
 /* ---- Barista Passport: a physical document. Fixed palette — paper doesn't dark-mode. ---- */
 .pp-scene {
-  --pp-cover: #1e3a2f;
-  --pp-cover-deep: #142921;
-  --pp-foil: #d4b36a;
-  --pp-foil-bright: #edd9a3;
-  --pp-paper: #f2ead8;
-  --pp-paper-edge: #e0d3b8;
-  --pp-guilloche: #c9b892;
-  --pp-ink: #2b2417;
-  --pp-ink-soft: #6b5f49;
+  --pp-cover: #1c1c1f;
+  --pp-cover-deep: #0e0e10;
+  --pp-foil: #c9c9cf;
+  --pp-foil-bright: #ffffff;
+  --pp-paper: #f3f3f4;
+  --pp-paper-edge: #dcdce0;
+  --pp-guilloche: #c3c3c9;
+  --pp-ink: #1a1a1c;
+  --pp-ink-soft: #6b6b70;
   background:
-    radial-gradient(120% 90% at 50% 0%, #241d16 0%, #15100b 60%, #0e0a07 100%);
+    radial-gradient(120% 90% at 50% 0%, #1a1a1c 0%, #0e0e10 60%, #08080a 100%);
   color: var(--pp-ink);
 }
 .pp-cover {
@@ -262,12 +266,12 @@ body {
     repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 5px),
     linear-gradient(160deg, var(--pp-cover) 0%, var(--pp-cover-deep) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(212, 179, 106, 0.35),
+    inset 0 0 0 1px rgba(201, 201, 207, 0.3),
     inset 0 0 60px rgba(0, 0, 0, 0.55),
     0 24px 48px -18px rgba(0, 0, 0, 0.8);
 }
 .pp-foil {
-  background: linear-gradient(105deg, #9c7c3c 0%, var(--pp-foil) 30%, var(--pp-foil-bright) 50%, var(--pp-foil) 68%, #9c7c3c 100%);
+  background: linear-gradient(105deg, #8e8e96 0%, var(--pp-foil) 30%, var(--pp-foil-bright) 50%, var(--pp-foil) 68%, #8e8e96 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -277,20 +281,20 @@ body {
 }
 .pp-page {
   background:
-    repeating-radial-gradient(circle at 0% 120%, transparent 0 7px, rgba(201, 184, 146, 0.16) 7px 8px),
-    repeating-radial-gradient(circle at 100% -20%, transparent 0 7px, rgba(201, 184, 146, 0.14) 7px 8px),
-    linear-gradient(180deg, #f5eedd 0%, var(--pp-paper) 100%);
+    repeating-radial-gradient(circle at 0% 120%, transparent 0 7px, rgba(195, 195, 201, 0.16) 7px 8px),
+    repeating-radial-gradient(circle at 100% -20%, transparent 0 7px, rgba(195, 195, 201, 0.14) 7px 8px),
+    linear-gradient(180deg, #fafafb 0%, var(--pp-paper) 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(107, 95, 73, 0.18),
-    inset 0 -14px 30px rgba(107, 95, 73, 0.08),
+    inset 0 0 0 1px rgba(107, 107, 112, 0.18),
+    inset 0 -14px 30px rgba(107, 107, 112, 0.08),
     0 16px 36px -20px rgba(0, 0, 0, 0.75);
 }
 .pp-mrz {
-  background: #faf5e6;
-  border-top: 1px dashed rgba(107, 95, 73, 0.4);
+  background: #f7f7f8;
+  border-top: 1px dashed rgba(107, 107, 112, 0.4);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 0.14em;
-  color: #3d3526;
+  color: #33333a;
 }
 .pp-label {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -319,4 +323,12 @@ body {
     transform: rotate(0deg) scale(1.04) !important;
     z-index: 10;
   }
+}
+
+/* OSM raster tiles are full-colour; desaturate them to sit in the palette. */
+.leaflet-tile-pane {
+  filter: grayscale(1) contrast(1.03);
+}
+.dark .leaflet-tile-pane {
+  filter: grayscale(1) invert(1) brightness(0.92) contrast(0.95);
 }

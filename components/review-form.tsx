@@ -63,7 +63,7 @@ export function ReviewForm({ interestId, subject }: { interestId: string; subjec
               className={cn(
                 "size-6 transition-colors duration-100",
                 value <= (hovered || rating)
-                  ? "fill-warning text-warning"
+                  ? "fill-foreground text-foreground"
                   : "text-border-strong",
               )}
             />
@@ -108,7 +108,7 @@ export function RatingStars({
             key={value}
             className={cn(
               "size-3.5",
-              value <= Math.round(rating) ? "fill-warning text-warning" : "text-border-strong",
+              value <= Math.round(rating) ? "fill-foreground text-foreground" : "text-border-strong",
             )}
           />
         ))}

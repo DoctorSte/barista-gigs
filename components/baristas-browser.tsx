@@ -3,16 +3,23 @@
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, Star, ThumbsUp, Users } from "lucide-react";
+import { CalendarCheck, FileText, Images, Star, ThumbsUp, Users } from "lucide-react";
 import { toast } from "sonner";
 import { toggleSavedBarista } from "@/app/actions/saved";
 import { formatMoney } from "@/lib/format";
 import { languageLabel, SKILLS, skillLabel } from "@/lib/constants";
+import type { Availability } from "@/lib/database.types";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChipGroup } from "@/components/ui/chip-toggle";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/field";
+import {
+  FilterBar,
+  FilterInput,
+  FilterPill,
+  FilterSelect,
+  FilterToggle,
+} from "@/components/ui/filter-bar";
 import { RatingStars } from "@/components/review-form";
 import { cn } from "@/lib/utils";
 import { useDict } from "@/components/i18n-provider";
@@ -32,7 +39,17 @@ export type DirectoryBarista = {
   rating: number | null;
   reviewCount: number;
   completedShifts: number;
+  availability: Availability;
+  hasCv: boolean;
+  portfolioCount: number;
 };
+
+/** Weekly availability covers the weekday of `date` and it isn't blacked out. */
+function freeOn(availability: Availability, date: string): boolean {
+  const weekday = (new Date(`${date}T00:00:00`).getDay() + 6) % 7;
+  if (availability?.blackoutDates?.includes(date)) return false;
+  return (availability?.weekly ?? []).some((window) => window.day === weekday);
+}
 
 export function BaristasBrowser({
   baristas,
@@ -49,25 +66,102 @@ export function BaristasBrowser({
   const [recommendedOnly, setRecommendedOnly] = useState(false);
   const [workedWithYou, setWorkedWithYou] = useState(false);
   const [savedOnly, setSavedOnly] = useState(false);
+  const [minRating, setMinRating] = useState("any");
+  const [minYears, setMinYears] = useState("any");
+  const [language, setLanguage] = useState("any");
+  const [freeDate, setFreeDate] = useState("");
+  const [hasCv, setHasCv] = useState(false);
+  const [hasPortfolio, setHasPortfolio] = useState(false);
+  const [sort, setSort] = useState("default");
   const saved = useMemo(() => new Set(savedIds), [savedIds]);
+
+  // Only offer languages that someone in this city actually speaks.
+  const languageOptions = useMemo(() => {
+    const codes = new Set<string>();
+    for (const barista of baristas) for (const code of barista.languages) codes.add(code);
+    return [...codes]
+      .map((code) => ({ value: code, label: languageLabel(code) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [baristas]);
 
   const filtered = useMemo(() => {
     const max = Number(maxRate) * 100;
-    return baristas
-      .filter((barista) => {
-        if (skills.length > 0 && !skills.every((s) => barista.skills.includes(s))) return false;
-        // Rate cap only applies to baristas with a listed rate.
-        if (max > 0 && barista.hourlyRateCents != null && barista.hourlyRateCents > max) {
-          return false;
-        }
-        if (recommendedOnly && barista.recommendations === 0) return false;
-        if (workedWithYou && barista.shifts === 0) return false;
-        if (savedOnly && !saved.has(barista.id)) return false;
-        return true;
-      })
+    const ratingFloor = minRating === "any" ? 0 : Number(minRating);
+    const yearsFloor = minYears === "any" ? 0 : Number(minYears);
+    const rows = baristas.filter((barista) => {
+      if (skills.length > 0 && !skills.every((s) => barista.skills.includes(s))) return false;
+      // Rate cap only applies to baristas with a listed rate.
+      if (max > 0 && barista.hourlyRateCents != null && barista.hourlyRateCents > max) {
+        return false;
+      }
+      if (recommendedOnly && barista.recommendations === 0) return false;
+      if (workedWithYou && barista.shifts === 0) return false;
+      if (savedOnly && !saved.has(barista.id)) return false;
+      if (ratingFloor > 0 && (barista.rating ?? 0) < ratingFloor) return false;
+      if (yearsFloor > 0 && (barista.yearsExperience ?? 0) < yearsFloor) return false;
+      if (language !== "any" && !barista.languages.includes(language)) return false;
+      if (freeDate && !freeOn(barista.availability, freeDate)) return false;
+      if (hasCv && !barista.hasCv) return false;
+      if (hasPortfolio && barista.portfolioCount === 0) return false;
+      return true;
+    });
+
+    const sorted = [...rows];
+    if (sort === "rating") {
+      sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    } else if (sort === "rate") {
+      sorted.sort((a, b) => (a.hourlyRateCents ?? Infinity) - (b.hourlyRateCents ?? Infinity));
+    } else if (sort === "experience") {
+      sorted.sort((a, b) => (b.yearsExperience ?? 0) - (a.yearsExperience ?? 0));
+    } else {
       // Favourites float to the top.
-      .sort((a, b) => Number(saved.has(b.id)) - Number(saved.has(a.id)));
-  }, [baristas, skills, maxRate, recommendedOnly, workedWithYou, savedOnly, saved]);
+      sorted.sort((a, b) => Number(saved.has(b.id)) - Number(saved.has(a.id)));
+    }
+    return sorted;
+  }, [
+    baristas,
+    skills,
+    maxRate,
+    recommendedOnly,
+    workedWithYou,
+    savedOnly,
+    minRating,
+    minYears,
+    language,
+    freeDate,
+    hasCv,
+    hasPortfolio,
+    sort,
+    saved,
+  ]);
+
+  const activeCount =
+    skills.length +
+    (maxRate ? 1 : 0) +
+    (recommendedOnly ? 1 : 0) +
+    (workedWithYou ? 1 : 0) +
+    (savedOnly ? 1 : 0) +
+    (minRating !== "any" ? 1 : 0) +
+    (minYears !== "any" ? 1 : 0) +
+    (language !== "any" ? 1 : 0) +
+    (freeDate ? 1 : 0) +
+    (hasCv ? 1 : 0) +
+    (hasPortfolio ? 1 : 0);
+
+  function clearAll() {
+    setSkills([]);
+    setMaxRate("");
+    setRecommendedOnly(false);
+    setWorkedWithYou(false);
+    setSavedOnly(false);
+    setMinRating("any");
+    setMinYears("any");
+    setLanguage("any");
+    setFreeDate("");
+    setHasCv(false);
+    setHasPortfolio(false);
+    setSort("default");
+  }
 
   function toggleSave(extraId: string) {
     startTransition(async () => {
@@ -76,15 +170,6 @@ export function BaristasBrowser({
       else toast.error(result.error);
     });
   }
-
-  const toggleClass = (active: boolean) =>
-    cn(
-      "pressable inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium outline-none",
-      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-      active
-        ? "border-accent bg-accent-soft text-accent"
-        : "border-border bg-surface text-muted-foreground hover:border-border-strong hover:text-foreground",
-    );
 
   return (
     <div className="flex flex-col gap-5">
@@ -98,45 +183,117 @@ export function BaristasBrowser({
             )
           }
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            aria-pressed={recommendedOnly}
-            onClick={() => setRecommendedOnly((v) => !v)}
-            className={toggleClass(recommendedOnly)}
-          >
-            <ThumbsUp className="size-3.5" /> {d.barista.recommended}
-          </button>
-          <button
-            type="button"
-            aria-pressed={workedWithYou}
-            onClick={() => setWorkedWithYou((v) => !v)}
-            className={toggleClass(workedWithYou)}
-          >
-            <CalendarCheck className="size-3.5" /> {d.barista.workedWithYou}
-          </button>
-          <button
-            type="button"
-            aria-pressed={savedOnly}
-            onClick={() => setSavedOnly((v) => !v)}
-            className={toggleClass(savedOnly)}
-          >
-            <Star className="size-3.5" /> {d.barista.saved}
-          </button>
-          <span className="ml-1 flex items-center gap-2 text-sm text-muted-foreground">
-            {d.barista.rateUpTo}
-            <Input
+        <FilterBar
+          label={d.filters.filters}
+          clearLabel={d.filters.clear}
+          resultLabel={d.filters.results(filtered.length)}
+          activeCount={activeCount}
+          onClear={clearAll}
+        >
+          <FilterToggle
+            label={d.barista.recommended}
+            active={recommendedOnly}
+            onToggle={() => setRecommendedOnly((v) => !v)}
+            icon={ThumbsUp}
+          />
+          <FilterToggle
+            label={d.barista.workedWithYou}
+            active={workedWithYou}
+            onToggle={() => setWorkedWithYou((v) => !v)}
+            icon={CalendarCheck}
+          />
+          <FilterToggle
+            label={d.barista.saved}
+            active={savedOnly}
+            onToggle={() => setSavedOnly((v) => !v)}
+            icon={Star}
+          />
+          <FilterPill label={d.barista.rateUpTo} active={Boolean(maxRate)}>
+            <FilterInput
               type="number"
               min={0}
               step={1}
               value={maxRate}
-              onChange={(e) => setMaxRate(e.target.value)}
-              className="h-8 w-20"
-              aria-label="Maximum hourly rate in euros"
+              onChange={setMaxRate}
+              ariaLabel={d.barista.rateUpTo}
+              width="w-10"
+              placeholder="–"
             />
-            €{d.common.perHour}
-          </span>
-        </div>
+            <span className="text-muted-foreground">€{d.common.perHour}</span>
+          </FilterPill>
+          <FilterPill label={d.filters.minRating} active={minRating !== "any"}>
+            <FilterSelect
+              ariaLabel={d.filters.minRating}
+              value={minRating}
+              onChange={setMinRating}
+              options={[
+                { value: "any", label: d.filters.any },
+                ...[3, 4, 4.5].map((n) => ({
+                  value: String(n),
+                  label: d.filters.ratingPlus(n),
+                })),
+              ]}
+            />
+          </FilterPill>
+          <FilterPill label={d.filters.experience} active={minYears !== "any"}>
+            <FilterSelect
+              ariaLabel={d.filters.experience}
+              value={minYears}
+              onChange={setMinYears}
+              options={[
+                { value: "any", label: d.filters.any },
+                ...[1, 3, 5, 10].map((n) => ({
+                  value: String(n),
+                  label: d.filters.yearsPlus(n),
+                })),
+              ]}
+            />
+          </FilterPill>
+          {languageOptions.length > 0 ? (
+            <FilterPill label={d.filters.language} active={language !== "any"}>
+              <FilterSelect
+                ariaLabel={d.filters.language}
+                value={language}
+                onChange={setLanguage}
+                options={[{ value: "any", label: d.filters.any }, ...languageOptions]}
+              />
+            </FilterPill>
+          ) : null}
+          <FilterPill label={d.filters.availableOn} active={Boolean(freeDate)}>
+            <FilterInput
+              type="date"
+              value={freeDate}
+              onChange={setFreeDate}
+              ariaLabel={d.filters.availableOn}
+              width="w-[7.5rem]"
+            />
+          </FilterPill>
+          <FilterToggle
+            label={d.filters.hasCv}
+            active={hasCv}
+            onToggle={() => setHasCv((v) => !v)}
+            icon={FileText}
+          />
+          <FilterToggle
+            label={d.filters.hasPortfolio}
+            active={hasPortfolio}
+            onToggle={() => setHasPortfolio((v) => !v)}
+            icon={Images}
+          />
+          <FilterPill label={d.filters.sort} active={sort !== "default"}>
+            <FilterSelect
+              ariaLabel={d.filters.sort}
+              value={sort}
+              onChange={setSort}
+              options={[
+                { value: "default", label: d.filters.sortDefault },
+                { value: "rating", label: d.filters.sortRating },
+                { value: "rate", label: d.filters.sortRateLow },
+                { value: "experience", label: d.filters.sortExperience },
+              ]}
+            />
+          </FilterPill>
+        </FilterBar>
       </div>
 
       {filtered.length === 0 ? (

@@ -25,28 +25,28 @@ function escapeHtml(value: string) {
 
 function render(input: EmailInput) {
   const button = input.ctaUrl
-    ? `<a href="${input.ctaUrl}" style="display:inline-block;margin-top:20px;padding:11px 22px;border-radius:8px;background:#7c5231;color:#ffffff;text-decoration:none;font-weight:600">${input.ctaLabel ?? "Open Barista Gigs"}</a>`
+    ? `<a href="${input.ctaUrl}" style="display:inline-block;margin-top:20px;padding:11px 22px;border-radius:8px;background:#111111;color:#ffffff;text-decoration:none;font-weight:600">${input.ctaLabel ?? "Open Barista Gigs"}</a>`
     : "";
   return `<!doctype html>
-<html><body style="margin:0;background:#f6f3ef;padding:32px 16px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<html><body style="margin:0;background:#f6f6f7;padding:32px 16px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:12px;padding:32px">
       <tr><td>
-        <p style="margin:0 0 24px;font-size:15px;font-weight:700;color:#7c5231">Barista Gigs</p>
-        <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#221c15">${input.title}</h1>
-        ${input.body ? `<p style="margin:0;font-size:15px;line-height:1.6;color:#5c5347">${input.body}</p>` : ""}
+        <p style="margin:0 0 24px;font-size:15px;font-weight:700;color:#111111">Barista Gigs</p>
+        <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#0b0b0c">${input.title}</h1>
+        ${input.body ? `<p style="margin:0;font-size:15px;line-height:1.6;color:#52525b">${input.body}</p>` : ""}
         ${
           input.lines?.length
             ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px">${input.lines
                 .map(
                   (line) =>
-                    `<tr><td style="padding:9px 0;border-top:1px solid #efe8dc;font-size:14px;line-height:1.5;color:#3d3526">${escapeHtml(line)}</td></tr>`,
+                    `<tr><td style="padding:9px 0;border-top:1px solid #e4e4e7;font-size:14px;line-height:1.5;color:#33333a">${escapeHtml(line)}</td></tr>`,
                 )
                 .join("")}</table>`
             : ""
         }
         ${button}
-        <p style="margin:28px 0 0;font-size:12px;color:#a39a8c">You're receiving this because you have a Barista Gigs account. Manage notifications in the app.</p>
+        <p style="margin:28px 0 0;font-size:12px;color:#8a8a92">You're receiving this because you have a Barista Gigs account. Manage notifications in the app.</p>
       </td></tr>
     </table>
   </td></tr></table>

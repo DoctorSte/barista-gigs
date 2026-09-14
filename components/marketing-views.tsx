@@ -47,10 +47,10 @@ function PassportBand({ copy }: { copy: PassportCopy }) {
           <h2 className="pp-teaser-foil font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             {copy.heading}
           </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-[#c9bfa8]">{copy.body}</p>
+          <p className="mt-3 text-[15px] leading-relaxed text-[#b9b9c0]">{copy.body}</p>
           <Link
             href="/signup?role=extra"
-            className="pressable mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#d4b36a] px-6 text-[15px] font-medium text-[#1e3a2f] hover:bg-[#edd9a3]"
+            className="pressable mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#f2f2f4] px-6 text-[15px] font-medium text-[#0e0e10] hover:bg-white"
           >
             {copy.cta}
             <ArrowRight className="size-4" />
@@ -71,7 +71,7 @@ function PassportBand({ copy }: { copy: PassportCopy }) {
           {/* 96×84px — exact multiples of the 12px perf grid, so scallops stay even. */}
           <div className="pp-teaser-hover absolute bottom-0 left-1/2 h-[84px] w-24 -translate-x-1/2 rotate-3">
             <div className="pp-teaser-postage absolute inset-0" />
-            <div className="absolute inset-[5px] flex items-center justify-center bg-[#f2ead8]">
+            <div className="absolute inset-[5px] flex items-center justify-center bg-[#f3f3f4]">
               <Image src="/mascot.png" alt="" width={300} height={277} className="h-auto w-12" />
             </div>
           </div>

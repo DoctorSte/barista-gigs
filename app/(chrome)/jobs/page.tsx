@@ -34,7 +34,7 @@ export default async function JobsPage() {
         </p>
       </div>
 
-      <GigsBrowser gigs={jobs} />
+      <GigsBrowser gigs={jobs} mode="job" />
     </div>
   );
 }

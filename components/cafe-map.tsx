@@ -29,9 +29,9 @@ export function CafeMap({ lat, lng, name }: { lat: number; lng: number; name: st
       }).addTo(map);
       L.circleMarker([lat, lng], {
         radius: 9,
-        color: "#7c5231",
+        color: "#0b0b0c",
         weight: 2,
-        fillColor: "#a9713f",
+        fillColor: "#52525b",
         fillOpacity: 0.85,
       })
         .bindTooltip(name)

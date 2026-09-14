@@ -13,7 +13,7 @@ import type { ExtraProfile, PortfolioPhoto, Profile } from "@/lib/database.types
 
 type CafeStampData = { name: string; count: number; lastDate: string };
 
-const INKS = ["#a63b2a", "#2a5da6", "#3e7a4e", "#7a4e8f", "#8a6b1f"];
+const INKS = ["#33333a", "#4a4a52", "#26262b", "#5a5a62", "#3d3d44"];
 
 function hash(text: string) {
   let h = 0;
@@ -181,9 +181,9 @@ function LatteStamp({
     >
       {/* Perforated sheet: holes straddle the outer edge only — the solid
           inner layer covers the interior of the hole grid. */}
-      <div className="pp-perf absolute inset-0 bg-[#fbf6ea] [filter:drop-shadow(0_6px_10px_rgba(43,36,23,0.35))]" />
-      <div className="absolute inset-[6px] bg-[#fbf6ea]" />
-      <div className="absolute inset-[11px] bottom-[30px] overflow-hidden border border-[#d8cbae] bg-[#efe7d2]">
+      <div className="pp-perf absolute inset-0 bg-[#f7f7f8] [filter:drop-shadow(0_6px_10px_rgba(43,36,23,0.35))]" />
+      <div className="absolute inset-[6px] bg-[#f7f7f8]" />
+      <div className="absolute inset-[11px] bottom-[30px] overflow-hidden border border-[#dcdce0] bg-[#ececef]">
         <Image
           src={src}
           alt={caption ?? `Latte art by ${name}`}
@@ -192,10 +192,10 @@ function LatteStamp({
           className="pp-stamp-photo object-cover"
         />
       </div>
-      <span className="pp-label absolute left-[11px] top-[13px] z-10 rounded-sm bg-[#fbf6ea]/85 px-1 !text-[8px]">
+      <span className="pp-label absolute left-[11px] top-[13px] z-10 rounded-sm bg-[#f7f7f8]/85 px-1 !text-[8px]">
         BARISTA POST
       </span>
-      <span className="absolute right-[10px] top-[10px] z-10 rounded-sm bg-[#fbf6ea]/85 px-1 font-mono text-[10px] font-bold text-[#a63b2a]">
+      <span className="absolute right-[10px] top-[10px] z-10 rounded-sm bg-[#f7f7f8]/85 px-1 font-mono text-[10px] font-bold text-[#33333a]">
         1☕
       </span>
       <figcaption className="pp-label absolute inset-x-[11px] bottom-[12px] truncate text-center !text-[8px]">
@@ -247,7 +247,7 @@ export default async function PassportPage({
             <br />
             PASSPORT
           </h1>
-          <div className="mx-auto mt-8 flex size-24 items-center justify-center rounded-full border border-[#d4b36a]/50">
+          <div className="mx-auto mt-8 flex size-24 items-center justify-center rounded-full border border-[#c9c9cf]/50">
             <Image
               src="/mascot.png"
               alt=""
@@ -258,7 +258,7 @@ export default async function PassportPage({
           </div>
           <div className="pp-foil-rule mx-auto mb-4 mt-8 h-px w-40" />
           <p className="pp-foil font-mono text-[10px] tracking-[0.4em]">BARISTA GIGS</p>
-          <div className="mx-auto mt-6 h-8 w-11 rounded-md border border-[#d4b36a]/60 bg-gradient-to-br from-[#d4b36a]/30 to-transparent" aria-hidden />
+          <div className="mx-auto mt-6 h-8 w-11 rounded-md border border-[#c9c9cf]/60 bg-gradient-to-br from-[#c9c9cf]/30 to-transparent" aria-hidden />
         </section>
 
         {/* ------ IDENTIFICATION PAGE ------ */}
@@ -268,7 +268,7 @@ export default async function PassportPage({
             <p className="pp-label">{passportNo}</p>
           </div>
           <div className="flex gap-5 px-5 pb-4 pt-3">
-            <div className="relative size-28 shrink-0 border border-[#c9b892] bg-[#e9dfc8] p-1">
+            <div className="relative size-28 shrink-0 border border-[#c3c3c9] bg-[#e6e6ea] p-1">
               {profile.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
@@ -278,7 +278,7 @@ export default async function PassportPage({
                   className="size-full object-cover [filter:saturate(0.85)_contrast(1.05)]"
                 />
               ) : (
-                <div className="flex size-full items-center justify-center font-display text-3xl font-semibold text-[#6b5f49]">
+                <div className="flex size-full items-center justify-center font-display text-3xl font-semibold text-[#6b6b70]">
                   {profile.display_name
                     .split(/\s+/)
                     .map((p) => p[0])
@@ -287,8 +287,8 @@ export default async function PassportPage({
                     .toUpperCase()}
                 </div>
               )}
-              <span className="absolute -left-px -top-px size-2.5 border-l-2 border-t-2 border-[#6b5f49]" />
-              <span className="absolute -bottom-px -right-px size-2.5 border-b-2 border-r-2 border-[#6b5f49]" />
+              <span className="absolute -left-px -top-px size-2.5 border-l-2 border-t-2 border-[#6b6b70]" />
+              <span className="absolute -bottom-px -right-px size-2.5 border-b-2 border-r-2 border-[#6b6b70]" />
             </div>
             <dl className="grid flex-1 grid-cols-2 content-start gap-x-3 gap-y-2.5">
               <div className="col-span-2">
@@ -318,7 +318,7 @@ export default async function PassportPage({
             </dl>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-dashed border-[#c9b892] px-5 py-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 border-t border-dashed border-[#c3c3c9] px-5 py-4">
             <div>
               <dt className="pp-label">RATE</dt>
               <dd className="text-sm font-semibold">
@@ -358,16 +358,16 @@ export default async function PassportPage({
           </div>
 
           {recommendations.length > 0 ? (
-            <div className="flex items-center gap-3 border-t border-dashed border-[#c9b892] px-5 py-3">
+            <div className="flex items-center gap-3 border-t border-dashed border-[#c3c3c9] px-5 py-3">
               <svg viewBox="0 0 48 48" className="size-11 shrink-0" aria-hidden>
-                <circle cx="24" cy="24" r="19" fill="none" stroke="#9c7c3c" strokeWidth="7" strokeDasharray="1 6" strokeLinecap="round" />
-                <circle cx="24" cy="24" r="13" fill="none" stroke="#9c7c3c" strokeWidth="1" />
-                <text x="24" y="29" textAnchor="middle" fontSize="14" fill="#9c7c3c">
+                <circle cx="24" cy="24" r="19" fill="none" stroke="#8e8e96" strokeWidth="7" strokeDasharray="1 6" strokeLinecap="round" />
+                <circle cx="24" cy="24" r="13" fill="none" stroke="#8e8e96" strokeWidth="1" />
+                <text x="24" y="29" textAnchor="middle" fontSize="14" fill="#8e8e96">
                   ★
                 </text>
               </svg>
-              <p className="text-[13px] leading-snug text-[#6b5f49]">
-                <span className="font-semibold text-[#2b2417]">Consular endorsement</span> — vouched
+              <p className="text-[13px] leading-snug text-[#6b6b70]">
+                <span className="font-semibold text-[#1a1a1c]">Consular endorsement</span> — vouched
                 for by {recommendations.join(", ")}.
               </p>
             </div>
@@ -395,7 +395,7 @@ export default async function PassportPage({
             </div>
           ) : (
             <div className="my-6 flex justify-center">
-              <div className="flex size-36 items-center justify-center rounded-full border-2 border-dashed border-[#c9b892] p-6 text-center">
+              <div className="flex size-36 items-center justify-center rounded-full border-2 border-dashed border-[#c3c3c9] p-6 text-center">
                 <p className="pp-label !text-[9px] leading-relaxed">
                   FIRST STAMP
                   <br />
@@ -434,14 +434,14 @@ export default async function PassportPage({
             <br />
             AT ANY COUNTER THAT WILL HAVE THEM
           </p>
-          <div className="mx-auto mt-6 max-w-xs -rotate-1 rounded-md bg-[#f5efe0] px-5 py-4 shadow-[0_10px_24px_-12px_rgba(0,0,0,0.8)]">
+          <div className="mx-auto mt-6 max-w-xs -rotate-1 rounded-md bg-[#f2f2f4] px-5 py-4 shadow-[0_10px_24px_-12px_rgba(0,0,0,0.8)]">
             <p className="pp-label !text-[8px]">HIRING VISA · APPLY WITHIN</p>
-            <p className="mt-1 font-display text-base font-semibold text-[#2b2417]">
+            <p className="mt-1 font-display text-base font-semibold text-[#1a1a1c]">
               Want {given === "—" ? surname : given} behind your bar?
             </p>
             <Link
               href="/signup?role=shop"
-              className="pressable mt-3 inline-flex h-9 items-center rounded-sm bg-[#1e3a2f] px-5 text-[13px] font-medium text-[#edd9a3]"
+              className="pressable mt-3 inline-flex h-9 items-center rounded-sm bg-[#1c1c1f] px-5 text-[13px] font-medium text-[#f2f2f4]"
             >
               Join Barista Gigs
             </Link>

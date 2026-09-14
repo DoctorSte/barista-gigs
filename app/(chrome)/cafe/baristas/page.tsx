@@ -4,7 +4,7 @@ import { requireShop } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { BaristasBrowser, type DirectoryBarista } from "@/components/baristas-browser";
 import { baristaTrustStats } from "@/lib/trust";
-import type { RateCard } from "@/lib/database.types";
+import type { Availability, RateCard } from "@/lib/database.types";
 import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Baristas" };
@@ -19,6 +19,8 @@ type BaristaRow = {
   signature_drink: string | null;
   languages: string[];
   skills: string[];
+  availability: Availability;
+  cv_path: string | null;
   profiles: { display_name: string; avatar_url: string | null } | null;
 };
 
@@ -29,7 +31,7 @@ export default async function BaristasPage() {
   const { data } = await supabase
     .from("extras_profiles")
     .select(
-      "id, user_id, years_experience, hourly_rate_cents, currency, rates, signature_drink, skills, languages, profiles:user_id(display_name, avatar_url)",
+      "id, user_id, years_experience, hourly_rate_cents, currency, rates, signature_drink, skills, languages, availability, cv_path, profiles:user_id(display_name, avatar_url)",
     )
     .eq("city_id", shop.city_id)
     .eq("is_available", true)
@@ -40,7 +42,8 @@ export default async function BaristasPage() {
 
   const extraIds = rows.map((barista) => barista.id);
   const nowIso = new Date().toISOString();
-  const [{ data: recData }, { data: shiftData }, { data: savedData }] = extraIds.length
+  const [{ data: recData }, { data: shiftData }, { data: savedData }, { data: photoData }] =
+    extraIds.length
     ? await Promise.all([
         supabase.from("recommendations").select("extra_id").in("extra_id", extraIds),
         // RLS only surfaces this shop's own interests, so these counts are
@@ -51,8 +54,9 @@ export default async function BaristasPage() {
           .eq("status", "accepted")
           .in("extra_id", extraIds),
         supabase.from("saved_baristas").select("extra_id").eq("shop_id", shop.id),
+        supabase.from("portfolio_photos").select("extra_id").in("extra_id", extraIds),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
 
   const recommendationCounts = new Map<string, number>();
   for (const rec of (recData ?? []) as { extra_id: string }[]) {
@@ -67,6 +71,11 @@ export default async function BaristasPage() {
     if (row.announcements && row.announcements.ends_at < nowIso) {
       shiftCounts.set(row.extra_id, (shiftCounts.get(row.extra_id) ?? 0) + 1);
     }
+  }
+
+  const portfolioCounts = new Map<string, number>();
+  for (const row of (photoData ?? []) as { extra_id: string }[]) {
+    portfolioCounts.set(row.extra_id, (portfolioCounts.get(row.extra_id) ?? 0) + 1);
   }
 
   const trustByExtra = await baristaTrustStats(supabase, extraIds);
@@ -86,6 +95,9 @@ export default async function BaristasPage() {
     rating: trustByExtra[row.id]?.rating ?? null,
     reviewCount: trustByExtra[row.id]?.reviewCount ?? 0,
     completedShifts: trustByExtra[row.id]?.completed ?? 0,
+    availability: row.availability,
+    hasCv: Boolean(row.cv_path),
+    portfolioCount: portfolioCounts.get(row.id) ?? 0,
   }));
 
   return (

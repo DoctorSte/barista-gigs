@@ -40,9 +40,9 @@ export function GigsMap({ gigs }: { gigs: MapGig[] }) {
       for (const gig of gigs) {
         L.circleMarker([gig.lat, gig.lng], {
           radius: 9,
-          color: "#7c5231",
+          color: "#0b0b0c",
           weight: 2,
-          fillColor: "#a9713f",
+          fillColor: "#52525b",
           fillOpacity: 0.85,
         })
           .bindPopup(
