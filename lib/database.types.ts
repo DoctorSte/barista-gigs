@@ -96,6 +96,7 @@ export type ExtraProfile = {
   skills: string[];
   is_available: boolean;
   referral_code: string;
+  referred_by_extra: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -114,6 +115,7 @@ export type ReferralInvite = {
   id: string;
   extra_id: string;
   email: string;
+  audience: "cafe" | "barista";
   created_at: string;
 };
 

@@ -11,9 +11,11 @@ import { ExtraProfileForm } from "@/components/extra-profile-form";
 import { PaymentDetailsForm } from "@/components/payment-details-form";
 import { PortfolioManager } from "@/components/portfolio-manager";
 import { ReferralLink } from "@/components/referral-link";
+import { CrewSection, type CrewMember } from "@/components/crew-section";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatMoney } from "@/lib/format";
 import { BARISTA_REFERRAL_BONUS_CENTS } from "@/lib/referrals";
+import { baristaTrustStats } from "@/lib/trust";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import type { PortfolioPhoto, ReferralBonus } from "@/lib/database.types";
 import { dateLocale, getDict, getLocale } from "@/lib/i18n";
@@ -58,9 +60,37 @@ export default async function ProfilePage() {
       .order("created_at", { ascending: false });
     referredCafes = (referredData ?? []) as typeof referredCafes;
   }
+  // The crew: baristas who signed up through this barista's link. They may be
+  // in other cities, so read them with the service role like referred cafés.
+  let crew: CrewMember[] = [];
+  if (hasAdminClient()) {
+    const admin = createAdminClient();
+    const { data: crewData } = await admin
+      .from("extras_profiles")
+      .select("id, created_at, profiles:user_id(display_name, avatar_url)")
+      .eq("referred_by_extra", extra.id)
+      .order("created_at", { ascending: false });
+    const rows = (crewData ?? []) as unknown as {
+      id: string;
+      created_at: string;
+      profiles: { display_name: string; avatar_url: string | null } | null;
+    }[];
+    const stats = await baristaTrustStats(
+      supabase,
+      rows.map((row) => row.id),
+    );
+    crew = rows.map((row) => ({
+      id: row.id,
+      name: row.profiles?.display_name ?? "Barista",
+      avatarUrl: row.profiles?.avatar_url ?? null,
+      shifts: stats[row.id]?.completed ?? 0,
+      joinedLabel: d.profile.joinedOn(formatDate(row.created_at, loc)),
+    }));
+  }
+
   const { data: inviteData } = await supabase
     .from("referral_invites")
-    .select("email")
+    .select("email, audience")
     .eq("extra_id", extra.id)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -108,6 +138,13 @@ export default async function ProfilePage() {
         ) : null}
         <ExtraProfileForm profile={profile} extra={extra} />
         <PaymentDetailsForm details={paymentData?.details ?? ""} />
+        <CrewSection
+          code={extra.referral_code}
+          crew={crew}
+          invited={(inviteData ?? [])
+            .filter((invite) => invite.audience === "barista")
+            .map((invite) => invite.email)}
+        />
         <div className="rounded-lg border border-border bg-surface p-5">
           <h2 className="font-display text-lg font-semibold tracking-tight">
             {d.profile.referTitle(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
@@ -118,7 +155,9 @@ export default async function ProfilePage() {
           <div className="mt-4">
             <ReferralLink
               code={extra.referral_code}
-              invited={(inviteData ?? []).map((invite) => invite.email)}
+              invited={(inviteData ?? [])
+                .filter((invite) => invite.audience === "cafe")
+                .map((invite) => invite.email)}
             />
           </div>
           {referredCafes.length > 0 ? (

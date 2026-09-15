@@ -146,15 +146,34 @@ export async function completeOnboarding(
     }
     const { data: existingExtra } = await supabase
       .from("extras_profiles")
-      .select("id")
+      .select("id, referred_by_extra")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    // A barista arriving through another barista's link joins their crew.
+    // Same cookie as the café flow; an unknown or self-referring code is
+    // ignored, and the referrer is only ever set once.
+    let crewReferrerId: string | null = null;
+    if (!existingExtra || existingExtra.referred_by_extra === null) {
+      const cookieStore = await cookies();
+      const referralCode = cookieStore.get("referral_code")?.value;
+      if (referralCode && hasAdminClient()) {
+        const { data: referrer } = await createAdminClient()
+          .from("extras_profiles")
+          .select("id, user_id")
+          .eq("referral_code", referralCode)
+          .maybeSingle();
+        if (referrer && referrer.user_id !== user.id) crewReferrerId = referrer.id;
+      }
+    }
+
     const values = {
       city_id: cityId,
       bio: parsed.data.bio || null,
       years_experience: parsed.data.yearsExperience ?? null,
       hourly_rate_cents: parsed.data.hourlyRateCents ?? null,
       skills: parsed.data.skills,
+      ...(crewReferrerId ? { referred_by_extra: crewReferrerId } : {}),
     };
     const { error } = existingExtra
       ? await supabase.from("extras_profiles").update(values).eq("id", existingExtra.id)

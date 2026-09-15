@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
+import { crewTier } from "@/lib/crew";
 import { formatMoney } from "@/lib/format";
 import { languageLabel, skillLabel } from "@/lib/constants";
 import type { ExtraProfile, PortfolioPhoto, Profile } from "@/lib/database.types";
@@ -67,6 +68,11 @@ async function loadPassport(username: string) {
     admin.from("cities").select("name").eq("id", extra.city_id).maybeSingle(),
   ]);
 
+  const { count: crewCount } = await admin
+    .from("extras_profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("referred_by_extra", extra.id);
+
   // Café stamps: one per café, counting completed shifts there.
   const stamps = new Map<string, CafeStampData>();
   for (const row of (worked ?? []) as unknown as {
@@ -95,6 +101,7 @@ async function loadPassport(username: string) {
     cafeStamps: [...stamps.values()].sort((a, b) => b.count - a.count),
     shiftsWorked: [...stamps.values()].reduce((sum, s) => sum + s.count, 0),
     cityName: (city as { name: string } | null)?.name ?? null,
+    crewCount: crewCount ?? 0,
   };
 }
 
@@ -214,7 +221,13 @@ export default async function PassportPage({
   const passport = await loadPassport(username);
   if (!passport) notFound();
 
-  const { profile, extra, photos, recommendations, cafeStamps, shiftsWorked, cityName } = passport;
+  const { profile, extra, photos, recommendations, cafeStamps, shiftsWorked, cityName, crewCount } =
+    passport;
+  // Sponsoring other baristas earns a rank; the passport wears it as a visa
+  // class rather than a badge.
+  const crewRank = ["FIRST POUR", "MORNING CREW", "FULL BRIGADE", "GUILD"][
+    crewTier(crewCount).reached - 1
+  ];
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
   const nameParts = profile.display_name.trim().split(/\s+/);
   const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
@@ -346,6 +359,14 @@ export default async function PassportPage({
                 <dt className="pp-label">ENDORSEMENTS</dt>
                 <dd className="text-sm font-semibold">
                   {extra.skills.map(skillLabel).join(" · ").toUpperCase()}
+                </dd>
+              </div>
+            ) : null}
+            {crewCount > 0 ? (
+              <div className="col-span-2">
+                <dt className="pp-label">DELEGATION</dt>
+                <dd className="text-sm font-semibold">
+                  {crewCount} SPONSORED{crewRank ? ` · ${crewRank}` : ""}
                 </dd>
               </div>
             ) : null}

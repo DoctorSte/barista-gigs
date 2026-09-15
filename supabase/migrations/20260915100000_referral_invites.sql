@@ -7,6 +7,8 @@ create table public.referral_invites (
   id uuid primary key default gen_random_uuid(),
   extra_id uuid not null references public.extras_profiles (id) on delete cascade,
   email text not null,
+  -- Which pitch was sent: a café invite or a "join my crew" one.
+  audience text not null default 'cafe' check (audience in ('cafe', 'barista')),
   created_at timestamptz not null default now(),
   unique (extra_id, email)
 );
