@@ -58,6 +58,12 @@ export default async function ProfilePage() {
       .order("created_at", { ascending: false });
     referredCafes = (referredData ?? []) as typeof referredCafes;
   }
+  const { data: inviteData } = await supabase
+    .from("referral_invites")
+    .select("email")
+    .eq("extra_id", extra.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
   const { data: bonusData } = await supabase
     .from("referral_bonuses")
     .select("*")
@@ -110,7 +116,10 @@ export default async function ProfilePage() {
             {d.profile.referSub(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
           </p>
           <div className="mt-4">
-            <ReferralLink code={extra.referral_code} />
+            <ReferralLink
+              code={extra.referral_code}
+              invited={(inviteData ?? []).map((invite) => invite.email)}
+            />
           </div>
           {referredCafes.length > 0 ? (
             <div className="mt-4">

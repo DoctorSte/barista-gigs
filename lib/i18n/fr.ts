@@ -215,6 +215,11 @@ export const fr: Dict = {
     referTitle: (bonus) => `Parrainez un café, gagnez ${bonus}`,
     referSub: (bonus) =>
       `Vous connaissez un café qui devrait recruter ici ? Quand il s'abonne via votre lien, vous touchez une prime de ${bonus} — versée aux coordonnées de paiement ci-dessus.`,
+    inviteByEmail: "Ou envoyez-le directement à un café",
+    invitePlaceholder: "responsable@cafe.com",
+    invite: "Inviter",
+    inviteSent: "Invitation envoyée",
+    inviteSentTo: (n) => `${n} café${n === 1 ? "" : "s"} invité${n === 1 ? "" : "s"} :`,
     referJoined: (n, earned) =>
       `${n} café${n === 1 ? "" : "s"} inscrit${n === 1 ? "" : "s"} via votre lien${earned ? ` · ${earned} gagnés` : ""}`,
     joinedOn: (date) => `inscrit le ${date}`,

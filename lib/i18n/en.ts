@@ -211,6 +211,11 @@ export const en = {
     referTitle: (bonus: string) => `Refer a café, earn ${bonus}`,
     referSub: (bonus: string) =>
       `Know a café that should be hiring here? When they subscribe through your link, you get a ${bonus} cash bonus — paid to the payment details above.`,
+    inviteByEmail: "Or send it straight to a café",
+    invitePlaceholder: "manager@cafe.com",
+    invite: "Invite",
+    inviteSent: "Invite sent",
+    inviteSentTo: (n: number) => `Invited ${n} ${n === 1 ? "café" : "cafés"}:`,
     referJoined: (n: number, earned: string) =>
       `${n} ${n === 1 ? "café" : "cafés"} joined with your link${earned ? ` · ${earned} earned` : ""}`,
     joinedOn: (date: string) => `joined ${date}`,

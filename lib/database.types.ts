@@ -110,6 +110,13 @@ export type ReferralBonus = {
   paid_at: string | null;
 };
 
+export type ReferralInvite = {
+  id: string;
+  extra_id: string;
+  email: string;
+  created_at: string;
+};
+
 export type Recommendation = {
   id: string;
   shop_id: string;
@@ -296,6 +303,7 @@ export type Database = {
       notification_prefs: Table<NotificationPrefs, "user_id">;
       reviews: Table<Review, "interest_id" | "author_role" | "rating">;
       referral_bonuses: Table<ReferralBonus, "extra_id" | "shop_id" | "amount_cents">;
+      referral_invites: Table<ReferralInvite, "extra_id" | "email">;
       cafe_staff: Table<CafeStaff, "shop_id" | "name">;
       planner_shifts: Table<PlannerShift, "shop_id" | "staff_id" | "date" | "start_min" | "end_min">;
     };
