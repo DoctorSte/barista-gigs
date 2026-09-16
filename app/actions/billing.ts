@@ -97,6 +97,8 @@ export async function startSubscription(
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
+    // Lets cafés enter codes like the founding-café one at checkout.
+    allow_promotion_codes: true,
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: appUrl("/settings/billing?checkout=success"),
     cancel_url: appUrl("/settings/billing?checkout=cancelled"),

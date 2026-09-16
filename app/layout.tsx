@@ -41,9 +41,8 @@ export const metadata: Metadata = {
     siteName: "Barista Gigs",
     type: "website",
     locale: "en_US",
-    images: [{ url: "/mascot.png", width: 300, height: 277, alt: "Barista Gigs" }],
   },
-  twitter: { card: "summary" },
+  twitter: { card: "summary_large_image" },
 };
 
 const ORG_JSON_LD = {

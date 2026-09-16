@@ -32,6 +32,7 @@ export const fr: Dict = {
     jobs: "Emplois",
     applications: "Candidatures",
     forCafes: "Pour les cafés",
+    hiring: "Shifts ouverts",
     forBaristas: "Pour les baristas",
     myProfile: "Mon profil",
     cafeProfile: "Profil du café",

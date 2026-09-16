@@ -5,6 +5,7 @@ import { getDict } from "@/lib/i18n";
 export async function SiteFooter() {
   const d = await getDict();
   const links = [
+    { href: "/hiring", label: d.nav.hiring },
     { href: "/for-cafes", label: d.nav.forCafes },
     { href: "/for-baristas", label: d.nav.forBaristas },
     { href: "/legal/terms", label: d.nav.terms },

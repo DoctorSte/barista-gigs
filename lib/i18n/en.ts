@@ -31,6 +31,7 @@ export const en = {
     jobs: "Jobs",
     applications: "Applications",
     forCafes: "For cafés",
+    hiring: "Open shifts",
     forBaristas: "For baristas",
     myProfile: "My profile",
     cafeProfile: "Café profile",
