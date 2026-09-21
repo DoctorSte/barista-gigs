@@ -23,7 +23,8 @@ export type NotificationInput = {
     | "team_invite"
     | "team_joined"
     | "shift_completed"
-    | "new_review";
+    | "new_review"
+    | "staff_time_off";
   title: string;
   body?: string;
   href?: string;

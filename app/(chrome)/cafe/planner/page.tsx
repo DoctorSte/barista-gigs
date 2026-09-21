@@ -30,7 +30,8 @@ export default async function PlannerPage({
   const windowStart = addDays(fromDateKey(days[0]!), -1).toISOString();
   const windowEnd = addDays(fromDateKey(days[6]!), 2).toISOString();
 
-  const [{ data: gigData }, { data: staffData }, { data: internalData }] = await Promise.all([
+  const [{ data: gigData }, { data: staffData }, { data: internalData }, { data: timeOffData }] =
+    await Promise.all([
     supabase
       .from("announcements")
       .select("*")
@@ -46,6 +47,11 @@ export default async function PlannerPage({
       .eq("shop_id", shop.id)
       .in("date", days)
       .order("start_min"),
+    supabase
+      .from("staff_time_off")
+      .select("id, staff_id, date, note")
+      .eq("shop_id", shop.id)
+      .in("date", days),
   ]);
 
   const gigs = (gigData ?? []) as Announcement[];
@@ -147,7 +153,19 @@ export default async function PlannerPage({
     openingHours: shop.opening_hours,
     blocks,
     baristas: [...baristaMap.values()].sort((a, b) => a.name.localeCompare(b.name)),
-    staff: staff.map((s) => ({ id: s.id, name: s.name })),
+    staff: staff.map((s) => ({
+      id: s.id,
+      name: s.name,
+      weeklyHoursTarget: s.weekly_hours_target,
+      hasDefaultWeek: (s.default_week ?? []).length > 0,
+      hasAccount: Boolean(s.user_id),
+    })),
+    timeOff: (timeOffData ?? []).map((t) => ({
+      id: t.id,
+      staffId: t.staff_id,
+      date: t.date,
+      note: t.note,
+    })),
   };
 
   return (

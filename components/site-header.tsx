@@ -17,6 +17,7 @@ export async function SiteHeader() {
     { href: "/gigs", label: d.nav.gigs },
     { href: "/jobs", label: d.nav.jobs },
     { href: "/applications", label: d.nav.applications },
+    { href: "/schedule", label: d.nav.schedule },
     { href: "/messages", label: d.nav.messages },
   ];
   const SHOP_LINKS: NavLink[] = [

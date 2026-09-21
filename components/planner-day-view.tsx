@@ -22,6 +22,8 @@ type Row = {
   kind: "open" | "barista" | "staff";
   blocks: PlannerBlock[];
   weekMinutes: number;
+  weeklyHoursTarget?: number | null;
+  off?: boolean;
 };
 
 function blockMinutes(block: PlannerBlock): number {
@@ -289,14 +291,27 @@ export function PlannerDayView({
                   <Avatar name={row.name} src={row.avatarUrl} className="size-6 text-[10px]" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium">{row.name}</p>
+                  <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
+                    <span className="truncate">{row.name}</span>
+                    {row.off ? (
+                      <span className="shrink-0 rounded-sm border border-dashed border-border-strong px-1 text-[10px] font-medium text-muted-foreground">
+                        {d.planner.offDay}
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="text-[10px] text-muted-foreground">
                     {row.blocks.length > 0
                       ? d.planner.dayHours(
                           hoursLabel(row.blocks.reduce((sum, b) => sum + blockMinutes(b), 0)),
                         )
                       : "—"}
-                    {row.weekMinutes > 0 ? ` · ${d.planner.weekHours(hoursLabel(row.weekMinutes))}` : ""}
+                    {row.weekMinutes > 0 || row.weeklyHoursTarget != null
+                      ? ` · ${d.planner.weekHours(
+                          row.weeklyHoursTarget != null
+                            ? `${hoursLabel(row.weekMinutes)} / ${row.weeklyHoursTarget}h`
+                            : hoursLabel(row.weekMinutes),
+                        )}`
+                      : ""}
                   </p>
                 </div>
                 {row.kind === "barista" ? null : (

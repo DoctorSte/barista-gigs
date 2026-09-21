@@ -259,6 +259,20 @@ export type CafeStaff = {
   id: string;
   shop_id: string;
   name: string;
+  weekly_hours_target: number | null;
+  default_week: AvailabilityWindow[];
+  user_id: string | null;
+  invite_email: string | null;
+  invite_token: string | null;
+  created_at: string;
+};
+
+export type StaffTimeOff = {
+  id: string;
+  shop_id: string;
+  staff_id: string;
+  date: string;
+  note: string | null;
   created_at: string;
 };
 
@@ -307,6 +321,7 @@ export type Database = {
       referral_bonuses: Table<ReferralBonus, "extra_id" | "shop_id" | "amount_cents">;
       referral_invites: Table<ReferralInvite, "extra_id" | "email">;
       cafe_staff: Table<CafeStaff, "shop_id" | "name">;
+      staff_time_off: Table<StaffTimeOff, "shop_id" | "staff_id" | "date">;
       planner_shifts: Table<PlannerShift, "shop_id" | "staff_id" | "date" | "start_min" | "end_min">;
     };
     Views: Record<string, never>;

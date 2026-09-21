@@ -9,11 +9,14 @@ import {
   ChevronRight,
   Copy,
   Inbox,
+  Users,
+  Wand2,
   Plus,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { addStaff, copyPreviousWeek, removeStaff } from "@/app/actions/planner";
+import { applyDefaultWeek, removeTimeOff } from "@/app/actions/staff";
 import {
   absRange,
   addDays,
@@ -74,7 +77,14 @@ export type PlannerData = {
   openingHours: OpeningHours | null;
   blocks: PlannerBlock[];
   baristas: PlannerBarista[];
-  staff: { id: string; name: string }[];
+  staff: {
+    id: string;
+    name: string;
+    weeklyHoursTarget: number | null;
+    hasDefaultWeek: boolean;
+    hasAccount: boolean;
+  }[];
+  timeOff: { id: string; staffId: string; date: string; note: string | null }[];
 };
 
 const GRID_COLS = "grid-cols-[180px_repeat(7,minmax(104px,1fr))]";
@@ -158,6 +168,9 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     return flagged;
   }, [data.blocks]);
 
+  // Days a staff member marked off, keyed staffId|date.
+  const offByStaffDay = new Map(data.timeOff.map((t) => [`${t.staffId}|${t.date}`, t]));
+
   // Day totals count real coverage: assigned gig shifts + internal shifts.
   const dayTotals = useMemo(() => {
     const totals = new Map<string, number>();
@@ -220,6 +233,30 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     });
   }
 
+  function runFillDefaults() {
+    startTransition(async () => {
+      const result = await applyDefaultWeek(data.weekStart);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      const created = result.data?.created ?? 0;
+      if (created === 0) toast.info(d.planner.nothingToFill);
+      else {
+        toast.success(d.planner.filledFromDefault(created));
+        router.refresh();
+      }
+    });
+  }
+
+  function confirmRemoveTimeOff(id: string) {
+    startTransition(async () => {
+      const result = await removeTimeOff(id);
+      if (result.ok) router.refresh();
+      else toast.error(result.error);
+    });
+  }
+
   function confirmRemoveStaff(staffId: string) {
     if (!window.confirm(d.planner.removePersonConfirm)) return;
     startTransition(async () => {
@@ -273,6 +310,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     blocks: PlannerBlock[],
     onAdd: (() => void) | null,
     addLabel: string,
+    off?: { id: string; note: string | null },
   ) {
     return (
       <div
@@ -282,7 +320,30 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           date === data.todayKey && "bg-accent-soft/25",
         )}
       >
-        {blocks.map(renderChip)}
+        {off ? (
+          <button
+            type="button"
+            title={off.note ?? d.planner.offDay}
+            onClick={() => {
+              if (window.confirm(`${d.planner.offDay} — ${d.common.remove}?`)) {
+                confirmRemoveTimeOff(off.id);
+              }
+            }}
+            className="pressable w-full rounded-sm border border-dashed border-border-strong bg-[repeating-linear-gradient(135deg,transparent_0_4px,var(--muted)_4px_8px)] px-1.5 py-0.5 text-left text-[11px] font-medium text-muted-foreground"
+          >
+            {d.planner.offDay}
+            {off.note ? ` · ${off.note.slice(0, 24)}` : ""}
+          </button>
+        ) : null}
+        {blocks.map((block) =>
+          off && block.kind === "internal" ? (
+            <span key={block.id} className="block rounded-md ring-1 ring-danger">
+              {renderChip(block)}
+            </span>
+          ) : (
+            renderChip(block)
+          ),
+        )}
         {onAdd ? (
           <button
             type="button"
@@ -303,11 +364,22 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     );
   }
 
-  function rowLabel(content: React.ReactNode, minutes: number) {
+  function rowLabel(content: React.ReactNode, minutes: number, target?: number | null) {
+    const met = target != null && minutes >= target * 60;
     return (
       <div className="flex items-center justify-between gap-2 py-2 pr-2">
         {content}
-        {minutes > 0 ? (
+        {target != null ? (
+          <span
+            className={cn(
+              "shrink-0 text-[11px] font-medium tabular-nums",
+              met ? "text-success" : "text-muted-foreground",
+            )}
+            title={met ? undefined : d.planner.hoursShort(`${hoursLabel(minutes)} / ${target}h`)}
+          >
+            {hoursLabel(minutes)} / {target}h{met ? " ✓" : ""}
+          </span>
+        ) : minutes > 0 ? (
           <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
             {hoursLabel(minutes)}
           </span>
@@ -343,6 +415,8 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
         kind: "staff" as const,
         blocks: rowBlocks.filter((b) => b.date === activeDay),
         weekMinutes: rowBlocks.reduce((sum, b) => sum + blockMinutes(b), 0),
+        weeklyHoursTarget: person.weeklyHoursTarget,
+        off: offByStaffDay.has(`${person.id}|${activeDay}`),
       };
     }),
   ].filter((row) => row.kind !== "barista" || row.blocks.length > 0);
@@ -397,6 +471,22 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           >
             <Copy className="size-3.5" /> {d.planner.copyLastWeek}
           </button>
+          {data.staff.some((person) => person.hasDefaultWeek) ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={runFillDefaults}
+              className="pressable inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] font-medium hover:bg-muted disabled:opacity-60"
+            >
+              <Wand2 className="size-3.5" /> {d.planner.fillDefaultWeek}
+            </button>
+          ) : null}
+          <Link
+            href="/cafe/staff"
+            className="pressable inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            <Users className="size-3.5" /> {d.planner.manageStaff}
+          </Link>
           <Link
             href={plannerHref({ week: prevWeek, day: null })}
             aria-label={d.planner.prevWeek}
@@ -543,6 +633,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
                       </button>
                     </span>,
                     sumMinutes(rowBlocks),
+                    person.weeklyHoursTarget,
                   )}
                 </div>
                 {data.days.map((date) =>
@@ -551,6 +642,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
                     rowBlocks.filter((b) => b.date === date),
                     () => setEditor({ type: "create-internal", date, staff: person }),
                     d.planner.newInternal(person.name),
+                    offByStaffDay.get(`${person.id}|${date}`),
                   ),
                 )}
               </div>
