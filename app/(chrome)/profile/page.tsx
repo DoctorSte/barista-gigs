@@ -13,6 +13,7 @@ import { PortfolioManager } from "@/components/portfolio-manager";
 import { ReferralLink } from "@/components/referral-link";
 import { CrewSection, type CrewMember } from "@/components/crew-section";
 import { Badge } from "@/components/ui/badge";
+import { Section } from "@/components/ui/section";
 import { formatDate, formatMoney } from "@/lib/format";
 import { BARISTA_REFERRAL_BONUS_CENTS } from "@/lib/referrals";
 import { baristaTrustStats } from "@/lib/trust";
@@ -120,7 +121,7 @@ export default async function ProfilePage() {
         </Link>
       </div>
 
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-8">
         <AvatarUpload userId={user.id} name={profile.display_name} avatarUrl={profile.avatar_url} />
         {profile.username ? <PassportLink username={profile.username} /> : null}
         {recommendations.length > 0 ? (
@@ -136,6 +137,9 @@ export default async function ProfilePage() {
             </p>
           </div>
         ) : null}
+      </div>
+
+      <div className="mt-6">
         <ExtraProfileForm profile={profile} extra={extra} />
         <PaymentDetailsForm details={paymentData?.details ?? ""} />
         <CrewSection
@@ -145,14 +149,11 @@ export default async function ProfilePage() {
             .filter((invite) => invite.audience === "barista")
             .map((invite) => invite.email)}
         />
-        <div className="rounded-lg border border-border bg-surface p-5">
-          <h2 className="font-display text-lg font-semibold tracking-tight">
-            {d.profile.referTitle(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {d.profile.referSub(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
-          </p>
-          <div className="mt-4">
+        <Section
+          title={d.profile.referTitle(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
+          hint={d.profile.referSub(formatMoney(BARISTA_REFERRAL_BONUS_CENTS, "EUR"))}
+        >
+          <div>
             <ReferralLink
               code={extra.referral_code}
               invited={(inviteData ?? [])
@@ -196,7 +197,7 @@ export default async function ProfilePage() {
               </ul>
             </div>
           ) : null}
-        </div>
+        </Section>
         <CvUpload userId={user.id} cvPath={extra.cv_path} cvFilename={extra.cv_filename} />
         <PortfolioManager
           userId={user.id}

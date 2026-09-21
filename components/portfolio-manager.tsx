@@ -6,7 +6,7 @@ import { ImagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { addPortfolioPhoto, deletePortfolioPhoto } from "@/app/actions/portfolio";
-import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useDict } from "@/components/i18n-provider";
@@ -67,14 +67,11 @@ export function PortfolioManager({
   }
 
   return (
-    <Card>
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="font-display text-lg font-semibold">{d.profile.portfolio}</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Latte art, bar setups, anything that shows your craft. Up to {MAX_PHOTOS} photos.
-          </p>
-        </div>
+    <Section
+      title={d.profile.portfolio}
+      hint={`Latte art, bar setups, anything that shows your craft. Up to ${MAX_PHOTOS} photos.`}
+    >
+      <div className="flex items-center justify-end gap-4">
         <Button
           variant="outline"
           size="sm"
@@ -124,6 +121,6 @@ export function PortfolioManager({
           No photos yet — shops love seeing your pours.
         </p>
       )}
-    </Card>
+    </Section>
   );
 }

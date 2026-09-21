@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Input, Label, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
-import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { useDict } from "@/components/i18n-provider";
 
 export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: ExtraProfile }) {
@@ -33,29 +33,26 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
   }, [state, d]);
 
   return (
-    <Card>
-      <form action={action} className="flex flex-col gap-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-lg font-semibold">{d.profile.aboutYou}</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {isAvailable ? d.profile.aboutYouSub : d.uploads.hiddenFromSearch}
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Label htmlFor="availability-switch" className="text-muted-foreground">
-              {d.profile.available}
-            </Label>
+    <form action={action}>
+      <Section
+        title={d.profile.aboutYou}
+        hint={isAvailable ? d.profile.aboutYouSub : d.uploads.hiddenFromSearch}
+        aside={
+          <div className="mt-1 flex items-center gap-2.5">
             <Switch
               id="availability-switch"
               checked={isAvailable}
               onCheckedChange={setIsAvailable}
               aria-label={d.profile.available}
             />
+            <Label htmlFor="availability-switch" className="text-muted-foreground">
+              {d.profile.available}
+            </Label>
             <input type="hidden" name="isAvailable" value={String(isAvailable)} />
           </div>
-        </div>
-
+        }
+      >
+        <div className="flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-3">
           <Field label={d.onboarding.displayName} error={error?.field === "displayName" ? error.error : undefined}>
             {(id) => <Input id={id} name="displayName" defaultValue={profile.display_name} required />}
@@ -224,7 +221,8 @@ export function ExtraProfileForm({ profile, extra }: { profile: Profile; extra: 
 
         <FormError message={error && !error.field ? error.error : undefined} />
         <SubmitButton className="self-start">{d.profile.saveProfile}</SubmitButton>
-      </form>
-    </Card>
+        </div>
+      </Section>
+    </form>
   );
 }

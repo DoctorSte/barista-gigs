@@ -18,6 +18,7 @@ import { useDict } from "@/components/i18n-provider";
 import { hoursLabel, toMinutes } from "@/lib/planner";
 import type { AvailabilityWindow, OpeningHours } from "@/lib/database.types";
 import type { ActionResult } from "@/lib/validation";
+import { Section } from "@/components/ui/section";
 
 export type StaffRow = {
   id: string;
@@ -54,7 +55,7 @@ export function StaffManager({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       {staff.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border-strong bg-surface p-8 text-center">
           <p className="font-display text-lg font-semibold tracking-tight">{d.staff.empty}</p>
@@ -73,7 +74,7 @@ export function StaffManager({
       )}
 
       <form
-        className="flex flex-wrap gap-2"
+        className="mt-6 flex flex-wrap gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           const name = newName.trim();
@@ -144,9 +145,14 @@ function StaffCard({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-display text-lg font-semibold tracking-tight">{person.name}</p>
+    <Section
+      title={person.name}
+      hint={
+        person.weeklyHoursTarget != null
+          ? `${person.weeklyHoursTarget}h · ${d.staff.contractedHours.toLowerCase()}`
+          : undefined
+      }
+      aside={
         <button
           type="button"
           disabled={pending}
@@ -155,14 +161,14 @@ function StaffCard({
               run(() => removeStaff(person.id), d.staff.removed);
             }
           }}
-          className="pressable inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[12px] font-medium text-muted-foreground hover:text-danger"
+          className="pressable inline-flex items-center gap-1 rounded-sm py-1 text-[12px] font-medium text-muted-foreground hover:text-danger"
         >
           <UserMinus className="size-3.5" /> {d.staff.remove}
         </button>
-      </div>
-
-      <div className="mt-4 grid gap-5 sm:grid-cols-[180px_1fr]">
-        <label className="flex flex-col gap-1.5">
+      }
+    >
+      <div className="flex flex-col gap-5">
+        <label className="flex max-w-56 flex-col gap-1.5">
           <span className="text-[13px] font-medium">{d.staff.contractedHours}</span>
           <input
             type="number"
@@ -215,7 +221,7 @@ function StaffCard({
       ) : null}
 
       <AccountSection person={person} pending={pending} run={run} />
-    </div>
+    </Section>
   );
 }
 

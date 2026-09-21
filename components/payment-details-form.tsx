@@ -6,7 +6,7 @@ import { updatePaymentDetails } from "@/app/actions/profile";
 import { SubmitButton } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { FormError } from "@/components/form-error";
-import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { useDict } from "@/components/i18n-provider";
 
 export function PaymentDetailsForm({ details }: { details: string }) {
@@ -19,15 +19,8 @@ export function PaymentDetailsForm({ details }: { details: string }) {
   }, [state, d]);
 
   return (
-    <Card>
+    <Section title={d.profile.paymentDetails} hint={d.profile.paymentDetailsSub}>
       <form action={action} className="flex flex-col gap-5">
-        <div>
-          <h2 className="font-display text-lg font-semibold">{d.profile.paymentDetails}</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {d.profile.paymentDetailsSub}
-          </p>
-        </div>
-
         <Field label={d.uploads.detailsLabel} error={error?.field === "details" ? error.error : undefined}>
           {(id) => (
             <Textarea
@@ -44,6 +37,6 @@ export function PaymentDetailsForm({ details }: { details: string }) {
         <FormError message={error && !error.field ? error.error : undefined} />
         <SubmitButton className="self-start">{d.profile.savePaymentDetails}</SubmitButton>
       </form>
-    </Card>
+    </Section>
   );
 }

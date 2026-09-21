@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { markTimeOff, removeTimeOff } from "@/app/actions/staff";
 import { useDict, useLocaleTag } from "@/components/i18n-provider";
 import { fromDateKey, dateKey, hoursLabel, toHHMM } from "@/lib/planner";
+import { Section } from "@/components/ui/section";
 
 export type ScheduleCafe = {
   staffId: string;
@@ -19,7 +20,7 @@ export type ScheduleCafe = {
 
 export function MySchedule({ cafes }: { cafes: ScheduleCafe[] }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col">
       {cafes.map((cafe) => (
         <CafeSchedule key={cafe.staffId} cafe={cafe} />
       ))}
@@ -55,18 +56,18 @@ function CafeSchedule({ cafe }: { cafe: ScheduleCafe }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-xl font-semibold tracking-tight">{cafe.cafeName}</h2>
+    <Section
+      title={cafe.cafeName}
+      aside={
         <p className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">
             {d.schedule.hoursThisWeek(hoursLabel(cafe.weekMinutes))}
           </span>
           {cafe.weeklyHoursTarget != null ? d.schedule.ofContracted(cafe.weeklyHoursTarget) : ""}
         </p>
-      </div>
-
-      <div className="mt-4">
+      }
+    >
+      <div>
         <p className="text-[13px] font-medium">{d.schedule.upcoming}</p>
         {cafe.upcoming.length === 0 ? (
           <p className="mt-1.5 text-sm text-muted-foreground">{d.schedule.noShifts}</p>
@@ -156,6 +157,6 @@ function CafeSchedule({ cafe }: { cafe: ScheduleCafe }) {
           </button>
         </form>
       </div>
-    </div>
+    </Section>
   );
 }

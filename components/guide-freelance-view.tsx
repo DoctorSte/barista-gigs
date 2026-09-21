@@ -197,7 +197,7 @@ export function GuideFreelanceView({
         <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground/80">{t.disclaimer}</p>
       </div>
 
-      <div className="mt-12 rounded-lg border border-border bg-surface p-6 text-center">
+      <div className="mt-12 rounded-2xl bg-muted/50 px-6 py-8 text-center">
         <h2 className="font-display text-xl font-semibold tracking-tight">{t.ctaTitle}</h2>
         <p className="mt-1.5 text-[15px] text-muted-foreground">{t.ctaBody}</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">

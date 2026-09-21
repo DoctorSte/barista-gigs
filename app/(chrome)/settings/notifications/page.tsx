@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
 import { NotificationSettingsForm } from "@/components/notification-settings-form";
 import type { NotificationPrefs } from "@/lib/database.types";
 import { getDict } from "@/lib/i18n";
@@ -28,7 +27,7 @@ export default async function NotificationSettingsPage() {
         </p>
       </div>
 
-      <Card className="p-6 sm:p-8">
+      <div className="mt-2">
         <NotificationSettingsForm
           role={profile.role}
           initial={{
@@ -40,7 +39,7 @@ export default async function NotificationSettingsPage() {
             email_digest: prefs?.email_digest ?? true,
           }}
         />
-      </Card>
+      </div>
     </div>
   );
 }

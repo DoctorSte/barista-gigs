@@ -175,7 +175,7 @@ export async function HiringView({ locale }: { locale: "en" | "fr" }) {
         ))}
       </ul>
 
-      <div className="mt-10 rounded-lg border border-border bg-surface p-6 text-center">
+      <div className="mt-12 rounded-2xl bg-muted/50 px-6 py-8 text-center">
         <p className="text-[15px]">{t.cta}</p>
         <Link
           href={signup}

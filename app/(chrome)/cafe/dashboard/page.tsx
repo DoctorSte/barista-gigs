@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { formatDate, formatGigSchedule, formatPay } from "@/lib/format";
 import { Badge, GigStatusBadge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReferralLink } from "@/components/referral-link";
 import { TeamManager, type TeamInviteRow, type TeamMemberRow } from "@/components/team-manager";
@@ -217,9 +217,7 @@ export default async function ShopDashboardPage() {
       )}
 
       {isOwner && subscribed ? (
-        <Card className="rise-in mt-6">
-          <h2 className="font-display text-lg font-semibold tracking-tight">{d.cafe.team}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{d.cafe.teamSub}</p>
+        <Section className="rise-in mt-8" title={d.cafe.team} hint={d.cafe.teamSub}>
           <TeamManager
             members={teamMembers}
             invites={teamInvites}
@@ -227,15 +225,11 @@ export default async function ShopDashboardPage() {
             planName={plan.name}
             canInviteMore={teamSeatsUsed < plan.teamAccounts}
           />
-        </Card>
+        </Section>
       ) : null}
 
-      <Card className="rise-in mt-6">
-        <h2 className="font-display text-lg font-semibold tracking-tight">{d.cafe.referTitle}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {d.cafe.referSub}
-        </p>
-        <div className="mt-4">
+      <Section className="rise-in" title={d.cafe.referTitle} hint={d.cafe.referSub}>
+        <div>
           <ReferralLink code={shop.referral_code} />
         </div>
         {referred.length > 0 ? (
@@ -266,7 +260,7 @@ export default async function ShopDashboardPage() {
             </ul>
           </div>
         ) : null}
-      </Card>
+      </Section>
     </div>
   );
 }

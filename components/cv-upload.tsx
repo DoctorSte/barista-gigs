@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { updateCv } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/section";
 import { useDict } from "@/components/i18n-provider";
 
 const MAX_SIZE_MB = 5;
@@ -76,22 +76,16 @@ export function CvUpload({
   }
 
   return (
-    <Card>
+    <Section title="CV" hint={cvPath ? d.uploads.cvVisible : d.profile.cvSub}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="font-display text-lg font-semibold">CV</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {cvPath
-              ? d.uploads.cvVisible
-              : d.profile.cvSub}
+        {cvPath ? (
+          <p className="inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-3 py-1.5 text-sm">
+            <FileText className="size-4 text-accent" />
+            {cvFilename ?? "CV"}
           </p>
-          {cvPath ? (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-3 py-1.5 text-sm">
-              <FileText className="size-4 text-accent" />
-              {cvFilename ?? "CV"}
-            </p>
-          ) : null}
-        </div>
+        ) : (
+          <span />
+        )}
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -118,6 +112,6 @@ export function CvUpload({
           if (file) void handleFile(file);
         }}
       />
-    </Card>
+    </Section>
   );
 }

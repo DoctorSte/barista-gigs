@@ -10,6 +10,7 @@ import { useDict } from "@/components/i18n-provider";
 import { CREW_TIERS, crewTier } from "@/lib/crew";
 import { cn } from "@/lib/utils";
 import type { ActionResult } from "@/lib/validation";
+import { Section } from "@/components/ui/section";
 
 export type CrewMember = {
   id: string;
@@ -67,24 +68,21 @@ export function CrewSection({
   const shiftsTogether = crew.reduce((sum, member) => sum + member.shifts, 0);
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-lg font-semibold tracking-tight">{d.crew.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {crew.length === 0 ? d.crew.sub : d.crew.joined(crew.length)}
-          </p>
-        </div>
-        {tier.reached > 0 ? (
+    <Section
+      title={d.crew.title}
+      hint={crew.length === 0 ? d.crew.sub : d.crew.joined(crew.length)}
+      aside={
+        tier.reached > 0 ? (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-foreground/20 bg-muted px-3 py-1 text-[13px] font-medium">
             <span aria-hidden>{"☕".repeat(tier.reached)}</span>
             {d.crew.tiers[tier.reached - 1]}
           </span>
-        ) : null}
-      </div>
+        ) : null
+      }
+    >
 
       {/* Milestone track — each badge sits at its own crew size. */}
-      <div className="mt-6 pr-1">
+      <div className="mt-1 pr-1">
         <div className="relative h-1 rounded-full bg-muted">
           <div
             className="absolute inset-y-0 left-0 rounded-full bg-foreground transition-[width] duration-700"
@@ -189,6 +187,6 @@ export function CrewSection({
           </ul>
         </div>
       ) : null}
-    </div>
+    </Section>
   );
 }
