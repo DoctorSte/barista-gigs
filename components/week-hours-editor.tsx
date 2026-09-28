@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { X } from "lucide-react";
 import type { AvailabilityWindow, OpeningHours } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 import { useDict } from "@/components/i18n-provider";
@@ -235,8 +236,20 @@ export function WeekHoursEditor({
               )}
             </div>
 
-            <span className="w-24 shrink-0 text-right text-[12px] tabular-nums text-muted-foreground">
+            <span className="flex w-28 shrink-0 items-center justify-end gap-1 text-right text-[12px] tabular-nums text-muted-foreground">
               {active ? `${w!.start} – ${w!.end}` : b ? "—" : "closed"}
+              {active ? (
+                <button
+                  type="button"
+                  aria-label={`${d.common.remove} — ${label}`}
+                  onClick={() => toggleDay(day)}
+                  className="pressable rounded-full p-1 text-muted-foreground/50 outline-none hover:text-danger focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="size-3.5" />
+                </button>
+              ) : (
+                <span aria-hidden className="size-[22px]" />
+              )}
             </span>
           </div>
         );

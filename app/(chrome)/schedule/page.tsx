@@ -29,7 +29,9 @@ export default async function SchedulePage() {
     const horizon = dateKey(addDays(new Date(), 14));
     const thisWeek = weekDays(dateKey(mondayOf(new Date())));
 
-    const [{ data: shiftData }, { data: offData }] = await Promise.all([
+    // Shop names come via the service role — the shop may not be
+    // city-visible to this barista, but they work there.
+    const [{ data: shiftData }, { data: offData }, shopRows] = await Promise.all([
       supabase
         .from("planner_shifts")
         .select("id, staff_id, date, start_min, end_min, note")
@@ -44,18 +46,15 @@ export default async function SchedulePage() {
         .in("staff_id", staffIds)
         .gte("date", today)
         .order("date"),
+      hasAdminClient()
+        ? createAdminClient()
+            .from("coffee_shops")
+            .select("id, name")
+            .in("id", rows.map((row) => row.shop_id))
+            .then((result) => result.data ?? [])
+        : Promise.resolve([]),
     ]);
-
-    // Shop names via the service role — the shop may not be city-visible to
-    // this barista, but they work there.
-    const shopNames = new Map<string, string>();
-    if (hasAdminClient()) {
-      const { data: shops } = await createAdminClient()
-        .from("coffee_shops")
-        .select("id, name")
-        .in("id", rows.map((row) => row.shop_id));
-      for (const shop of shops ?? []) shopNames.set(shop.id, shop.name);
-    }
+    const shopNames = new Map<string, string>(shopRows.map((shop) => [shop.id, shop.name]));
 
     for (const row of rows) {
       const shifts = (shiftData ?? []).filter((shift) => shift.staff_id === row.id);
