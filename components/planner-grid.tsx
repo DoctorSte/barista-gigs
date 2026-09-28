@@ -1,21 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import {useMemo, useState, useTransition, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Copy,
   Inbox,
   Users,
   Wand2,
   Plus,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { addStaff, copyPreviousWeek, removeStaff } from "@/app/actions/planner";
+import { copyPreviousWeek } from "@/app/actions/planner";
 import { applyDefaultWeek, removeTimeOff } from "@/app/actions/staff";
 import {
   absRange,
@@ -102,8 +102,25 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
   const loc = useLocaleTag();
   const router = useRouter();
   const [editor, setEditor] = useState<EditorState | null>(null);
-  const [newName, setNewName] = useState("");
+  const [fillOpen, setFillOpen] = useState(false);
+  const fillMenuRef = useRef<HTMLDivElement>(null);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!fillOpen) return;
+    function onPointerDown(event: PointerEvent) {
+      if (!fillMenuRef.current?.contains(event.target as Node)) setFillOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setFillOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [fillOpen]);
 
   // View and selected day live in the URL so week navigation keeps them and a
   // particular day is shareable, the same way ?week= already is.
@@ -202,21 +219,6 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     return "bg-warning-soft text-warning border border-warning/40";
   }
 
-  function submitAddStaff() {
-    const name = newName.trim();
-    if (!name) return;
-    startTransition(async () => {
-      const result = await addStaff(name);
-      if (result.ok) {
-        toast.success(d.planner.personAdded);
-        setNewName("");
-        router.refresh();
-      } else {
-        toast.error(result.error);
-      }
-    });
-  }
-
   function runCopyLastWeek() {
     startTransition(async () => {
       const result = await copyPreviousWeek(data.weekStart);
@@ -254,19 +256,6 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
       const result = await removeTimeOff(id);
       if (result.ok) router.refresh();
       else toast.error(result.error);
-    });
-  }
-
-  function confirmRemoveStaff(staffId: string) {
-    if (!window.confirm(d.planner.removePersonConfirm)) return;
-    startTransition(async () => {
-      const result = await removeStaff(staffId);
-      if (result.ok) {
-        toast.success(d.planner.personRemoved);
-        router.refresh();
-      } else {
-        toast.error(result.error);
-      }
     });
   }
 
@@ -432,9 +421,17 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           <h1 className="font-display text-3xl font-semibold tracking-tight">
             {d.planner.title}
           </h1>
-          <p className="mt-1 flex items-center gap-1.5 text-[15px] text-muted-foreground">
-            <CalendarDays className="size-4" />
-            {d.planner.subtitle(weekRangeLabel)}
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="size-4" />
+              {d.planner.subtitle(weekRangeLabel)}
+            </span>
+            <Link
+              href="/cafe/staff"
+              className="flex items-center gap-1 text-[13px] font-medium underline-offset-2 hover:text-foreground hover:underline"
+            >
+              <Users className="size-3.5" /> {d.planner.manageStaff}
+            </Link>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -463,50 +460,70 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={runCopyLastWeek}
-            className="pressable inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] font-medium hover:bg-muted disabled:opacity-60"
-          >
-            <Copy className="size-3.5" /> {d.planner.copyLastWeek}
-          </button>
-          {data.staff.some((person) => person.hasDefaultWeek) ? (
+          {/* Week nav reads as one control, not three buttons. */}
+          <div className="flex h-9 items-center overflow-hidden rounded-md border border-border bg-surface">
+            <Link
+              href={plannerHref({ week: prevWeek, day: null })}
+              aria-label={d.planner.prevWeek}
+              className="flex h-full w-9 items-center justify-center hover:bg-muted"
+            >
+              <ChevronLeft className="size-4" />
+            </Link>
+            <Link
+              href={plannerHref({ week: data.todayKey, day: null })}
+              className="flex h-full items-center border-x border-border px-3.5 text-[13px] font-medium hover:bg-muted"
+            >
+              {d.planner.today}
+            </Link>
+            <Link
+              href={plannerHref({ week: nextWeek, day: null })}
+              aria-label={d.planner.nextWeek}
+              className="flex h-full w-9 items-center justify-center hover:bg-muted"
+            >
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+
+          {/* Both week-filling moves live under one menu. */}
+          <div ref={fillMenuRef} className="relative">
             <button
               type="button"
               disabled={pending}
-              onClick={runFillDefaults}
+              aria-expanded={fillOpen}
+              aria-haspopup="true"
+              onClick={() => setFillOpen((value) => !value)}
               className="pressable inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] font-medium hover:bg-muted disabled:opacity-60"
             >
-              <Wand2 className="size-3.5" /> {d.planner.fillDefaultWeek}
+              <Wand2 className="size-3.5" /> {d.planner.fillMenu}
+              <ChevronDown className="size-3 opacity-60" />
             </button>
-          ) : null}
-          <Link
-            href="/cafe/staff"
-            className="pressable inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] font-medium hover:bg-muted"
-          >
-            <Users className="size-3.5" /> {d.planner.manageStaff}
-          </Link>
-          <Link
-            href={plannerHref({ week: prevWeek, day: null })}
-            aria-label={d.planner.prevWeek}
-            className="pressable flex size-9 items-center justify-center rounded-md border border-border bg-surface hover:bg-muted"
-          >
-            <ChevronLeft className="size-4" />
-          </Link>
-          <Link
-            href={plannerHref({ week: data.todayKey, day: null })}
-            className="pressable flex h-9 items-center rounded-md border border-border bg-surface px-3.5 text-[13px] font-medium hover:bg-muted"
-          >
-            {d.planner.today}
-          </Link>
-          <Link
-            href={plannerHref({ week: nextWeek, day: null })}
-            aria-label={d.planner.nextWeek}
-            className="pressable flex size-9 items-center justify-center rounded-md border border-border bg-surface hover:bg-muted"
-          >
-            <ChevronRight className="size-4" />
-          </Link>
+            {fillOpen ? (
+              <div className="menu-panel absolute right-0 z-40 mt-1.5 w-60 rounded-md border border-border bg-surface-raised p-1.5 shadow-lg shadow-black/8">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFillOpen(false);
+                    runCopyLastWeek();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-sm px-2.5 py-2 text-left text-[13px] outline-none transition-colors duration-100 hover:bg-muted focus-visible:bg-muted"
+                >
+                  <Copy className="size-3.5 shrink-0 text-muted-foreground" />
+                  {d.planner.copyLastWeek}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFillOpen(false);
+                    runFillDefaults();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-sm px-2.5 py-2 text-left text-[13px] outline-none transition-colors duration-100 hover:bg-muted focus-visible:bg-muted"
+                >
+                  <Wand2 className="size-3.5 shrink-0 text-muted-foreground" />
+                  {d.planner.fillDefaultWeek}
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -622,15 +639,6 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
                       <Avatar name={person.name} className="size-7 text-[11px]" />
                       <span className="truncate text-sm font-medium">{person.name}</span>
                       <Badge className="shrink-0">{d.planner.staffTag}</Badge>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => confirmRemoveStaff(person.id)}
-                        aria-label={d.planner.removePerson}
-                        className="pressable rounded-sm p-0.5 text-muted-foreground/50 hover:text-danger"
-                      >
-                        <X className="size-3" />
-                      </button>
                     </span>,
                     sumMinutes(rowBlocks),
                     person.weeklyHoursTarget,
@@ -654,27 +662,13 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
             <div className="px-4 py-6 text-sm text-muted-foreground">{d.planner.noPeople}</div>
           ) : null}
 
-          {/* Day totals + add person */}
+          {/* Day totals */}
           <div className={cn("grid", GRID_COLS)}>
-            <div className="flex items-center gap-1.5 py-2 pl-3 pr-2">
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") submitAddStaff();
-                }}
-                placeholder={d.planner.addPersonPlaceholder}
-                aria-label={d.planner.addPerson}
-                className="h-7 w-full min-w-0 rounded-sm border border-border bg-surface px-2 text-[12px] outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring"
-              />
-              <button
-                type="button"
-                disabled={pending || !newName.trim()}
-                onClick={submitAddStaff}
-                className="pressable flex h-7 shrink-0 items-center rounded-sm border border-border-strong bg-surface px-2 text-[12px] font-medium hover:bg-muted disabled:opacity-50"
-              >
-                {d.planner.add}
-              </button>
+            <div className="flex items-center justify-between py-2 pl-3 pr-2 text-[11px] font-medium text-muted-foreground">
+              <span className="uppercase tracking-[0.14em]">{d.planner.totalRow}</span>
+              <span className="tabular-nums">
+                {hoursLabel([...dayTotals.values()].reduce((sum, m) => sum + m, 0))}
+              </span>
             </div>
             {data.days.map((date) => {
               const minutes = dayTotals.get(date) ?? 0;

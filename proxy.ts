@@ -64,19 +64,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (AUTH_PAGES.includes(pathname) || isProtected(pathname))) {
+  // Only auth pages need the role lookup (to route a logged-in visitor home).
+  // Protected pages check their own profile requirements server-side, so the
+  // proxy skips that query on every ordinary page view.
+  if (user && AUTH_PAGES.includes(pathname)) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile && pathname !== "/onboarding") {
-      return redirectTo("/onboarding");
-    }
-    if (profile && AUTH_PAGES.includes(pathname)) {
-      return redirectTo(profile.role === "shop" ? "/cafe/dashboard" : "/gigs");
-    }
+    if (!profile) return redirectTo("/onboarding");
+    return redirectTo(profile.role === "shop" ? "/cafe/dashboard" : "/gigs");
   }
 
   return response;

@@ -611,6 +611,8 @@ export const fr: Dict = {
     copyLastWeek: "Copier la semaine dernière",
     manageStaff: "Gérer l'équipe",
     fillDefaultWeek: "Remplir depuis les horaires types",
+    fillMenu: "Remplir la semaine",
+    totalRow: "Total",
     filledFromDefault: (n) => `${n} shift${n === 1 ? "" : "s"} ajouté${n === 1 ? "" : "s"} depuis les horaires types`,
     nothingToFill: "Rien à remplir — définissez les horaires types dans Gérer l'équipe.",
     offDay: "Absent·e",
@@ -632,7 +634,7 @@ export const fr: Dict = {
     hours: (label) => label,
     applicants: (n) => `${n} candidat${n === 1 ? "" : "s"}`,
     noPeople:
-      "Publiez un shift sur la ligne Shifts ouverts et il est à prendre — les baristas apparaissent ici dès qu'ils en prennent un. Ajoutez votre propre équipe ci-dessous pour la planifier directement.",
+      "Publiez un shift sur la ligne Shifts ouverts et il est à prendre — les baristas apparaissent ici dès qu'ils en prennent un. Ajoutez votre propre équipe via « Gérer l'équipe » pour la planifier directement.",
     addPerson: "Ajouter une personne",
     addPersonPlaceholder: "Nom, ex. Jules",
     add: "Ajouter",

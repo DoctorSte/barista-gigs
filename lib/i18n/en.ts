@@ -601,6 +601,8 @@ export const en = {
     copyLastWeek: "Copy last week",
     manageStaff: "Manage staff",
     fillDefaultWeek: "Fill from defaults",
+    fillMenu: "Fill week",
+    totalRow: "Total",
     filledFromDefault: (n: number) =>
       `${n} ${n === 1 ? "shift" : "shifts"} added from default schedules`,
     nothingToFill: "Nothing to fill — set default schedules under Manage staff.",
@@ -622,7 +624,7 @@ export const en = {
     hours: (label: string) => label,
     applicants: (n: number) => `${n} ${n === 1 ? "applicant" : "applicants"}`,
     noPeople:
-      "Post a shift on the Open row and it goes up for grabs — baristas appear here once they take one. Add your own staff below to schedule them directly.",
+      "Post a shift on the Open row and it goes up for grabs — baristas appear here once they take one. Add your own staff under Manage staff to schedule them directly.",
     addPerson: "Add person",
     addPersonPlaceholder: "Name, e.g. Jules",
     add: "Add",

@@ -51,27 +51,40 @@ export default async function ProfilePage() {
 
   const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/portfolio/`;
 
-  // Referred cafés may live in other cities — read them via the service role.
-  let referredCafes: { id: string; name: string; created_at: string }[] = [];
-  if (hasAdminClient()) {
-    const { data: referredData } = await createAdminClient()
-      .from("coffee_shops")
-      .select("id, name, created_at")
-      .eq("referred_by_extra", extra.id)
-      .order("created_at", { ascending: false });
-    referredCafes = (referredData ?? []) as typeof referredCafes;
-  }
-  // The crew: baristas who signed up through this barista's link. They may be
-  // in other cities, so read them with the service role like referred cafés.
+  // Referred cafés and the crew live behind the service role (other cities);
+  // everything else is RLS reads. One parallel batch — these were five
+  // sequential round trips.
+  const admin = hasAdminClient() ? createAdminClient() : null;
+  const [referredData, crewData, { data: inviteData }, { data: bonusData }] = await Promise.all([
+    admin
+      ? admin
+          .from("coffee_shops")
+          .select("id, name, created_at")
+          .eq("referred_by_extra", extra.id)
+          .order("created_at", { ascending: false })
+          .then((r) => r.data ?? [])
+      : Promise.resolve([]),
+    admin
+      ? admin
+          .from("extras_profiles")
+          .select("id, created_at, profiles:user_id(display_name, avatar_url)")
+          .eq("referred_by_extra", extra.id)
+          .order("created_at", { ascending: false })
+          .then((r) => r.data ?? [])
+      : Promise.resolve([]),
+    supabase
+      .from("referral_invites")
+      .select("email, audience")
+      .eq("extra_id", extra.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase.from("referral_bonuses").select("*").eq("extra_id", extra.id),
+  ]);
+  const referredCafes = referredData as { id: string; name: string; created_at: string }[];
+
   let crew: CrewMember[] = [];
-  if (hasAdminClient()) {
-    const admin = createAdminClient();
-    const { data: crewData } = await admin
-      .from("extras_profiles")
-      .select("id, created_at, profiles:user_id(display_name, avatar_url)")
-      .eq("referred_by_extra", extra.id)
-      .order("created_at", { ascending: false });
-    const rows = (crewData ?? []) as unknown as {
+  if (crewData.length > 0) {
+    const rows = crewData as unknown as {
       id: string;
       created_at: string;
       profiles: { display_name: string; avatar_url: string | null } | null;
@@ -89,16 +102,6 @@ export default async function ProfilePage() {
     }));
   }
 
-  const { data: inviteData } = await supabase
-    .from("referral_invites")
-    .select("email, audience")
-    .eq("extra_id", extra.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
-  const { data: bonusData } = await supabase
-    .from("referral_bonuses")
-    .select("*")
-    .eq("extra_id", extra.id);
   const bonuses = (bonusData ?? []) as ReferralBonus[];
   const bonusByShop = new Map(bonuses.map((b) => [b.shop_id, b]));
   const earnedCents = bonuses.reduce((sum, b) => sum + b.amount_cents, 0);
