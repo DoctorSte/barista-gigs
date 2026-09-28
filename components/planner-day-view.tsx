@@ -198,18 +198,6 @@ export function PlannerDayView({
     });
   }
 
-  // How many people are on at each half hour — the overlap read at a glance.
-  const slots = Math.max(1, Math.round(span / SNAP));
-  const coverage = Array.from({ length: slots }, (_, index) => {
-    const slotStart = min + index * SNAP;
-    return dayBlocks.filter((block) => {
-      if (block.kind === "gig" && (block.assigneeExtraIds?.length ?? 0) === 0) return false;
-      const start = toMinutes(block.start);
-      return slotStart >= start && slotStart < start + blockMinutes(block);
-    }).length;
-  });
-  const peak = Math.max(1, ...coverage);
-
   function barClass(block: PlannerBlock, past: boolean): string {
     if (block.kind === "internal") {
       return past
@@ -422,23 +410,6 @@ export function PlannerDayView({
             </div>
             );
           })}
-
-          {/* Coverage: how many people are on, half hour by half hour */}
-          <div className="flex border-t border-border bg-muted/20">
-            <div className="w-48 shrink-0 border-r border-border/60 px-3 py-2 text-[11px] font-medium text-muted-foreground">
-              {d.planner.coverage}
-            </div>
-            <div className="relative flex h-10 flex-1 items-end gap-px px-px py-1">
-              {coverage.map((count, index) => (
-                <span
-                  key={index}
-                  className={cn("flex-1 rounded-sm", count > 0 ? "bg-foreground/70" : "bg-border/40")}
-                  style={{ height: count > 0 ? `${(count / peak) * 100}%` : "3px" }}
-                  title={String(count)}
-                />
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 

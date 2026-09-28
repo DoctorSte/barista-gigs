@@ -622,7 +622,6 @@ export const fr: Dict = {
     repeat: "Répétition",
     repeatOnce: "Ce jour seulement",
     repeatWeeks: (n) => `Chaque semaine pendant ${n} semaines`,
-    coverage: "En salle",
     dayHours: (label) => `${label} aujourd'hui`,
     weekHours: (label) => `${label} cette semaine`,
     dragHint:

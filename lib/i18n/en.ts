@@ -613,7 +613,6 @@ export const en = {
     repeat: "Repeats",
     repeatOnce: "Just this day",
     repeatWeeks: (n: number) => `Weekly for ${n} weeks`,
-    coverage: "On the floor",
     dayHours: (label: string) => `${label} today`,
     weekHours: (label: string) => `${label} this week`,
     dragHint: "Drag a staff shift to move it, or its edges to change the hours.",
