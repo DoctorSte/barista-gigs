@@ -28,6 +28,7 @@ const CATEGORY_BY_TYPE: Record<string, EmailPrefKey> = {
   team_invite: "email_team",
   team_joined: "email_team",
   staff_time_off: "email_team",
+  staff_shift_cancelled: "email_team",
   referral_reward: "email_referrals",
   shift_completed: "email_applications",
   new_review: "email_applications",

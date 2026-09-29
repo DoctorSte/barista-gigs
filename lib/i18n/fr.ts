@@ -245,6 +245,14 @@ export const fr: Dict = {
     ofContracted: (target) => ` sur ${target} h contractuelles`,
     upcoming: "Prochains shifts",
     noShifts: "Aucun shift planifié dans les deux prochaines semaines.",
+    cantMakeIt: "Empêchement ?",
+    cancelTitle: "Annuler ce shift ?",
+    cancelBody: (cafe, when) =>
+      `${cafe} sera prévenu immédiatement que vous ne pouvez pas travailler ${when}.`,
+    cancelReasonPlaceholder: "Motif (optionnel) — ex. « malade, désolé·e pour le délai »",
+    keepShift: "Garder le shift",
+    confirmCancel: "Annuler le shift",
+    cancelled: "Shift annulé — le café a été prévenu",
     timeOff: "Jours off",
     timeOffHint:
       "Marquez un jour où vous ne pouvez pas travailler — le café le voit aussitôt dans son planning.",

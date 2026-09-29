@@ -9,7 +9,13 @@ import type { NotificationPrefs } from "@/lib/database.types";
 
 // Notification types that also go out as an email. Messages and referral
 // rewards stay in-app only for now (messages would need unread batching).
-const EMAILED_TYPES = new Set(["new_applicant", "application_accepted", "gig_invite", "sos_gig"]);
+const EMAILED_TYPES = new Set([
+  "new_applicant",
+  "application_accepted",
+  "gig_invite",
+  "sos_gig",
+  "staff_shift_cancelled",
+]);
 
 export type NotificationInput = {
   type:
@@ -24,7 +30,8 @@ export type NotificationInput = {
     | "team_joined"
     | "shift_completed"
     | "new_review"
-    | "staff_time_off";
+    | "staff_time_off"
+    | "staff_shift_cancelled";
   title: string;
   body?: string;
   href?: string;

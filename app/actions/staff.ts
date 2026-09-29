@@ -6,9 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { getSession, requireShop } from "@/lib/auth";
 import { notify } from "@/lib/notifications";
-import { sendEmails } from "@/lib/email";
-import { addDays, dateKey, fromDateKey, toMinutes, weekDays } from "@/lib/planner";
+import { sendEmails, sendScheduledEmail } from "@/lib/email";
+import { addDays, dateKey, fromDateKey, toHHMM, toMinutes, weekDays } from "@/lib/planner";
 import { emailSchema, type ActionResult } from "@/lib/validation";
+import { emailAllowed } from "@/lib/notification-prefs";
+import type { NotificationPrefs } from "@/lib/database.types";
 import type { AvailabilityWindow, CafeStaff } from "@/lib/database.types";
 
 // Staff contracts: weekly hours targets, default schedules, and linking a
@@ -325,6 +327,7 @@ export async function markTimeOff(input: {
         href: `/cafe/planner?week=${input.date}`,
       });
     }
+    await queueStaffChangeEmail(staffRow);
   }
 
   revalidatePath("/schedule");
@@ -333,9 +336,24 @@ export async function markTimeOff(input: {
 }
 
 export async function removeTimeOff(id: string): Promise<ActionResult> {
+  const { user } = await getSession();
   const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("staff_time_off")
+    .select("staff_id, cafe_staff:staff_id(id, name, user_id, shop_id)")
+    .eq("id", id)
+    .maybeSingle();
   const { error } = await supabase.from("staff_time_off").delete().eq("id", id);
   if (error) return { ok: false, error: "Could not remove it. Try again." };
+
+  // Unmarking a day is an availability change too — same debounced email.
+  const staffRow = (row as unknown as {
+    cafe_staff: { id: string; name: string; user_id: string | null; shop_id: string } | null;
+  } | null)?.cafe_staff;
+  if (staffRow && user && staffRow.user_id === user.id) {
+    await queueStaffChangeEmail(staffRow);
+  }
+
   revalidatePath("/schedule");
   revalidatePath("/cafe/planner");
   return { ok: true };
@@ -369,4 +387,121 @@ export async function searchBaristas(
         avatarUrl: row.profiles?.avatar_url ?? null,
       })),
   };
+}
+
+// One email per quiet window when a linked barista edits their days off —
+// toggling five times in ten minutes shouldn't send five emails. The email
+// is generic ("see the planner"), so later changes inside the window ride
+// along for free.
+const CHANGE_EMAIL_DELAY_MS = 20 * 60 * 1000;
+
+async function queueStaffChangeEmail(staff: { id: string; shop_id: string; name: string }) {
+  if (!hasAdminClient()) return;
+  try {
+    const admin = createAdminClient();
+    const { data: pending } = await admin
+      .from("pending_staff_emails")
+      .select("send_at")
+      .eq("staff_id", staff.id)
+      .maybeSingle();
+    if (pending && new Date(pending.send_at) > new Date()) return;
+
+    const { data: shop } = await admin
+      .from("coffee_shops")
+      .select("name, owner_id")
+      .eq("id", staff.shop_id)
+      .maybeSingle();
+    if (!shop) return;
+    const { data: prefs } = await admin
+      .from("notification_prefs")
+      .select("*")
+      .eq("user_id", shop.owner_id)
+      .maybeSingle();
+    if (!emailAllowed(prefs as NotificationPrefs | null, "staff_time_off")) return;
+    const { data: owner } = await admin.auth.admin.getUserById(shop.owner_id);
+    const to = owner?.user?.email;
+    if (!to) return;
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://baristagigs.com";
+    const sendAt = new Date(Date.now() + CHANGE_EMAIL_DELAY_MS);
+    const sent = await sendScheduledEmail(
+      {
+        to,
+        subject: `${staff.name} updated their availability at ${shop.name}`,
+        title: `${staff.name} updated their availability`,
+        body: "They changed their days off in the last few minutes. The planner always shows the current rota.",
+        ctaLabel: "Open the planner",
+        ctaUrl: `${appUrl}/cafe/planner`,
+      },
+      sendAt,
+    );
+    if (sent) {
+      await admin
+        .from("pending_staff_emails")
+        .upsert({ staff_id: staff.id, send_at: sendAt.toISOString() });
+    }
+  } catch {
+    // Best-effort; never block the change itself.
+  }
+}
+
+/**
+ * A linked barista backs out of an upcoming staff shift. Deliberate enough
+ * to warrant a dialog on their side and an immediate email to the café —
+ * with their reason, if they gave one.
+ */
+export async function cancelStaffShift(input: {
+  plannerShiftId: string;
+  reason?: string;
+}): Promise<ActionResult> {
+  const { user } = await getSession();
+  if (!user) return { ok: false, error: "Log in first." };
+  if (!hasAdminClient()) return { ok: false, error: "Try again later." };
+  const admin = createAdminClient();
+
+  const { data: shift } = await admin
+    .from("planner_shifts")
+    .select("id, shop_id, staff_id, date, start_min, end_min")
+    .eq("id", input.plannerShiftId)
+    .maybeSingle();
+  if (!shift) return { ok: false, error: "That shift no longer exists." };
+
+  const { data: staffRow } = await admin
+    .from("cafe_staff")
+    .select("id, name, user_id, shop_id")
+    .eq("id", shift.staff_id)
+    .maybeSingle();
+  if (!staffRow || staffRow.user_id !== user.id || staffRow.shop_id !== shift.shop_id) {
+    return { ok: false, error: "This isn't your shift." };
+  }
+  if (shift.date < dateKey(new Date())) {
+    return { ok: false, error: "That shift is in the past." };
+  }
+
+  const { error } = await admin.from("planner_shifts").delete().eq("id", shift.id);
+  if (error) return { ok: false, error: "Could not cancel the shift. Try again." };
+
+  const { data: shop } = await admin
+    .from("coffee_shops")
+    .select("name, owner_id")
+    .eq("id", shift.shop_id)
+    .maybeSingle();
+  if (shop) {
+    const when = fromDateKey(shift.date).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+    const reason = input.reason?.trim().slice(0, 300);
+    await notify(shop.owner_id, {
+      type: "staff_shift_cancelled",
+      title: `${staffRow.name} cancelled their shift on ${when}`,
+      body: `${toHHMM(shift.start_min)}–${toHHMM(shift.end_min % 1440)}${reason ? ` — “${reason}”` : ""}`,
+      href: `/cafe/planner?week=${shift.date}`,
+    });
+  }
+
+  revalidatePath("/schedule");
+  revalidatePath("/cafe/planner");
+  return { ok: true };
 }

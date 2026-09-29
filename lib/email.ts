@@ -55,6 +55,31 @@ function render(input: EmailInput) {
 </body></html>`;
 }
 
+/**
+ * Sends one email at a future time via Resend's scheduled_at (the batch
+ * endpoint doesn't support scheduling). Returns false if nothing was sent.
+ */
+export async function sendScheduledEmail(input: EmailInput, sendAt: Date): Promise<boolean> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return false;
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: FROM,
+        to: [input.to],
+        subject: input.subject,
+        html: render(input),
+        scheduled_at: sendAt.toISOString(),
+      }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Send up to 100 emails in one Resend batch call. No-op without RESEND_API_KEY. */
 export async function sendEmails(inputs: EmailInput[]): Promise<void> {
   const key = process.env.RESEND_API_KEY;

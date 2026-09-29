@@ -267,6 +267,12 @@ export type CafeStaff = {
   created_at: string;
 };
 
+export type PendingStaffEmail = {
+  staff_id: string;
+  send_at: string;
+  created_at: string;
+};
+
 export type StaffTimeOff = {
   id: string;
   shop_id: string;
@@ -322,6 +328,7 @@ export type Database = {
       referral_invites: Table<ReferralInvite, "extra_id" | "email">;
       cafe_staff: Table<CafeStaff, "shop_id" | "name">;
       staff_time_off: Table<StaffTimeOff, "shop_id" | "staff_id" | "date">;
+      pending_staff_emails: Table<PendingStaffEmail, "staff_id" | "send_at">;
       planner_shifts: Table<PlannerShift, "shop_id" | "staff_id" | "date" | "start_min" | "end_min">;
     };
     Views: Record<string, never>;
