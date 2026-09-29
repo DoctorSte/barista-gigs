@@ -623,17 +623,37 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           {/* Staff rows */}
           {data.staff.map((person) => {
             const rowBlocks = blocksForStaff(person.id);
+            const minutes = sumMinutes(rowBlocks);
+            const target = person.weeklyHoursTarget;
+            const met = target != null && minutes >= target * 60;
             return (
               <div key={person.id} className={cn("grid border-b border-border/70", GRID_COLS)}>
                 <div className="pl-3">
+                  {/* Hours sit under the name — beside it, a long name or a
+                      wide "x / y" figure squeezes the other out of the column. */}
                   {rowLabel(
-                    <span className="flex min-w-0 items-center gap-2">
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
                       <Avatar name={person.name} className="size-7 text-[11px]" />
-                      <span className="truncate text-sm font-medium">{person.name}</span>
-                      <Badge className="shrink-0">{d.planner.staffTag}</Badge>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate text-sm font-medium">{person.name}</span>
+                          <Badge className="shrink-0">{d.planner.staffTag}</Badge>
+                        </span>
+                        {target != null || minutes > 0 ? (
+                          <span
+                            className={cn(
+                              "block text-[11px] font-medium tabular-nums",
+                              met ? "text-success" : "text-muted-foreground",
+                            )}
+                          >
+                            {hoursLabel(minutes)}
+                            {target != null ? ` / ${target}h` : ""}
+                            {met ? " ✓" : ""}
+                          </span>
+                        ) : null}
+                      </span>
                     </span>,
-                    sumMinutes(rowBlocks),
-                    person.weeklyHoursTarget,
+                    0,
                   )}
                 </div>
                 {data.days.map((date) =>
