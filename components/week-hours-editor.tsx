@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { X } from "lucide-react";
 import type { AvailabilityWindow, OpeningHours } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
+import { TimeBar } from "@/components/ui/time-bar";
 import { useDict } from "@/components/i18n-provider";
 
 const SNAP = 30; // minutes
@@ -175,52 +176,29 @@ export function WeekHoursEditor({
             </button>
 
             <div
+              data-track
               className={cn(
                 "relative h-9 flex-1 rounded-md border border-border",
                 b ? "bg-muted/60" : "bg-muted/25",
               )}
             >
               {active && b ? (
-                <div
-                  role="presentation"
-                  onPointerDown={(e) =>
-                    startDrag(e, day, "move", (e.currentTarget as HTMLElement).parentElement!)
-                  }
-                  className="absolute inset-y-1 cursor-grab touch-none rounded-[5px] bg-accent-soft ring-1 ring-accent/40 active:cursor-grabbing"
+                <TimeBar
+                  draggable
+                  className="inset-y-1 border border-primary bg-primary text-primary-foreground"
                   style={{ left: `${left}%`, width: `${width}%` }}
+                  onDragStart={(mode, e) => {
+                    const track = (e.currentTarget as HTMLElement).closest(
+                      "[data-track]",
+                    ) as HTMLElement | null;
+                    if (track) startDrag(e, day, mode, track);
+                  }}
+                  onNudge={(edge, direction) => nudge(day, edge, direction * SNAP)}
+                  startAria={`${label} start time, ${w!.start}`}
+                  endAria={`${label} end time, ${w!.end}`}
                 >
-                  <button
-                    type="button"
-                    aria-label={`${label} start time, ${w!.start}`}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      startDrag(e, day, "start", (e.currentTarget.parentElement as HTMLElement).parentElement!);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "ArrowLeft") nudge(day, "start", -SNAP);
-                      if (e.key === "ArrowRight") nudge(day, "start", SNAP);
-                    }}
-                    className="absolute -left-1 top-1/2 h-6 w-2.5 -translate-y-1/2 cursor-ew-resize touch-none rounded-full bg-accent outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  <button
-                    type="button"
-                    aria-label={`${label} end time, ${w!.end}`}
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      startDrag(e, day, "end", (e.currentTarget.parentElement as HTMLElement).parentElement!);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "ArrowLeft") nudge(day, "end", -SNAP);
-                      if (e.key === "ArrowRight") nudge(day, "end", SNAP);
-                    }}
-                    className="absolute -right-1 top-1/2 h-6 w-2.5 -translate-y-1/2 cursor-ew-resize touch-none rounded-full bg-accent outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  {width > 22 ? (
-                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[11px] font-medium tabular-nums text-accent">
-                      {w!.start} – {w!.end}
-                    </span>
-                  ) : null}
-                </div>
+                  {width > 22 ? `${w!.start} – ${w!.end}` : ""}
+                </TimeBar>
               ) : (
                 <button
                   type="button"

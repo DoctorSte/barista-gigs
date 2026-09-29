@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { movePlannerShift } from "@/app/actions/planner";
 import { fromDateKey, hoursLabel, shiftDuration, toHHMM, toMinutes } from "@/lib/planner";
 import { Avatar } from "@/components/ui/avatar";
+import { TimeBar } from "@/components/ui/time-bar";
 import { useDict, useLocaleTag } from "@/components/i18n-provider";
 import { cn } from "@/lib/utils";
 import type { PlannerBlock, PlannerData } from "@/components/planner-grid";
@@ -83,6 +84,12 @@ export function PlannerDayView({
   const trackRefs = useRef(new Map<string, HTMLElement>());
   // While dragging we render from local state so the bar tracks the pointer.
   const [draft, setDraft] = useState<{ id: string; start: number; end: number } | null>(null);
+  // After a drop the bar stays where it landed while the save runs in the
+  // background; an entry is dropped once the server round-trips the same
+  // times back (or the save fails and we revert).
+  const [overrides, setOverrides] = useState<Map<string, { start: number; end: number }>>(
+    () => new Map(),
+  );
   // A drag ends with a click event; this stops that click opening the dialog.
   const movedRef = useRef(false);
   const dragRef = useRef<{
@@ -117,6 +124,22 @@ export function PlannerDayView({
 
   function liveTimes(block: PlannerBlock) {
     if (draft && draft.id === block.id) return { start: draft.start, end: draft.end };
+    const override = overrides.get(block.id);
+    if (override) {
+      const propStart = toMinutes(block.start);
+      // Server caught up — the props now say what the override says.
+      if (propStart === override.start && propStart + blockMinutes(block) === override.end) {
+        queueMicrotask(() =>
+          setOverrides((current) => {
+            if (!current.has(block.id)) return current;
+            const next = new Map(current);
+            next.delete(block.id);
+            return next;
+          }),
+        );
+      }
+      return { start: override.start, end: override.end };
+    }
     const start = toMinutes(block.start);
     return { start, end: start + blockMinutes(block) };
   }
@@ -182,6 +205,8 @@ export function PlannerDayView({
     setDraft(null);
     if (start === drag.start && end === drag.end) return;
     movedRef.current = true;
+    // The bar stays where it was dropped; the save happens behind it.
+    setOverrides((current) => new Map(current).set(block.id, { start, end }));
     startTransition(async () => {
       const result = await movePlannerShift({
         id: block.plannerShiftId!,
@@ -190,9 +215,13 @@ export function PlannerDayView({
         endMin: end >= 1440 ? 1440 : end,
       });
       if (result.ok) {
-        toast.success(d.planner.shiftSaved);
         router.refresh();
       } else {
+        setOverrides((current) => {
+          const next = new Map(current);
+          next.delete(block.id);
+          return next;
+        });
         toast.error(result.error);
       }
     });
@@ -319,8 +348,8 @@ export function PlannerDayView({
               </div>
 
               <div
-                className="relative flex-1"
-                style={{ height: lanes * LANE_HEIGHT + 12 }}
+                className="relative flex-1 self-stretch"
+                style={{ minHeight: lanes * LANE_HEIGHT + 12 }}
                 onPointerMove={onPointerMove}
                 ref={(element) => {
                   if (element) trackRefs.current.set(row.key, element);
@@ -342,13 +371,12 @@ export function PlannerDayView({
                   const draggable = block.kind === "internal";
                   const overnight = end > 1440;
                   return (
-                    <div
+                    <TimeBar
                       key={block.id}
+                      draggable={draggable}
                       className={cn(
-                        "absolute flex items-center rounded-md px-2 text-[11px] font-medium shadow-sm",
                         barClass(block, past),
-                        draggable ? "cursor-grab touch-none active:cursor-grabbing" : "cursor-pointer",
-                        conflict && "ring-1 ring-danger",
+                        conflict && "border-danger bg-danger text-white",
                         draft?.id === block.id && "z-10 ring-2 ring-ring",
                       )}
                       style={{
@@ -357,11 +385,11 @@ export function PlannerDayView({
                         top: (lane.get(block.id) ?? 0) * LANE_HEIGHT + 6,
                         height: LANE_HEIGHT - 6,
                       }}
-                      onPointerDown={(event) => {
+                      onDragStart={(mode, event) => {
                         const track = trackRefs.current.get(row.key);
-                        if (draggable && track) startDrag(event, block, "move", track);
+                        if (track) startDrag(event, block, mode, track);
                       }}
-                      onPointerUp={() => (draggable ? endDrag(block) : undefined)}
+                      onDragEnd={() => endDrag(block)}
                       onClick={() => {
                         if (movedRef.current) {
                           movedRef.current = false;
@@ -375,34 +403,10 @@ export function PlannerDayView({
                           : `${toHHMM(start)}–${toHHMM(end % 1440)}${block.title ? ` · ${block.title}` : ""}`
                       }
                     >
-                      {draggable ? (
-                        <span
-                          role="presentation"
-                          onPointerDown={(event) => {
-                            const track = trackRefs.current.get(row.key);
-                            if (track) startDrag(event, block, "start", track);
-                          }}
-                          onPointerUp={() => endDrag(block)}
-                          className="absolute inset-y-0 left-0 w-2 cursor-ew-resize rounded-l-md"
-                        />
-                      ) : null}
-                      <span className="truncate">
-                        {toHHMM(start)}–{toHHMM(end % 1440)}
-                        {overnight ? ` ${d.planner.pastMidnight}` : ""}
-                        {block.title ? ` · ${block.title}` : ""}
-                      </span>
-                      {draggable ? (
-                        <span
-                          role="presentation"
-                          onPointerDown={(event) => {
-                            const track = trackRefs.current.get(row.key);
-                            if (track) startDrag(event, block, "end", track);
-                          }}
-                          onPointerUp={() => endDrag(block)}
-                          className="absolute inset-y-0 right-0 w-2 cursor-ew-resize rounded-r-md"
-                        />
-                      ) : null}
-                    </div>
+                      {toHHMM(start)}–{toHHMM(end % 1440)}
+                      {overnight ? ` ${d.planner.pastMidnight}` : ""}
+                      {block.title ? ` · ${block.title}` : ""}
+                    </TimeBar>
                   );
                 })}
 

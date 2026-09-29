@@ -259,8 +259,8 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
     });
   }
 
-  function renderChip(block: PlannerBlock) {
-    const conflict = conflictIds.has(block.id);
+  function renderChip(block: PlannerBlock, offConflict = false) {
+    const conflict = conflictIds.has(block.id) || offConflict;
     return (
       <button
         key={block.id}
@@ -277,7 +277,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
           "pressable w-full rounded-sm px-1.5 py-1 text-left text-[11px] font-medium leading-tight outline-none",
           "focus-visible:ring-2 focus-visible:ring-ring",
           chipClass(block),
-          conflict && "ring-2 ring-danger",
+          conflict && "border-danger bg-danger text-white",
         )}
       >
         <span className="block truncate">
@@ -324,15 +324,7 @@ export function PlannerGrid({ data }: { data: PlannerData }) {
             {off.note ? ` · ${off.note.slice(0, 24)}` : ""}
           </button>
         ) : null}
-        {blocks.map((block) =>
-          off && block.kind === "internal" ? (
-            <span key={block.id} className="block rounded-md ring-1 ring-danger">
-              {renderChip(block)}
-            </span>
-          ) : (
-            renderChip(block)
-          ),
-        )}
+        {blocks.map((block) => renderChip(block, Boolean(off) && block.kind === "internal"))}
         {onAdd ? (
           <button
             type="button"
