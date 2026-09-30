@@ -18,7 +18,7 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <Field label={d.auth.email}>
         {(id) => (
-          <Input id={id} name="email" type="email" autoComplete="email" required autoFocus />
+          <Input id={id} name="email" type="email" autoComplete="username" required autoFocus />
         )}
       </Field>
       <Field label={d.auth.password}>

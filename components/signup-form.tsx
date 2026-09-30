@@ -69,7 +69,7 @@ export function SignupForm({ initialRole }: { initialRole?: "shop" | "extra" }) 
         {(id) => <Input id={id} name="displayName" autoComplete="name" required />}
       </Field>
       <Field label={d.auth.email}>
-        {(id) => <Input id={id} name="email" type="email" autoComplete="email" required />}
+        {(id) => <Input id={id} name="email" type="email" autoComplete="username" required />}
       </Field>
       <Field label={d.auth.password} hint={d.auth.passwordHint}>
         {(id) => (
