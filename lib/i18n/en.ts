@@ -267,6 +267,11 @@ export const en = {
       accepted: "You're linked — here's your schedule",
     },
   },
+  cookies: {
+    notice: "We only use cookies that keep you signed in — nothing for tracking.",
+    more: "Privacy",
+    ok: "Got it",
+  },
   profile: {
     title: "My profile",
     subtitle: (city: string) => `${city} — this is what cafés see when you apply.`,

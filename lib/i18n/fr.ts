@@ -270,6 +270,12 @@ export const fr: Dict = {
       accepted: "Compte lié — voici votre planning",
     },
   },
+  cookies: {
+    notice:
+      "Nous n'utilisons que des cookies qui vous gardent connecté·e — rien pour vous pister.",
+    more: "Confidentialité",
+    ok: "Compris",
+  },
   profile: {
     title: "Mon profil",
     subtitle: (city) => `${city} — c'est ce que les cafés voient quand vous candidatez.`,

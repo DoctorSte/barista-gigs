@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { getLocale } from "@/lib/i18n";
 import { I18nProvider } from "@/components/i18n-provider";
+import { CookieNotice } from "@/components/cookie-notice";
 import "./globals.css";
 
 const generalSans = localFont({
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Analytics />
           <I18nProvider locale={locale}>
             {children}
+            <CookieNotice />
           </I18nProvider>
           <Toaster
             position="bottom-right"

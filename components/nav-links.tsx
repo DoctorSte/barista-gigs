@@ -18,7 +18,7 @@ export function NavLinks({ links, className }: { links: NavLink[]; className?: s
             key={link.href}
             href={link.href}
             className={cn(
-              "pressable rounded-sm px-3 py-1.5 text-sm transition-colors duration-150",
+              "pressable shrink-0 whitespace-nowrap rounded-sm px-3 py-1.5 text-sm transition-colors duration-150",
               active
                 ? "font-medium text-foreground"
                 : "text-muted-foreground hover:text-foreground",

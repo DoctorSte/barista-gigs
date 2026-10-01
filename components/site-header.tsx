@@ -106,7 +106,12 @@ export async function SiteHeader() {
       </div>
       {links.length > 0 ? (
         <div className="border-t border-border/60 sm:hidden">
-          <NavLinks links={links} className="flex justify-center py-1" />
+          {/* Scrolls sideways instead of shrinking links until words break;
+              "safe center" keeps it centered only while everything fits. */}
+          <NavLinks
+            links={links}
+            className="flex overflow-x-auto px-3 py-1 [justify-content:safe_center] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          />
         </div>
       ) : null}
     </header>
