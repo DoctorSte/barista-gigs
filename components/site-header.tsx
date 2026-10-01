@@ -56,25 +56,27 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-15 max-w-5xl items-center gap-6 px-4 sm:px-6">
+      <div className="mx-auto flex h-15 max-w-5xl items-center gap-4 px-4 sm:gap-6 sm:px-6">
         <Link
           href={profile ? (profile.role === "shop" ? "/cafe/dashboard" : "/gigs") : "/"}
-          className="pressable flex items-center gap-2 rounded-md font-display text-[17px] font-semibold tracking-tight"
+          className="pressable flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md font-display text-[17px] font-semibold tracking-tight"
         >
           <Image
             src="/mascot.png"
-            alt=""
+            alt="Barista Gigs"
             width={64}
             height={59}
             priority
             className="size-8 shrink-0 object-contain"
           />
-          Barista Gigs
+          {/* On the narrowest phones the mascot carries the brand alone —
+              better than "Barista / Gigs" wrapping against the buttons. */}
+          <span className="max-[379px]:hidden">Barista Gigs</span>
         </Link>
 
         <NavLinks links={links} className="hidden sm:flex" />
 
-        <div className="ml-auto flex items-center gap-2.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2.5">
           {user && profile ? (
             <>
               <NotificationBell notifications={notifications} unreadCount={unreadCount} />
@@ -90,13 +92,13 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="pressable rounded-sm px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
+                className="pressable shrink-0 whitespace-nowrap rounded-sm px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground sm:px-3"
               >
                 {d.common.logIn}
               </Link>
               <Link
                 href="/signup"
-                className="pressable rounded-sm bg-primary px-3.5 py-1.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"
+                className="pressable shrink-0 whitespace-nowrap rounded-sm bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 sm:px-3.5"
               >
                 {d.common.signUp}
               </Link>
