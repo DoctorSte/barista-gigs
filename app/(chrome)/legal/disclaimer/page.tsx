@@ -6,16 +6,22 @@ export const metadata: Metadata = { title: "Disclaimers" };
 
 export default function DisclaimerPage() {
   return (
-    <LegalPage title="Disclaimers" updated="8 September 2026">
+    <LegalPage title="Disclaimers" updated="14 October 2026">
       <LegalSection heading="Not an employer or staffing agency">
         <p>
           Barista Gigs is a listing and matching service. We are not the employer of any barista,
-          we are not a temporary-work or staffing agency, and we do not supervise, direct, or
-          control anyone&rsquo;s work. Whether a given shift legally constitutes freelance work,
-          casual employment, or something else depends on the law of the country where it happens
-          and on how the café and barista arrange it — that classification, and its consequences
-          (taxes, social security, insurance, permits), is the responsibility of the café and the
-          barista, not of Barista Gigs.
+          we are not a temporary-work, staffing, or placement agency, we do not supply or lend
+          labour, and we do not supervise, direct, or control anyone&rsquo;s work. Gigs are meant
+          for registered independent baristas working as professionals; employed positions are
+          hired directly by the café. How a given arrangement is classified in law depends on how
+          the café and barista actually work together, not on what the listing says — and that
+          classification, with its consequences (contributions, taxes, insurance, permits), is
+          the responsibility of the café and the barista, not of Barista Gigs. Sections 3 to 6 of
+          the{" "}
+          <Link href="/legal/terms" className="text-accent hover:underline">
+            Terms
+          </Link>{" "}
+          set out what each side must do to keep it clean.
         </p>
       </LegalSection>
 
