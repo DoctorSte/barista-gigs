@@ -273,6 +273,12 @@ export type PendingStaffEmail = {
   created_at: string;
 };
 
+export type ProfileReminder = {
+  extra_id: string;
+  sent_count: number;
+  last_sent_at: string;
+};
+
 export type StaffTimeOff = {
   id: string;
   shop_id: string;
@@ -329,6 +335,7 @@ export type Database = {
       cafe_staff: Table<CafeStaff, "shop_id" | "name">;
       staff_time_off: Table<StaffTimeOff, "shop_id" | "staff_id" | "date">;
       pending_staff_emails: Table<PendingStaffEmail, "staff_id" | "send_at">;
+      profile_reminders: Table<ProfileReminder, "extra_id">;
       planner_shifts: Table<PlannerShift, "shop_id" | "staff_id" | "date" | "start_min" | "end_min">;
     };
     Views: Record<string, never>;

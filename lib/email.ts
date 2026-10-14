@@ -4,6 +4,15 @@
 
 const FROM = process.env.EMAIL_FROM ?? "Barista Gigs <notifications@baristagigs.com>";
 
+// The seed scripts create accounts on these domains. Nothing receives mail
+// there, and bouncing a dozen demo addresses only hurts our sender reputation.
+const SEED_DOMAINS = ["baristagigs.dev", "baristagigs.app"];
+
+function isSeedAddress(to: string) {
+  const domain = to.trim().toLowerCase().split("@")[1] ?? "";
+  return SEED_DOMAINS.includes(domain);
+}
+
 export type EmailInput = {
   to: string;
   subject: string;
@@ -61,7 +70,7 @@ function render(input: EmailInput) {
  */
 export async function sendScheduledEmail(input: EmailInput, sendAt: Date): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return false;
+  if (!key || isSeedAddress(input.to)) return false;
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -83,14 +92,15 @@ export async function sendScheduledEmail(input: EmailInput, sendAt: Date): Promi
 /** Send up to 100 emails in one Resend batch call. No-op without RESEND_API_KEY. */
 export async function sendEmails(inputs: EmailInput[]): Promise<void> {
   const key = process.env.RESEND_API_KEY;
-  if (!key || inputs.length === 0) return;
+  const deliverable = inputs.filter((input) => !isSeedAddress(input.to));
+  if (!key || deliverable.length === 0) return;
 
   try {
     await fetch("https://api.resend.com/emails/batch", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify(
-        inputs.slice(0, 100).map((input) => ({
+        deliverable.slice(0, 100).map((input) => ({
           from: FROM,
           to: [input.to],
           subject: input.subject,
