@@ -7,6 +7,8 @@ import { getOwnerShops, getOwnerSubscription, requireShop } from "@/lib/auth";
 import { notify, notifyMany } from "@/lib/notifications";
 import { firstZodError, gigSchema, type ActionResult } from "@/lib/validation";
 import { PLANS, isPlanId } from "@/lib/plans";
+import { alertAdmin } from "@/lib/admin-alerts";
+import { formatListingKind, formatPay } from "@/lib/format";
 import type { AnnouncementStatus } from "@/lib/database.types";
 
 function parseGigForm(formData: FormData) {
@@ -157,6 +159,18 @@ export async function createGig(
 
   // Best-effort follow-ups; never fail the publish because of them.
   try {
+    await alertAdmin({
+      subject: `${parsed.data.isSos ? "SOS gig" : "New gig"}: ${shop.name} — ${title}`,
+      title: `${shop.name} posted a gig`,
+      body: title,
+      lines: [
+        `Type: ${formatListingKind(parsed.data.kind)}${parsed.data.isSos ? " · SOS" : ""}`,
+        `Pay: ${formatPay(parsed.data.payRateCents, parsed.data.payType)}`,
+        `Status: ${parsed.data.status}`,
+      ],
+      path: `/gigs/${data.id}`,
+    });
+
     if (parsed.data.isSos && parsed.data.status === "open") {
       // SOS blast: ping every available barista in the city (cap for sanity).
       const { data: extras } = await supabase

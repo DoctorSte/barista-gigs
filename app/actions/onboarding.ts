@@ -7,6 +7,7 @@ import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { homeForRole } from "@/lib/auth";
 import { resolveCityId } from "@/lib/city";
 import { geocodeAddress } from "@/lib/geocode";
+import { alertAdmin } from "@/lib/admin-alerts";
 import {
   citySelectionSchema,
   extraOnboardingSchema,
@@ -131,6 +132,19 @@ export async function completeOnboarding(
           is_published: true,
         });
     if (error) return { ok: false, error: "Could not save your café. Try again." };
+
+    if (!existingShop) {
+      await alertAdmin({
+        subject: `New café: ${parsed.data.shopName}`,
+        title: `${parsed.data.shopName} just joined`,
+        body: `${displayName} signed up as a café in ${cityParsed.name}.`,
+        lines: [
+          `Email: ${user.email ?? "unknown"}`,
+          `Address: ${parsed.data.address}`,
+          ...(referrerId || referrerExtraId ? ["Came through a referral link"] : []),
+        ],
+      });
+    }
   } else {
     const parsed = extraOnboardingSchema.safeParse({
       bio: formData.get("bio") ?? "",
